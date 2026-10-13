@@ -2,6 +2,9 @@
 
 Usage:
     uv run python -m qanoun.retrieval.evaluate --method bm25
+    uv run python -m qanoun.retrieval.evaluate --method bm25 dense hybrid   # compare methods
+
+`dense` and `hybrid` need Qdrant running and loaded (see qanoun.retrieval.index).
 
 The test set (eval/retrieval_set.jsonl) lists questions with the articles that answer them.
 Results are broken down by language, because Darija is the hard case we must track.
@@ -13,6 +16,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
+from functools import cache
 from pathlib import Path
 from statistics import mean
 
@@ -45,12 +49,48 @@ def load_questions(path: Path | None = None) -> list[dict]:
         return [json.loads(line) for line in f if line.strip()]
 
 
+@cache
+def _bm25() -> BM25Index:
+    return BM25Index.build({a.id: search_text(a) for a in load_articles()})
+
+
+@cache
+def _dense():
+    # Imported here: loading torch and the model takes a while and isn't needed for BM25.
+    from qanoun.retrieval.embeddings import BGEM3Embedder
+    from qanoun.retrieval.search import DenseSearcher
+    from qanoun.retrieval.vector_store import ArticleStore
+
+    store = ArticleStore.connect()
+    expected = len(load_articles())
+    if store.count() != expected:
+        raise SystemExit(
+            f"Qdrant holds {store.count()} articles, the corpus {expected}: "
+            "run `uv run python -m qanoun.retrieval.index` first."
+        )
+    return DenseSearcher(BGEM3Embedder(), store)
+
+
 def bm25_searcher() -> Searcher:
-    index = BM25Index.build({a.id: search_text(a) for a in load_articles()})
+    index = _bm25()
     return lambda question, k: [doc for doc, _ in index.search(question, k)]
 
 
-SEARCHERS: dict[str, Callable[[], Searcher]] = {"bm25": bm25_searcher}
+def dense_searcher() -> Searcher:
+    return _dense()
+
+
+def hybrid_searcher() -> Searcher:
+    from qanoun.retrieval.search import HybridSearcher
+
+    return HybridSearcher(_bm25(), _dense())
+
+
+SEARCHERS: dict[str, Callable[[], Searcher]] = {
+    "bm25": bm25_searcher,
+    "dense": dense_searcher,
+    "hybrid": hybrid_searcher,
+}
 
 
 def run(searcher: Searcher, questions: list[dict], depth: int = 10) -> list[QuestionResult]:
@@ -89,8 +129,7 @@ def report(method: str, results: list[QuestionResult]) -> str:
         f"| Group | Questions | Hit@{K} | Recall@{K} | MRR |",
         "| --- | --- | --- | --- | --- |",
     ]
-    order = ["all", "ar", "fr", "darija-ar", "darija-latn"]
-    for name in sorted(summary, key=lambda n: order.index(n) if n in order else 99):
+    for name in _ordered(summary):
         s = summary[name]
         lines.append(
             f"| {name} | {s['questions']} | {s[f'hit@{K}']:.0%} | "
@@ -106,18 +145,54 @@ def report(method: str, results: list[QuestionResult]) -> str:
     return "\n".join(lines) + "\n"
 
 
+GROUP_ORDER = ["all", "ar", "fr", "darija-ar", "darija-latn"]
+
+
+def _ordered(groups) -> list[str]:
+    return sorted(groups, key=lambda n: GROUP_ORDER.index(n) if n in GROUP_ORDER else 99)
+
+
+def comparison(results_by_method: dict[str, list[QuestionResult]]) -> str:
+    """One row per method, hit@5 overall and per language: the table for the README."""
+    summaries = {method: summarize(results) for method, results in results_by_method.items()}
+    groups = _ordered({g for s in summaries.values() for g in s})
+    lines = [
+        f"# Retrieval comparison, hit@{K}",
+        "",
+        f"{date.today().isoformat()} · " + ", ".join(summaries),
+        "",
+        "| Method | " + " | ".join(groups) + " | MRR |",
+        "| --- " * (len(groups) + 2) + "|",
+    ]
+    for method, summary in summaries.items():
+        cells = [f"{summary[g][f'hit@{K}']:.0%}" if g in summary else "–" for g in groups]
+        lines.append(f"| {method} | " + " | ".join(cells) + f" | {summary['all']['mrr']:.2f} |")
+    return "\n".join(lines) + "\n"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Evaluate a search method.")
-    parser.add_argument("--method", choices=sorted(SEARCHERS), default="bm25")
+    parser.add_argument("--method", nargs="+", choices=list(SEARCHERS), default=["bm25"])
     args = parser.parse_args(argv)
 
-    results = run(SEARCHERS[args.method](), load_questions())
-    text = report(args.method, results)
-    out = EVAL_DIR / "reports" / f"retrieval-{args.method}-{date.today().isoformat()}.md"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(text, encoding="utf-8")
-    print(text)
-    print(f"report written to {out}")
+    reports_dir = EVAL_DIR / "reports"
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    today = date.today().isoformat()
+    questions = load_questions()
+    results_by_method = {}
+    for method in args.method:
+        results = results_by_method[method] = run(SEARCHERS[method](), questions)
+        text = report(method, results)
+        out = reports_dir / f"retrieval-{method}-{today}.md"
+        out.write_text(text, encoding="utf-8")
+        print(text)
+        print(f"report written to {out}\n")
+    if len(results_by_method) > 1:
+        text = comparison(results_by_method)
+        out = reports_dir / f"retrieval-comparison-{today}.md"
+        out.write_text(text, encoding="utf-8")
+        print(text)
+        print(f"comparison written to {out}")
     return 0
 
 

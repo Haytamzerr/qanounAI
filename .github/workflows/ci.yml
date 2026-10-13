@@ -8,6 +8,9 @@ on:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
+    env:
+      # The embedding model (torch, several GB) runs on a developer machine, never in CI
+      UV_NO_GROUP: embeddings
     steps:
       - uses: actions/checkout@v4
 

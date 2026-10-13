@@ -65,13 +65,26 @@ Reads the PDFs listed in `data/sources.csv` from `data/raw/`, writes one JSON re
 `data/processed/articles.jsonl`, and fails if a quality check does not pass. See
 [docs/corpus.md](docs/corpus.md) for the sources and how the parser reads them.
 
+## Index the articles for meaning-based search
+
+Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) running.
+
+```bash
+docker compose up -d qdrant                 # start the vector database (Qdrant)
+uv run python -m qanoun.retrieval.index     # embed the 1,329 articles with BGE-M3 and load them
+```
+
+The first run downloads the BGE-M3 model (about 2.3 GB) and embeds every article on the CPU, which
+takes several minutes. The vectors are saved in `data/processed/embeddings/` and reused until an
+article or the model changes. The Qdrant dashboard is at http://localhost:6333/dashboard.
+
 ## Evaluate search
 
 ```bash
-uv run python -m qanoun.retrieval.evaluate --method bm25
+uv run python -m qanoun.retrieval.evaluate --method bm25 dense hybrid
 ```
 
-Scores a search method on 45 test questions (`eval/retrieval_set.jsonl`) in Arabic, French and Darija, and writes a report to `eval/reports/`.
+Scores each search method on 45 test questions (`eval/retrieval_set.jsonl`) in Arabic, French and Darija, writes one report per method to `eval/reports/`, and a comparison table when several methods run.
 
 | Method | Hit@5 | Arabic | French | Darija (Arabic script) | Arabizi |
 | --- | --- | --- | --- | --- | --- |

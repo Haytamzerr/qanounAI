@@ -1,0 +1,15 @@
+# Services Qanoun AI runs next to the Python code. Start them with:
+#   docker compose up -d qdrant
+# Data is kept in a Docker volume, so stopping or restarting the container loses nothing.
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.19.2 # same minor version as qdrant-client in uv.lock
+    ports:
+      - "6333:6333" # REST API and web dashboard (http://localhost:6333/dashboard)
+      - "6334:6334" # gRPC API
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    restart: unless-stopped
+
+volumes:
+  qdrant_storage:

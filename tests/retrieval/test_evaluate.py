@@ -32,3 +32,18 @@ def test_summary_and_report_by_language():
 def test_question_result_relevant_set():
     r = QuestionResult("q", "?", "fr", ["a", "b"], [])
     assert r.relevant == {"a", "b"}
+
+
+def test_comparison_table():
+    from qanoun.retrieval.evaluate import comparison
+
+    questions = [
+        {"id": "q1", "question": "سؤال", "language": "ar", "expected": ["a"]},
+        {"id": "q2", "question": "question", "language": "fr", "expected": ["b"]},
+    ]
+    text = comparison(
+        {"good": run(lambda q, k: ["a", "b"], questions), "bad": run(lambda q, k: [], questions)}
+    )
+    assert "| Method | all | ar | fr | MRR |" in text
+    assert "| good | 100% | 100% | 100% | 0.75 |" in text
+    assert "| bad | 0% | 0% | 0% | 0.00 |" in text
