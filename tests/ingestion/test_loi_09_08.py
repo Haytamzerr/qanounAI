@@ -17,7 +17,7 @@ pytestmark = pytest.mark.skipif(not PDF.exists(), reason="Law 09-08 PDF not down
 @pytest.fixture(scope="module")
 def articles():
     sources = load_sources(settings.data_dir / "sources.csv")
-    [source] = [s for s in sources if s.law_number == "09-08"]
+    [source] = [s for s in sources if s.file == PDF.name]
     return {a.article_number: a for a in parse_source(source, settings.raw_dir)}
 
 

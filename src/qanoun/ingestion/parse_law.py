@@ -1,18 +1,20 @@
-"""Parse a French Moroccan law into articles, using the fonts of each line.
+"""Parse a Moroccan law (French or Arabic PDF) into articles, using the fonts of each line.
 
 The structure of a law is: chapters, optional sections, articles. Some articles have a short
-sub-title (e.g. "Droit d’accès"). Text before the first chapter (cover page, promulgating dahir)
-is not part of the law's articles and is skipped.
+sub-title (e.g. "Droit d’accès" / "الحق في الولوج"). Text before the first chapter (cover page,
+promulgating dahir) is not part of the law's articles and is skipped.
 
-Each source PDF family has its own fonts, so the sizes live in a `LayoutProfile`. Supporting a
-new family of PDFs means adding a profile, not rewriting the parser.
+Two things vary between documents, and each lives in its own table:
+- the fonts, which depend on how the PDF was produced: a `LayoutProfile`;
+- the heading words, which depend on the language: `LanguageRules`.
+Supporting a new family of PDFs means adding a profile, not rewriting the parser.
 """
 
 import re
 import unicodedata
 from dataclasses import dataclass, field
 
-from qanoun.ingestion.models import Article, Source
+from qanoun.ingestion.models import Article, Language, Source
 from qanoun.ingestion.pdf_lines import Line
 
 
@@ -20,8 +22,9 @@ from qanoun.ingestion.pdf_lines import Line
 class LayoutProfile:
     body_size: float
     chapter_size: float
+    section_size: float
+    subtitle_size: float  # article sub-titles
     article_size: float
-    heading_size: float  # sections and article sub-titles
     paragraph_gap: float  # vertical gap (points) that starts a new paragraph
     tolerance: float = 0.3
 
@@ -32,35 +35,77 @@ class LayoutProfile:
 
 
 LAYOUTS: dict[str, LayoutProfile] = {
-    # Adala consolidated texts exported from Word (checked on Law 09-08, Oct 2026)
+    # Adala texts exported from Word, measured on Law 09-08 (Oct 2026)
     "adala-word": LayoutProfile(
-        body_size=14.0, chapter_size=16.0, article_size=15.0, heading_size=14.0, paragraph_gap=20.0
+        body_size=14.0,
+        chapter_size=16.0,
+        section_size=14.0,
+        subtitle_size=14.0,
+        article_size=15.0,
+        paragraph_gap=20.0,
+    ),
+    "adala-word-ar": LayoutProfile(
+        body_size=16.0,
+        chapter_size=20.0,
+        section_size=19.0,
+        subtitle_size=18.0,
+        article_size=16.0,
+        paragraph_gap=21.0,
+    ),
+}
+
+
+@dataclass(frozen=True)
+class LanguageRules:
+    chapter: re.Pattern[str]
+    section: re.Pattern[str]
+    article: re.Pattern[str]  # group 1: number or ordinal word, group 2: optional suffix
+    first_article: frozenset[str]  # words meaning "first"
+    suffixes: dict[str, str]  # e.g. "مكرر" -> "bis"
+    sentence_end: re.Pattern[str]
+
+
+RULES: dict[Language, LanguageRules] = {
+    "fr": LanguageRules(
+        chapter=re.compile(r"^CHAPITRE\s", re.IGNORECASE),
+        section=re.compile(r"^Section\s", re.IGNORECASE),
+        article=re.compile(
+            r"^Article\s+(premier|\d+)(?:\s*(bis|ter|quater))?\s*[:.]?$", re.IGNORECASE
+        ),
+        first_article=frozenset({"premier"}),
+        suffixes={"bis": "bis", "ter": "ter", "quater": "quater"},
+        sentence_end=re.compile(r"[.;:!?»]$"),
+    ),
+    "ar": LanguageRules(
+        chapter=re.compile(r"^الباب\s"),
+        section=re.compile(r"^الفرع\s"),
+        article=re.compile(r"^المادة\s*(الأولى|\d+)(?:\s*(المكررة|مكررة|مكرر))?\s*[:.]?$"),
+        first_article=frozenset({"الأولى"}),
+        suffixes={"المكررة": "bis", "مكررة": "bis", "مكرر": "bis"},
+        sentence_end=re.compile(r"[.;:!?»؛]$"),
     ),
 }
 
 PAGE_NUMBER = re.compile(r"^-\s*\d+\s*-$")
-ARTICLE_HEADING = re.compile(
-    r"^Article\s+(premier|\d+)(?:\s*(bis|ter|quater))?\s*[:.]?$", re.IGNORECASE
-)
-SECTION_HEADING = re.compile(r"^Section\s", re.IGNORECASE)
-CHAPTER_HEADING = re.compile(r"^CHAPITRE\s", re.IGNORECASE)
-SENTENCE_END = re.compile(r"[.;:!?»]$")
 
 
 def normalize(text: str) -> str:
     """Unicode normalisation and whitespace clean-up, without changing the wording."""
     text = unicodedata.normalize("NFC", text)
     text = re.sub(r"\s+", " ", text).strip()
-    return re.sub(r"\s+([,.])", r"\1", text)
+    return re.sub(r"\s+([,.،])", r"\1", text)
 
 
-def article_number(heading: str) -> str | None:
-    """'Article premier' -> '1', 'Article 25 bis' -> '25 bis', anything else -> None."""
-    match = ARTICLE_HEADING.match(normalize(heading))
+def article_number(heading: str, language: Language = "fr") -> str | None:
+    """'Article premier' / 'المادة الأولى' -> '1', 'Article 25 bis' -> '25 bis', else None."""
+    rules = RULES[language]
+    match = rules.article.match(normalize(heading))
     if not match:
         return None
-    number = "1" if match.group(1).lower() == "premier" else match.group(1)
-    return f"{number} {match.group(2).lower()}" if match.group(2) else number
+    raw = match.group(1)
+    number = "1" if raw.lower() in rules.first_article else raw
+    suffix = match.group(2)
+    return f"{number} {rules.suffixes[suffix.lower()]}" if suffix else number
 
 
 def _close(a: float, b: float, tol: float) -> bool:
@@ -76,7 +121,7 @@ class _Draft:
     paragraphs: list[str] = field(default_factory=list)
     last_line: Line | None = None
 
-    def add_body(self, line: Line, profile: LayoutProfile) -> None:
+    def add_body(self, line: Line, profile: LayoutProfile, rules: LanguageRules) -> None:
         text = line.text.strip()
         prev = self.last_line
         if prev is None or not self.paragraphs:
@@ -85,7 +130,7 @@ class _Draft:
             if line.page == prev.page:
                 new_paragraph = line.y - prev.y > profile.paragraph_gap
             else:  # across a page break, trust punctuation
-                new_paragraph = bool(SENTENCE_END.search(self.paragraphs[-1]))
+                new_paragraph = bool(rules.sentence_end.search(self.paragraphs[-1]))
             if new_paragraph:
                 self.paragraphs.append(text)
             elif self.paragraphs[-1].endswith("-") and not self.paragraphs[-1].endswith(" -"):
@@ -96,7 +141,9 @@ class _Draft:
 
 
 def parse_lines(lines: list[Line], source: Source, profile: LayoutProfile) -> list[Article]:
-    """Build the list of articles from classified lines."""
+    """Build the list of articles from the lines of one PDF."""
+    rules = RULES[source.language]
+    tol = profile.tolerance
     chapter: str | None = None
     section: str | None = None
     last_heading: str | None = None  # "chapter" or "section" while a heading may still wrap
@@ -107,10 +154,9 @@ def parse_lines(lines: list[Line], source: Source, profile: LayoutProfile) -> li
         text = normalize(line.text)
         if not text or PAGE_NUMBER.match(text):
             continue
-        tol = profile.tolerance
 
         if line.bold and _close(line.size, profile.chapter_size, tol):
-            if last_heading == "chapter" and chapter and not CHAPTER_HEADING.match(text):
+            if last_heading == "chapter" and chapter and not rules.chapter.match(text):
                 chapter = f"{chapter} {text}"  # heading wrapped onto another line
             else:
                 chapter, section, current = text, None, None
@@ -121,7 +167,7 @@ def parse_lines(lines: list[Line], source: Source, profile: LayoutProfile) -> li
             continue  # cover page and promulgating dahir
 
         if line.bold and _close(line.size, profile.article_size, tol):
-            number = article_number(text)
+            number = article_number(text, source.language)
             if number is not None:
                 hierarchy = [chapter] + ([section] if section else [])
                 current = _Draft(number=number, page=line.page, hierarchy=hierarchy)
@@ -129,19 +175,21 @@ def parse_lines(lines: list[Line], source: Source, profile: LayoutProfile) -> li
                 last_heading = None
                 continue
 
-        if line.bold and _close(line.size, profile.heading_size, tol):
-            if SECTION_HEADING.match(text):
+        if line.bold and _close(line.size, profile.section_size, tol):
+            if rules.section.match(text):
                 section, current, last_heading = text, None, "section"
                 continue
             if last_heading == "section" and section:
                 section = f"{section} {text}"
                 continue
-            if current is not None and not current.paragraphs:
-                current.title = f"{current.title} {text}" if current.title else text
-                continue
+
+        is_subtitle = line.bold and _close(line.size, profile.subtitle_size, tol)
+        if is_subtitle and current is not None and not current.paragraphs:
+            current.title = f"{current.title} {text}" if current.title else text
+            continue
 
         if current is not None:
-            current.add_body(line, profile)
+            current.add_body(line, profile, rules)
             last_heading = None
 
     return [_to_article(d, source) for d in drafts]

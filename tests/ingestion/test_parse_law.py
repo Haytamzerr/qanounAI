@@ -2,7 +2,7 @@
 
 import pytest
 
-from qanoun.ingestion.parse_fr import LAYOUTS, article_number, normalize, parse_lines
+from qanoun.ingestion.parse_law import LAYOUTS, article_number, normalize, parse_lines
 from qanoun.ingestion.pdf_lines import Span, group_into_lines, read_lines
 
 PROFILE = LAYOUTS["adala-word"]
