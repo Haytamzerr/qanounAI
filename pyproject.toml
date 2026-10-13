@@ -36,4 +36,6 @@ select = ["E", "F", "I", "B", "UP", "SIM"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+# Tests on the real PDFs take about a minute: skipped by default, run with `pytest -m slow`
+addopts = "-q -m 'not slow'"
+markers = ["slow: parses the real law PDFs (run with `uv run pytest -m slow`)"]

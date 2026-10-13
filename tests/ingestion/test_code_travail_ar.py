@@ -12,7 +12,10 @@ from qanoun.ingestion.build import load_sources, parse_source
 from qanoun.ingestion.quality import check_articles
 
 PDF = settings.raw_dir / "code-travail-ar.pdf"
-pytestmark = pytest.mark.skipif(not PDF.exists(), reason="Labour Code PDF not downloaded")
+pytestmark = [
+    pytest.mark.slow,
+    pytest.mark.skipif(not PDF.exists(), reason="Labour Code PDF not downloaded"),
+]
 
 
 @pytest.fixture(scope="module")
