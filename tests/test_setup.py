@@ -23,3 +23,9 @@ def test_api_key_is_never_printed(monkeypatch):
     s = Settings()
     assert "sk-very-secret" not in repr(s)
     assert s.llm_api_key.get_secret_value() == "sk-very-secret"
+
+
+def test_default_language_can_be_changed(monkeypatch):
+    monkeypatch.setenv("QANOUN_DEFAULT_LANGUAGE", "ar")
+    s = Settings()
+    assert s.default_language == "ar"

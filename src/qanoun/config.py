@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # Data locations
     data_dir: Path = PROJECT_ROOT / "data"
 
+    # Language used when the question's language can't be detected
+    default_language: str = "fr"
+
     # LLM provider (filled in from Phase 3)
     llm_api_key: SecretStr | None = None
     llm_fast_model: str = ""
