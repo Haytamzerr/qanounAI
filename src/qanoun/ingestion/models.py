@@ -1,0 +1,53 @@
+"""Data models for the legal corpus.
+
+`Source` describes one downloaded file (one row of `data/sources.csv`).
+`Article` is the unit of everything downstream: we search, cite and verify articles.
+"""
+
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+Language = Literal["fr", "ar"]
+
+
+class Source(BaseModel):
+    """Where a legal text comes from, and how to parse it."""
+
+    file: str = Field(description="File name inside data/raw/")
+    law_number: str = Field(description='e.g. "09-08"')
+    law_title: str
+    language: Language
+    layout: str = Field(description="Name of the layout profile used to read the PDF")
+    source_url: str
+    bulletin_officiel: str | None = None
+    consolidated_as_of: str | None = None
+    downloaded_on: str
+    is_official_version: bool = Field(
+        description="True only for the Arabic text published in the Bulletin officiel"
+    )
+
+    @field_validator("bulletin_officiel", "consolidated_as_of", mode="before")
+    @classmethod
+    def empty_to_none(cls, value: str | None) -> str | None:
+        return value or None
+
+
+class Article(BaseModel):
+    """One article of one law, in one language, with everything needed to cite it."""
+
+    model_config = ConfigDict(frozen=True)
+
+    id: str = Field(description='Stable identifier, e.g. "loi-09-08-fr-art-5"')
+    law_number: str
+    law_title: str
+    language: Language
+    article_number: str = Field(description='A string, because some are "25 bis"')
+    title: str | None = Field(default=None, description='Optional heading, e.g. "Droit d’accès"')
+    hierarchy: list[str] = Field(description="Chapter, then section if any")
+    text: str = Field(min_length=20)
+    page_start: int = Field(ge=1)
+    source_url: str
+    bulletin_officiel: str | None = None
+    consolidated_as_of: str | None = None
+    is_official_version: bool

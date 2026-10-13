@@ -54,10 +54,20 @@ cp .env.example .env           # then fill in your own values
 uv run pytest                  # run the tests
 ```
 
+## Build the legal corpus
+
+```bash
+uv run python -m qanoun.ingestion.build
+```
+
+Reads the PDFs listed in `data/sources.csv` from `data/raw/`, writes one JSON record per article to
+`data/processed/articles.jsonl`, and fails if a quality check does not pass. See
+[docs/corpus.md](docs/corpus.md) for the sources and how the parser reads them.
+
 ## Roadmap
 
 - [x] Phase 0: project setup
-- [ ] Phase 1: legal corpus (article-level dataset)
+- [ ] Phase 1: legal corpus (article-level dataset): Law 09-08 in French done (67 articles)
 - [ ] Phase 2: indexing and hybrid retrieval
 - [ ] Phase 3: grounded answers with citations
 - [ ] Phase 4: evaluation framework
