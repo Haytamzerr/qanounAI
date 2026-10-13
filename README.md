@@ -51,7 +51,8 @@ cd qanounAI
 uv sync                        # create the environment and install dependencies
 uv run pre-commit install      # check code style on every commit
 cp .env.example .env           # then fill in your own values
-uv run pytest                  # run the tests
+uv run pytest                  # run the fast tests
+uv run pytest -m slow          # also run the tests on the real law PDFs (about 1 min)
 ```
 
 ## Build the legal corpus
@@ -63,6 +64,18 @@ uv run python -m qanoun.ingestion.build
 Reads the PDFs listed in `data/sources.csv` from `data/raw/`, writes one JSON record per article to
 `data/processed/articles.jsonl`, and fails if a quality check does not pass. See
 [docs/corpus.md](docs/corpus.md) for the sources and how the parser reads them.
+
+## Evaluate search
+
+```bash
+uv run python -m qanoun.retrieval.evaluate --method bm25
+```
+
+Scores a search method on 45 test questions (`eval/retrieval_set.jsonl`) in Arabic, French and Darija, and writes a report to `eval/reports/`.
+
+| Method | Hit@5 | Arabic | French | Darija (Arabic script) | Arabizi |
+| --- | --- | --- | --- | --- | --- |
+| BM25 keywords (baseline) | 47% | 78% | 11% | 25% | 11% |
 
 ## Roadmap
 

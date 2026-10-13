@@ -1,0 +1,45 @@
+{"id": "r01", "question": "ما هي مدة فترة الاختبار في عقد الشغل غير محدد المدة؟", "language": "ar", "style": "formal", "expected": ["loi-65-99-ar-art-13", "loi-65-99-ar-art-14"]}
+{"id": "r02", "question": "Quelle est la durée de la période d'essai pour un contrat à durée indéterminée ?", "language": "fr", "style": "formal", "expected": ["loi-65-99-ar-art-13", "loi-65-99-ar-art-14"]}
+{"id": "r03", "question": "chhal dyal lwe9t dyal la période d'essai f lkhedma?", "language": "darija-latn", "style": "everyday", "expected": ["loi-65-99-ar-art-13", "loi-65-99-ar-art-14"]}
+{"id": "r04", "question": "كم مدة أجل الإخطار عند إنهاء عقد الشغل؟", "language": "ar", "style": "formal", "expected": ["loi-65-99-ar-art-43"]}
+{"id": "r05", "question": "tredouni mn lkhedma bla préavis, wach 3ndi l7e9?", "language": "darija-latn", "style": "everyday", "expected": ["loi-65-99-ar-art-43", "loi-65-99-ar-art-52", "loi-65-99-ar-art-53"]}
+{"id": "r06", "question": "كيف يحسب التعويض عن الفصل؟", "language": "ar", "style": "formal", "expected": ["loi-65-99-ar-art-52", "loi-65-99-ar-art-53"]}
+{"id": "r07", "question": "شحال كيعطيوك ديال التعويض إلى طردوك من الخدمة؟", "language": "darija-ar", "style": "everyday", "expected": ["loi-65-99-ar-art-52", "loi-65-99-ar-art-53"]}
+{"id": "r08", "question": "Combien de jours de congé annuel payé a un salarié ?", "language": "fr", "style": "formal", "expected": ["loi-65-99-ar-art-231"]}
+{"id": "r09", "question": "chhal dyal lconji 3ndi f l3am?", "language": "darija-latn", "style": "everyday", "expected": ["loi-65-99-ar-art-231"]}
+{"id": "r10", "question": "ما هو السن الأدنى لتشغيل الأحداث؟", "language": "ar", "style": "formal", "expected": ["loi-65-99-ar-art-143"]}
+{"id": "r11", "question": "À partir de quel âge peut-on travailler au Maroc ?", "language": "fr", "style": "everyday", "expected": ["loi-65-99-ar-art-143"]}
+{"id": "r12", "question": "ما هي المدة القانونية للشغل في الأسبوع؟", "language": "ar", "style": "formal", "expected": ["loi-65-99-ar-art-184"]}
+{"id": "r13", "question": "شحال من ساعة خاصني نخدم فالسيمانة؟", "language": "darija-ar", "style": "everyday", "expected": ["loi-65-99-ar-art-184"]}
+{"id": "r14", "question": "ما هي مدة إجازة الولادة للمرأة الأجيرة؟", "language": "ar", "style": "formal", "expected": ["loi-65-99-ar-art-152"]}
+{"id": "r15", "question": "chhal dyal lconji dyal lwilada l lmra li khdama?", "language": "darija-latn", "style": "everyday", "expected": ["loi-65-99-ar-art-152"]}
+{"id": "r16", "question": "ما هي الأخطاء الجسيمة التي تبرر فصل الأجير؟", "language": "ar", "style": "formal", "expected": ["loi-65-99-ar-art-39"]}
+{"id": "r17", "question": "Quelles fautes graves justifient le licenciement d'un salarié ?", "language": "fr", "style": "formal", "expected": ["loi-65-99-ar-art-39"]}
+{"id": "r18", "question": "هل يجب على المشغل تسليم شهادة الشغل عند انتهاء العقد؟", "language": "ar", "style": "formal", "expected": ["loi-65-99-ar-art-72"]}
+{"id": "r19", "question": "lpatron ma bghach y3tini chahadat l3amal, chno ndir?", "language": "darija-latn", "style": "everyday", "expected": ["loi-65-99-ar-art-72"]}
+{"id": "r20", "question": "ما هو الحد الأدنى القانوني للأجر؟", "language": "ar", "style": "formal", "expected": ["loi-65-99-ar-art-356"]}
+{"id": "r21", "question": "ما هي مدة الراحة الأسبوعية للأجير؟", "language": "ar", "style": "formal", "expected": ["loi-65-99-ar-art-205", "loi-65-99-ar-art-206"]}
+{"id": "r22", "question": "ما هو سن الزواج القانوني؟", "language": "ar", "style": "formal", "expected": ["loi-70-03-ar-art-19", "loi-70-03-ar-art-20"]}
+{"id": "r23", "question": "واش البنت تقدر تزوج قبل 18 عام؟", "language": "darija-ar", "style": "everyday", "expected": ["loi-70-03-ar-art-19", "loi-70-03-ar-art-20"]}
+{"id": "r24", "question": "Quel est l'âge légal du mariage au Maroc ?", "language": "fr", "style": "formal", "expected": ["loi-70-03-ar-art-19", "loi-70-03-ar-art-20"]}
+{"id": "r25", "question": "متى يمنع التعدد؟", "language": "ar", "style": "formal", "expected": ["loi-70-03-ar-art-40", "loi-70-03-ar-art-41"]}
+{"id": "r26", "question": "wach rajel y9der yzewej mra tanya bla idn dyal mratu?", "language": "darija-latn", "style": "everyday", "expected": ["loi-70-03-ar-art-40", "loi-70-03-ar-art-41", "loi-70-03-ar-art-42"]}
+{"id": "r27", "question": "كيف يتم الطلاق بالاتفاق؟", "language": "ar", "style": "formal", "expected": ["loi-70-03-ar-art-114"]}
+{"id": "r28", "question": "Comment divorcer à l'amiable au Maroc ?", "language": "fr", "style": "everyday", "expected": ["loi-70-03-ar-art-114"]}
+{"id": "r29", "question": "ما هو الطلاق بالخلع؟", "language": "ar", "style": "formal", "expected": ["loi-70-03-ar-art-115", "loi-70-03-ar-art-116", "loi-70-03-ar-art-118"]}
+{"id": "r30", "question": "لمن تخول الحضانة بعد الطلاق؟", "language": "ar", "style": "formal", "expected": ["loi-70-03-ar-art-171"]}
+{"id": "r31", "question": "lwlad b9aw m3a chkoun mn ba3d tla9?", "language": "darija-latn", "style": "everyday", "expected": ["loi-70-03-ar-art-171", "loi-70-03-ar-art-166"]}
+{"id": "r32", "question": "ما الذي تشمله النفقة؟", "language": "ar", "style": "formal", "expected": ["loi-70-03-ar-art-189"]}
+{"id": "r33", "question": "شنو كتشمل النفقة ديال الدراري؟", "language": "darija-ar", "style": "everyday", "expected": ["loi-70-03-ar-art-189"]}
+{"id": "r34", "question": "ما هو سن الرشد القانوني؟", "language": "ar", "style": "formal", "expected": ["loi-70-03-ar-art-209"]}
+{"id": "r35", "question": "ما هي مسطرة التطليق للشقاق؟", "language": "ar", "style": "formal", "expected": ["loi-70-03-ar-art-94", "loi-70-03-ar-art-97"]}
+{"id": "r36", "question": "ما هو أجل التراجع في البيع عن بعد؟", "language": "ar", "style": "formal", "expected": ["loi-31-08-ar-art-36"]}
+{"id": "r37", "question": "chrit chi haja mn internet, chhal 3ndi bach nraj3ha?", "language": "darija-latn", "style": "everyday", "expected": ["loi-31-08-ar-art-36"]}
+{"id": "r38", "question": "Qu'est-ce qu'une clause abusive dans un contrat de consommation ?", "language": "fr", "style": "formal", "expected": ["loi-31-08-ar-art-15"]}
+{"id": "r39", "question": "ما هو الشرط التعسفي؟", "language": "ar", "style": "formal", "expected": ["loi-31-08-ar-art-15"]}
+{"id": "r40", "question": "هل يجب ترجمة العقد المحرر بلغة أجنبية إلى العربية؟", "language": "ar", "style": "formal", "expected": ["loi-31-08-ar-art-206"]}
+{"id": "r41", "question": "Ai-je le droit d'accéder à mes données personnelles détenues par une entreprise ?", "language": "fr", "style": "everyday", "expected": ["loi-09-08-ar-art-7", "loi-09-08-fr-art-7"]}
+{"id": "r42", "question": "هل يحق لي الولوج إلى معطياتي الشخصية؟", "language": "ar", "style": "formal", "expected": ["loi-09-08-ar-art-7", "loi-09-08-fr-art-7"]}
+{"id": "r43", "question": "wach chi charika t9der tsifti liya messages publicitaires bla idn dyali?", "language": "darija-latn", "style": "everyday", "expected": ["loi-09-08-ar-art-10", "loi-09-08-fr-art-10"]}
+{"id": "r44", "question": "Qu'est-ce qu'une donnée sensible ?", "language": "fr", "style": "formal", "expected": ["loi-09-08-ar-art-1", "loi-09-08-fr-art-1"]}
+{"id": "r45", "question": "ما هي اللجنة الوطنية لمراقبة حماية المعطيات الشخصية؟", "language": "ar", "style": "formal", "expected": ["loi-09-08-ar-art-27", "loi-09-08-fr-art-27"]}

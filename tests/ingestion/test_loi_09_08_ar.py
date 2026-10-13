@@ -11,7 +11,10 @@ from qanoun.ingestion.quality import check_articles
 
 PDF = settings.raw_dir / "loi-09-08-ar.pdf"
 FR_PDF = settings.raw_dir / "loi-09-08-fr.pdf"
-pytestmark = pytest.mark.skipif(not PDF.exists(), reason="Arabic Law 09-08 PDF not downloaded")
+pytestmark = [
+    pytest.mark.slow,
+    pytest.mark.skipif(not PDF.exists(), reason="Arabic Law 09-08 PDF not downloaded"),
+]
 
 
 def parse(file: str):

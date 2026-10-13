@@ -9,6 +9,8 @@ from qanoun.config import settings
 from qanoun.ingestion.build import load_sources, parse_source
 from qanoun.ingestion.quality import check_articles
 
+pytestmark = pytest.mark.slow
+
 
 def parse(file: str):
     if not (settings.raw_dir / file).exists():
