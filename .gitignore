@@ -218,3 +218,16 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- Qanoun AI ---
+# Data: raw PDFs and generated files stay local (rebuild them with the pipeline)
+data/raw/*
+data/interim/*
+data/processed/*
+!data/**/.gitkeep
+# Local services and caches
+qdrant_storage/
+.ruff_cache/
+# Frontend (from Phase 6)
+node_modules/
+.next/
