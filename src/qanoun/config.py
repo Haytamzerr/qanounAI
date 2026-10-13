@@ -27,8 +27,14 @@ class Settings(BaseSettings):
     llm_fast_model: str = ""
     llm_strong_model: str = ""
 
+    # Embedding model: multilingual (Arabic + French), runs locally on the CPU
+    embedding_model: str = "BAAI/bge-m3"
+    embedding_max_tokens: int = 1024  # longer articles are cut; only 2 of 1,329 exceed it
+    embedding_batch_size: int = 8  # small batches keep memory low on an 8 GB laptop
+
     # Services (filled in from Phase 2)
     qdrant_url: str = "http://localhost:6333"
+    qdrant_collection: str = "articles"
     redis_url: str = "redis://localhost:6379/0"
 
     @property
@@ -42,6 +48,10 @@ class Settings(BaseSettings):
     @property
     def processed_dir(self) -> Path:
         return self.data_dir / "processed"
+
+    @property
+    def embeddings_dir(self) -> Path:
+        return self.processed_dir / "embeddings"
 
 
 settings = Settings()
