@@ -1,0 +1,39 @@
+[project]
+name = "qanoun"
+version = "0.1.0"
+description = "Bilingual (French/Arabic/Darija) legal assistant for Moroccan law: RAG with verified article citations, AI agent, MCP server and evaluation suite."
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Haytamzerr" }]
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.8",
+    "pydantic-settings>=2.4",
+    "pymupdf>=1.24",
+    "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.6",
+    "pytest>=8.3",
+    "pre-commit>=3.8",
+    "ipykernel>=6.29",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.32,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+# E/F: errors, I: import order, B: likely bugs, UP: modern syntax, SIM: simplifications
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
