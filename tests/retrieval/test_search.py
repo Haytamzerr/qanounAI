@@ -11,9 +11,6 @@ from qanoun.retrieval.embeddings import HashingEmbedder
 from qanoun.retrieval.search import DenseSearcher, HybridSearcher, rrf
 from qanoun.retrieval.vector_store import ArticleStore, point_id
 
-# The in-memory Qdrant ignores payload indexes (only the server uses them) and says so
-pytestmark = pytest.mark.filterwarnings("ignore:Payload indexes have no effect")
-
 
 def make_article(law: str, language: str, number: int, text: str) -> Article:
     return Article(
@@ -98,3 +95,13 @@ def test_clear_message_when_qdrant_is_not_running():
 
     with pytest.raises(QdrantUnavailable, match="docker compose up -d qdrant"):
         ArticleStore.connect("http://127.0.0.1:9")  # nothing listens on port 9
+
+
+def test_folder_mode_keeps_the_data(tmp_path):
+    folder = str(tmp_path / "qdrant")
+    embedder = HashingEmbedder()
+    store = ArticleStore.connect(folder, "test")
+    store.recreate(embedder.dim)
+    store.upsert(ARTICLES, embedder.embed([search_text(a) for a in ARTICLES]))
+    store.client.close()  # only one process may open the folder at a time
+    assert ArticleStore.connect(folder, "test").count() == len(ARTICLES)
