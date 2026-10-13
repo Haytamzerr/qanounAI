@@ -64,14 +64,14 @@ def test_allah_ligature_is_repaired(read_as, expected):
 def test_reading_order_moves_space_and_period_to_their_real_place():
     # ".الخاصة " was extracted with the period first, although it sits at the far left
     raw = [(".", 429.7, 433.7), ("ا", 521.3, 524.6), ("ل", 517.9, 521.2), ("ة", 486.3, 492.3)]
-    assert "".join(c for c, _ in reading_order(raw)) == "الة."
+    assert "".join(c for c, *_ in reading_order(raw)) == "الة."
 
 
 def test_reading_order_keeps_numbers_left_to_right():
     # "رقم 09.08" drawn right to left: Arabic letters on the right, the number on the left
     word = [("ر", 100, 108), ("ق", 92, 100), ("م", 86, 92), (" ", 82, 86)]
     number = [(c, 40 + 7 * i, 47 + 7 * i) for i, c in enumerate("09.08")]
-    text = "".join(c for c, _ in reading_order(word + number))
+    text = "".join(c for c, *_ in reading_order(word + number))
     assert text == "رقم 09.08"
 
 

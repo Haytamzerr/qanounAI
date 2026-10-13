@@ -45,7 +45,7 @@ class Article(BaseModel):
     article_number: str = Field(description='A string, because some are "25 bis"')
     title: str | None = Field(default=None, description='Optional heading, e.g. "Droit d’accès"')
     hierarchy: list[str] = Field(description="Chapter, then section if any")
-    text: str = Field(min_length=20)
+    text: str = Field(description="May be empty only if parsing failed; quality checks flag it")
     page_start: int = Field(ge=1)
     source_url: str
     bulletin_officiel: str | None = None

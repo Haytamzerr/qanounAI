@@ -8,7 +8,9 @@ with its download URL; the PDFs themselves are not committed.
 | 09-08, protection of personal data | Arabic | 67 | [Adala](https://adala.justice.gov.ma/api/uploads/2024/09/05/%D8%B8%D9%87%D9%8A%D8%B1%20%D8%B4%D8%B1%D9%8A%D9%81%20%D8%B1%D9%82%D9%85%201.09.15%20%D8%A8%D8%AA%D9%86%D9%81%D9%8A%D8%B0%20%D8%A7%D9%84%D9%82%D8%A7%D9%86%D9%88%D9%86%20%D8%B1%D9%82%D9%85%2009.08%20%D8%A7%D9%84%D9%85%D8%AA%D8%B9%D9%84%D9%82%20%D8%A8%D8%AD%D9%85%D8%A7%D9%8A%D8%A9%20%D8%A7%D9%84%D8%A3%D8%B4%D8%AE%D8%A7%D8%B5%20%D8%A7%D9%84.._-1725534598486.pdf) | n° 5711 of 23 February 2009 (Arabic edition, p. 552) | not stated in the PDF | **Yes** |
 | 09-08, protection of personal data | French | 67 | [Adala](https://adala.justice.gov.ma/api/uploads/2024/04/30/Protection%20des%20personnes%20physiques-1714464099884.pdf) | n° 5714 of 5 March 2009 | not stated in the PDF | No (French is a translation; the Arabic BO text is official) |
 
-The French and Arabic versions have the same 67 articles, so `loi-09-08-fr-art-N` and `loi-09-08-ar-art-N` are translations of each other (checked by a test).
+| 65-99, Labour Code (مدونة الشغل) | Arabic | 589 | [Adala](https://adala.justice.gov.ma/api/uploads/2026/07/28/%D8%B8%D9%87%D9%8A%D8%B1%20%D8%B4%D8%B1%D9%8A%D9%81%20%D8%B1%D9%82%D9%85%201.03.194%20%D8%A8%D8%AA%D9%86%D9%81%D9%8A%D8%B0%20%D8%A7%D9%84%D9%82%D8%A7%D9%86%D9%88%D9%86%20%D8%B1%D9%82%D9%85%2065.99%20%D8%A7%D9%84%D9%85%D8%AA%D8%B9%D9%84%D9%82%20%D8%A8%D9%85%D8%AF%D9%88%D9%86%D8%A9%20%D8%A7%D9%84%D8%B4%D8%BA%D9%84%20-1785240385771.pdf) | n° 5167 of 8 December 2003; last amendment BO n° 7526 of 16 July 2026 (Law 032.26) | **16 July 2026** | **Yes** |
+
+For Law 09-08, the French and Arabic versions have the same 67 articles, so `loi-09-08-fr-art-N` and `loi-09-08-ar-art-N` are translations of each other (checked by a test).
 
 ## How to rebuild it
 
@@ -26,6 +28,8 @@ Kept as they are, because the assistant must quote the law exactly.
 | 09-08 (fr) | Chapter VI heading | "L’USAGEDE" is missing a space in the PDF |
 | 09-08 (fr) | Whole file | No consolidation date; amendments after 2009 may be missing |
 | 09-08 (ar) | Whole file | No consolidation date |
+| 65-99 (ar) | Article 517 | The heading "المادة 517" is printed in the footnote font (12.8 pt). It is rescued automatically (see below) and reported by the build |
+| 65-99 (ar) | Chapter headings | Drawn twice with a 0.8 pt offset (shadow effect); the copy is removed |
 | 09-08 (ar) | Article 5 and a few lists | Bullets drawn with the Symbol font are dropped with the small text; the list items themselves are kept |
 
 ## Arabic PDFs: two extraction traps and how they are repaired
@@ -34,6 +38,10 @@ Kept as they are, because the assistant must quote the law exactly.
 | --- | --- | --- |
 | Ligatures read backwards | "الأولى" read as "األولى", "ألا" as "أال", "لله" as "هلل" (707 cases in Law 09-08) | In a ligature every letter but the last has zero width: a zero-width alef before a lam, or a zero-width run starting with ه, is reversed (`fix_ligatures`) |
 | Spaces and punctuation out of place | ".الخاصة" instead of "الخاصة.", "المادةالأولى" with no space | Characters are re-ordered from their positions on the page, right to left, keeping numbers like "09.08" left to right (`reading_order`) |
+
+| Shadowed headings | "البابالباب الأول: لأول: فترة الاترة الا ختبار": the heading is drawn twice, 0.8 pt apart | A glyph identical in character, font and width, within 1.5 pt of one already kept in another span, is dropped (`_ShadowFilter`) |
+| Fake spaces | "الم اد ة": "spaces" whose box starts inside a letter | Spaces that start inside a letter are removed (`drop_fake_spaces`) |
+| Pieces cut anywhere | Words and headings split across spans, the two shadow copies split differently | Each visual line is rebuilt from all of its characters at once, whatever the spans (`group_into_lines`) |
 
 A blind "swap the letters back" rule would be wrong: "ال" is also the ordinary definite article, and "الإلكتروني" legitimately contains "لإل". The width test only touches real ligatures.
 
@@ -48,5 +56,11 @@ A blind "swap the letters back" rule would be wrong: "ال" is also the ordinary
 | 14 | Text of the law | Article text; paragraphs rebuilt from vertical spacing |
 | 12 to 13.6 | Footnotes, often quoting other texts | Dropped |
 | 9 | Footnote markers (digits) and ordinals (letters) | Markers dropped, ordinals kept |
+
+Arabic Labour Code (`adala-code-ar` profile): books (الكتاب) 21.8 bold, titles (القسم) 21.0 bold, chapters (الباب) 20.3 bold, sections (الفرع) 18.8 bold, sub-sections (القسم الفرعي) 18.0 bold, articles 15.8 bold, text 15.8, footnotes 12.8.
+
+## Mis-formatted article headings
+
+A small line that is exactly an article heading (no colon) and is directly followed by body text is promoted back to an article heading (`rescue_misformatted_headings`). Footnotes quoting other texts end with a colon, or are followed by small text or the page number, so they are never promoted. Every rescue is printed by the build as a `note:` line.
 
 Arabic files (`adala-word-ar` profile): chapters (الباب) 20 bold, sections (الفرع) 19 bold, article sub-titles 18 bold, articles (المادة الأولى، المادة 2…) 16 bold, text 16, footnotes 13, markers 10.6.
