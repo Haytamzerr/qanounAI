@@ -67,7 +67,7 @@ Reads the PDFs listed in `data/sources.csv` from `data/raw/`, writes one JSON re
 ## Roadmap
 
 - [x] Phase 0: project setup
-- [ ] Phase 1: legal corpus (article-level dataset): Law 09-08 (Arabic + French, 67 articles each) and the Labour Code (Arabic, 589 articles, consolidated July 2026)
+- [x] Phase 1: legal corpus: 1,329 articles from 5 texts: personal data (09-08, Arabic + French), Labour Code (65.99, July 2026), Family Code (70.03), Consumer Protection (31.08)
 - [ ] Phase 2: indexing and hybrid retrieval
 - [ ] Phase 3: grounded answers with citations
 - [ ] Phase 4: evaluation framework

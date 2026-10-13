@@ -92,9 +92,9 @@ def test_shadow_copy_is_dropped_but_ligature_alef_is_kept():
     assert shadows.check_and_keep("ب", 366.4, 371.9, 365.6, font, span=2), "copy 0.8 pt away"
     assert not shadows.check_and_keep("ب", 366.4, 371.9, 365.6, font, span=1), "same span"
     assert not shadows.check_and_keep("ا", 293.6, 297.1, 300.0, font, span=3)
-    assert not shadows.check_and_keep("ا", 293.6, 293.6, 300.0, font, span=4), (
-        "a zero-width ligature alef is not the shadow of a full alef at the same spot"
-    )
+    assert not shadows.check_and_keep(
+        "ا", 293.6, 293.6, 300.0, font, span=4
+    ), "a zero-width ligature alef is not the shadow of a full alef at the same spot"
 
 
 def test_fake_spaces_on_top_of_letters_are_removed():
@@ -125,3 +125,26 @@ def test_space_kept_before_a_word_starting_with_a_swapped_ligature():
     # "أ) لاحترام": the swapped zero-width alef belongs with the lam after it
     chars = [("أ", 200, 204), (")", 196, 199.5), ("ا", 190, 190), ("ل", 182, 190), ("ح", 176, 182)]
     assert _arabic_line(chars) == "أ) لاح"
+
+
+FAMILY = LAYOUTS["adala-family-ar"]
+
+
+def test_chapter_and_section_sharing_a_font_are_told_apart_by_their_word():
+    lines = [
+        line("باب تمهيدي: أحكام عامة", 18.0, True, y=40),  # preliminary chapter, without "ال"
+        line("المادة 1", 16.0, True, y=60),
+        line(BODY, 16.0, y=90),
+        line("الكتاب الأول: الزواج", 22.0, True, y=120),
+        line("الباب الأول: الزواج الصحيح وآثاره", 18.0, True, y=150),
+        line("الفرع الأول: الزوجان", 18.0, True, y=180),  # same font as the chapter
+        line("المادة 51", 16.0, True, y=210),
+        line(BODY, 16.0, y=240),
+    ]
+    first, second = parse_lines(lines, SOURCE, FAMILY)
+    assert first.hierarchy == ["باب تمهيدي: أحكام عامة"]
+    assert second.hierarchy == [
+        "الكتاب الأول: الزواج",
+        "الباب الأول: الزواج الصحيح وآثاره",
+        "الفرع الأول: الزوجان",
+    ]

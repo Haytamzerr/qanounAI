@@ -63,6 +63,20 @@ LAYOUTS: dict[str, LayoutProfile] = {
             ("subsection", 18.0),
         ),
     ),
+    # Family Code in Arabic (July 2021 consolidation): chapters and sections share a font
+    "adala-family-ar": LayoutProfile(
+        body_size=16.0,
+        article_size=16.0,
+        paragraph_gap=31.0,
+        levels=(("book", 22.0), ("title", 20.0), ("chapter", 18.0), ("section", 18.0)),
+    ),
+    # Consumer Protection law in Arabic (December 2020 consolidation)
+    "adala-consumer-ar": LayoutProfile(
+        body_size=16.1,
+        article_size=16.1,
+        paragraph_gap=21.5,
+        levels=(("title", 22.1), ("chapter", 21.1), ("section", 19.9)),
+    ),
 }
 
 
@@ -95,7 +109,7 @@ RULES: dict[Language, LanguageRules] = {
         levels={
             "book": re.compile(r"^الكتاب\s"),
             "title": re.compile(r"^القسم\s(?!الفرعي)"),
-            "chapter": re.compile(r"^الباب\s"),
+            "chapter": re.compile(r"^(?:ال)?باب\s"),  # also "باب تمهيدي" (preliminary)
             "section": re.compile(r"^الفرع\s"),
             "subsection": re.compile(r"^القسم الفرعي\s"),
         },
@@ -196,13 +210,15 @@ class _Draft:
         self.last_line = line
 
 
-def _heading_level(line: Line, profile: LayoutProfile) -> int | None:
+def _heading_candidates(line: Line, profile: LayoutProfile) -> list[int]:
+    """Heading levels whose font matches the line. Several levels can share a font."""
     if not line.bold:
-        return None
-    for index, (_, size) in enumerate(profile.levels):
-        if _close(line.size, size, profile.tolerance):
-            return index
-    return None
+        return []
+    return [
+        index
+        for index, (_, size) in enumerate(profile.levels)
+        if _close(line.size, size, profile.tolerance)
+    ]
 
 
 def parse_lines(lines: list[Line], source: Source, profile: LayoutProfile) -> list[Article]:
@@ -220,16 +236,17 @@ def parse_lines(lines: list[Line], source: Source, profile: LayoutProfile) -> li
         if not text or PAGE_NUMBER.match(text):
             continue
 
-        level = _heading_level(line, profile)
-        if level is not None:
-            name = profile.levels[level][0]
-            if rules.levels[name].match(text):
-                headings = [h for h in headings if h[0] < level] + [(level, text)]
-                started, current, last_heading = True, None, level
-                continue
-            if last_heading == level and headings and headings[-1][0] == level:
-                headings[-1] = (level, f"{headings[-1][1]} {text}")  # heading wrapped
-                continue
+        candidates = _heading_candidates(line, profile)
+        level = next(
+            (i for i in candidates if rules.levels[profile.levels[i][0]].match(text)), None
+        )
+        if level is not None:  # the font and the heading word agree
+            headings = [h for h in headings if h[0] < level] + [(level, text)]
+            started, current, last_heading = True, None, level
+            continue
+        if last_heading in candidates and headings and headings[-1][0] == last_heading:
+            headings[-1] = (last_heading, f"{headings[-1][1]} {text}")  # heading wrapped
+            continue
 
         if not started:
             continue  # cover page, promulgating dahir, preamble
