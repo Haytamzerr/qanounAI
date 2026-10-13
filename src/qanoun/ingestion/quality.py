@@ -21,7 +21,10 @@ def _base_number(number: str) -> int | None:
     return int(match.group()) if match else None
 
 
-def check_articles(articles: list[Article], min_chars: int = 40) -> list[str]:
+SENTENCE_END = re.compile(r"[.;:!?»؛؟]$")
+
+
+def check_articles(articles: list[Article], min_chars: int = 40, tiny: int = 15) -> list[str]:
     """Return a list of human-readable problems. An empty list means all checks passed."""
     problems: list[str] = []
     if not articles:
@@ -32,7 +35,10 @@ def check_articles(articles: list[Article], min_chars: int = 40) -> list[str]:
         if a.id in seen:
             problems.append(f"duplicate article id {a.id}")
         seen.add(a.id)
-        if len(a.text) < min_chars:
+        # Legal one-liners exist ("سن الرشد القانوني 18 سنة شمسية كاملة."): a short article is
+        # suspicious only if it is tiny, or does not end like a complete sentence.
+        complete = bool(SENTENCE_END.search(a.text.strip()))
+        if len(a.text) < tiny or (len(a.text) < min_chars and not complete):
             problems.append(
                 f"article {a.article_number} is suspiciously short ({len(a.text)} chars)"
             )

@@ -8,9 +8,17 @@ repos:
       - id: check-added-large-files
         args: ["--maxkb=1024"]
       - id: detect-private-key
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.9
+  # ruff runs from the project's own environment (version locked in uv.lock), so pre-commit,
+  # your editor and CI always format the same way.
+  - repo: local
     hooks:
       - id: ruff
-        args: ["--fix"]
+        name: ruff (lint)
+        entry: uv run ruff check --fix
+        language: system
+        types: [python]
       - id: ruff-format
+        name: ruff (format)
+        entry: uv run ruff format
+        language: system
+        types: [python]

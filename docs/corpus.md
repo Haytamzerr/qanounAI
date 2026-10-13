@@ -10,6 +10,13 @@ with its download URL; the PDFs themselves are not committed.
 
 | 65-99, Labour Code (مدونة الشغل) | Arabic | 589 | [Adala](https://adala.justice.gov.ma/api/uploads/2026/07/28/%D8%B8%D9%87%D9%8A%D8%B1%20%D8%B4%D8%B1%D9%8A%D9%81%20%D8%B1%D9%82%D9%85%201.03.194%20%D8%A8%D8%AA%D9%86%D9%81%D9%8A%D8%B0%20%D8%A7%D9%84%D9%82%D8%A7%D9%86%D9%88%D9%86%20%D8%B1%D9%82%D9%85%2065.99%20%D8%A7%D9%84%D9%85%D8%AA%D8%B9%D9%84%D9%82%20%D8%A8%D9%85%D8%AF%D9%88%D9%86%D8%A9%20%D8%A7%D9%84%D8%B4%D8%BA%D9%84%20-1785240385771.pdf) | n° 5167 of 8 December 2003; last amendment BO n° 7526 of 16 July 2026 (Law 032.26) | **16 July 2026** | **Yes** |
 
+| 70-03, Family Code (مدونة الأسرة) | Arabic | 400 | [Adala](https://adala.justice.gov.ma/api/uploads/2024/07/22/%D9%85%D8%AF%D9%88%D9%86%D8%A9%20%D8%A7%D9%84%D8%A3%D8%B3%D8%B1%D8%A9-1721646687560.pdf) | n° 5184 of 5 February 2004; last amendment Law 65.21, BO n° 7008 of 29 July 2021 | 29 July 2021 | **Yes** |
+| 31-08, Consumer Protection (حماية المستهلك) | Arabic | 206 | [Adala](https://adala.justice.gov.ma/api/uploads/2024/10/29/%D8%B8%D9%87%D9%8A%D8%B1%20%D8%B4%D8%B1%D9%8A%D9%81%20%D8%B1%D9%82%D9%85%20%20%D8%A8%D8%AA%D8%AD%D8%AF%D9%8A%D8%AF%20%D8%AA%D8%AF%D8%A7%D8%A8%D9%8A%D8%B1%20%D9%84%D8%AD%D9%85%D8%A7%D9%8A%D8%A9%20%D8%A7%D9%84%D9%85%D8%B3%D8%AA%D9%87%D9%84%D9%83-1730189983480.pdf) | n° 5932 of 7 April 2011; last amendment Law 78.20, BO n° 6945 of 21 December 2020 | 21 December 2020 | **Yes** |
+
+**Total: 1,329 articles in 5 texts.**
+
+The Family Code is under reform discussions; check before any demo whether a newer consolidated version has been published. The Labour Code has no up-to-date French text (Adala's French version dates from October 2011), so French questions are answered from the official Arabic text.
+
 For Law 09-08, the French and Arabic versions have the same 67 articles, so `loi-09-08-fr-art-N` and `loi-09-08-ar-art-N` are translations of each other (checked by a test).
 
 ## How to rebuild it
@@ -58,6 +65,9 @@ A blind "swap the letters back" rule would be wrong: "ال" is also the ordinary
 | 9 | Footnote markers (digits) and ordinals (letters) | Markers dropped, ordinals kept |
 
 Arabic Labour Code (`adala-code-ar` profile): books (الكتاب) 21.8 bold, titles (القسم) 21.0 bold, chapters (الباب) 20.3 bold, sections (الفرع) 18.8 bold, sub-sections (القسم الفرعي) 18.0 bold, articles 15.8 bold, text 15.8, footnotes 12.8.
+
+Family Code (`adala-family-ar`): books 22 bold, titles 20 bold, chapters **and** sections both 18 bold (told apart by their first word), articles 16 bold, text 16, paragraphs 34 pt apart. The first articles sit under "باب تمهيدي" (preliminary chapter, without "ال").
+Consumer Protection (`adala-consumer-ar`): titles 22.1 bold, chapters 21.1 bold, sections 19.9 bold ("الفرع 1"), articles 16.1 bold, text 16.1; page numbers are bold.
 
 ## Mis-formatted article headings
 

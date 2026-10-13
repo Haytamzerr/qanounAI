@@ -32,9 +32,18 @@ def test_gap_in_numbering_is_reported():
 
 
 def test_duplicate_and_short_articles_are_reported():
-    problems = check_articles([make("1"), make("1"), make("2", "Texte trop court ici.")])
+    problems = check_articles([make("1"), make("1"), make("2", "Texte coupé au milieu d")])
     assert any("duplicate" in p for p in problems)
     assert any("suspiciously short" in p for p in problems)
+
+
+def test_short_but_complete_article_is_accepted():
+    # Real one-line articles, e.g. Family Code article 209
+    assert check_articles([make("1", "سن الرشد القانوني 18 سنة شمسية كاملة.")]) == []
+
+
+def test_tiny_article_is_reported_even_if_complete():
+    assert any("suspiciously short" in p for p in check_articles([make("1", "Abrogé.")]))
 
 
 def test_footnote_leak_is_reported():
