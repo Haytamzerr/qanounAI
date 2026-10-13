@@ -92,9 +92,9 @@ def test_shadow_copy_is_dropped_but_ligature_alef_is_kept():
     assert shadows.check_and_keep("ب", 366.4, 371.9, 365.6, font, span=2), "copy 0.8 pt away"
     assert not shadows.check_and_keep("ب", 366.4, 371.9, 365.6, font, span=1), "same span"
     assert not shadows.check_and_keep("ا", 293.6, 297.1, 300.0, font, span=3)
-    assert not shadows.check_and_keep(
-        "ا", 293.6, 293.6, 300.0, font, span=4
-    ), "a zero-width ligature alef is not the shadow of a full alef at the same spot"
+    assert not shadows.check_and_keep("ا", 293.6, 293.6, 300.0, font, span=4), (
+        "a zero-width ligature alef is not the shadow of a full alef at the same spot"
+    )
 
 
 def test_fake_spaces_on_top_of_letters_are_removed():
