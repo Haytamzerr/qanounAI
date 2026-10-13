@@ -16,8 +16,8 @@ from pathlib import Path
 
 from qanoun.config import settings
 from qanoun.ingestion.models import Article, Source
-from qanoun.ingestion.parse_law import LAYOUTS, parse_lines
-from qanoun.ingestion.pdf_lines import read_lines
+from qanoun.ingestion.parse_law import LAYOUTS, parse_lines, rescue_misformatted_headings
+from qanoun.ingestion.pdf_lines import group_into_lines, read_spans
 from qanoun.ingestion.quality import check_articles
 
 SOURCES_CSV = "sources.csv"
@@ -28,9 +28,19 @@ def load_sources(path: Path) -> list[Source]:
         return [Source.model_validate(row) for row in csv.DictReader(f)]
 
 
-def parse_source(source: Source, raw_dir: Path) -> list[Article]:
+def parse_source(source: Source, raw_dir: Path, notes: list[str] | None = None) -> list[Article]:
+    """Parse one PDF into articles. Repairs worth knowing about are appended to `notes`."""
     profile = LAYOUTS[source.layout]
-    lines = read_lines(raw_dir / source.file, min_size=profile.min_size)
+    spans = read_spans(raw_dir / source.file)
+    lines = group_into_lines(spans, min_size=profile.min_size)
+    rescued = rescue_misformatted_headings(
+        group_into_lines(spans, min_size=0.0), profile, source.language
+    )
+    if notes is not None:
+        notes += [
+            f"rescued mis-formatted heading on p. {r.page}: {r.text.strip()}" for r in rescued
+        ]
+    lines = sorted(lines + rescued, key=lambda line: (line.page, line.y))
     return parse_lines(lines, source, profile)
 
 
@@ -67,10 +77,13 @@ def main(argv: list[str] | None = None) -> int:
     for source in sources:
         if source in missing:
             continue
-        articles = parse_source(source, settings.raw_dir)
+        notes: list[str] = []
+        articles = parse_source(source, settings.raw_dir, notes)
         problems = check_articles(articles)
         status = "OK  " if not problems else "FAIL"
         print(f"{status} {source.file}: {len(articles)} articles")
+        for note in notes:
+            print(f"     note: {note}")
         for p in problems:
             print(f"     - {p}")
         failed |= bool(problems)
