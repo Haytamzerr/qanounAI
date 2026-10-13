@@ -9,7 +9,9 @@ result carries everything needed to show and cite the article.
 """
 
 import uuid
+import warnings
 from collections.abc import Sequence
+from pathlib import Path
 
 import numpy as np
 from qdrant_client import QdrantClient, models
@@ -34,8 +36,16 @@ class ArticleStore:
 
     @classmethod
     def connect(cls, url: str | None = None, collection: str | None = None) -> "ArticleStore":
-        """Connect to the Qdrant server, with a clear message if it isn't running."""
+        """Connect to Qdrant, with a clear message if it isn't running.
+
+        An http(s) URL means the Qdrant server (Docker). Anything else is a folder: Qdrant then
+        runs inside this Python process and saves to that folder, with no server at all. Handy
+        in a cloud notebook or on a PC short of memory; fine for a few thousand articles.
+        """
         url = url or settings.qdrant_url
+        if not url.startswith(("http://", "https://")):
+            Path(url).mkdir(parents=True, exist_ok=True)
+            return cls(QdrantClient(path=url), collection)
         client = QdrantClient(url=url, timeout=30)
         try:
             client.get_collections()
@@ -54,10 +64,12 @@ class ArticleStore:
             self.collection,
             vectors_config=models.VectorParams(size=dim, distance=models.Distance.COSINE),
         )
-        for field in ("law_number", "language"):  # fields we filter on get an index
-            self.client.create_payload_index(
-                self.collection, field, field_schema=models.PayloadSchemaType.KEYWORD
-            )
+        with warnings.catch_warnings():  # the folder mode ignores indexes, and warns about it
+            warnings.simplefilter("ignore", UserWarning)
+            for field in ("law_number", "language"):  # fields we filter on get an index
+                self.client.create_payload_index(
+                    self.collection, field, field_schema=models.PayloadSchemaType.KEYWORD
+                )
 
     def upsert(self, articles: Sequence[Article], vectors: np.ndarray, batch: int = 128) -> None:
         if len(articles) != len(vectors):

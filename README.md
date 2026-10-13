@@ -78,6 +78,9 @@ The first run downloads the BGE-M3 model (about 2.3 GB) and embeds every article
 takes several minutes. The vectors are saved in `data/processed/embeddings/` and reused until an
 article or the model changes. The Qdrant dashboard is at http://localhost:6333/dashboard.
 
+Without Docker (in a cloud notebook, or on a PC short of memory), set `QANOUN_QDRANT_URL=data/qdrant`:
+Qdrant then runs inside Python and saves to that folder.
+
 ## Evaluate search
 
 ```bash

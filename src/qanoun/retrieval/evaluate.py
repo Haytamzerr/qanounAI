@@ -193,6 +193,8 @@ def main(argv: list[str] | None = None) -> int:
         out.write_text(text, encoding="utf-8")
         print(text)
         print(f"comparison written to {out}")
+    if _dense.cache_info().currsize:  # release Qdrant cleanly (needed in folder mode)
+        _dense().store.client.close()
     return 0
 
 

@@ -104,6 +104,7 @@ def main(argv: list[str] | None = None) -> int:
         store.recreate(embedder.dim)
         store.upsert(articles, vectors)
         print(f"Qdrant collection '{store.collection}': {store.count()} articles")
+        store.client.close()
     return 0
 
 
