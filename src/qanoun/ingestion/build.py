@@ -16,7 +16,7 @@ from pathlib import Path
 
 from qanoun.config import settings
 from qanoun.ingestion.models import Article, Source
-from qanoun.ingestion.parse_fr import LAYOUTS, parse_lines
+from qanoun.ingestion.parse_law import LAYOUTS, parse_lines
 from qanoun.ingestion.pdf_lines import read_lines
 from qanoun.ingestion.quality import check_articles
 
@@ -29,8 +29,6 @@ def load_sources(path: Path) -> list[Source]:
 
 
 def parse_source(source: Source, raw_dir: Path) -> list[Article]:
-    if source.language != "fr":
-        raise NotImplementedError("Arabic parsing comes later in Phase 1")
     profile = LAYOUTS[source.layout]
     lines = read_lines(raw_dir / source.file, min_size=profile.min_size)
     return parse_lines(lines, source, profile)

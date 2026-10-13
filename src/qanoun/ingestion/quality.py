@@ -11,6 +11,8 @@ from qanoun.ingestion.models import Article
 FOOTNOTE_LEAKS = [
     re.compile(r"Bulletin Officiel n°", re.IGNORECASE),  # footnotes cite the BO; articles rarely do
     re.compile(r"^\s*Article \d+\s*:", re.MULTILINE),  # quoted articles of other texts
+    re.compile(r"الجريدة الرسمية عدد"),  # Arabic footnotes cite the BO issue number
+    re.compile(r"^\s*المادة\s*\d+\s*:", re.MULTILINE),
 ]
 
 
