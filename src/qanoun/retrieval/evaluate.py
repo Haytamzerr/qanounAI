@@ -29,7 +29,7 @@ from functools import cache
 from pathlib import Path
 from statistics import mean
 
-from qanoun.config import PROJECT_ROOT
+from qanoun.config import PROJECT_ROOT, settings
 from qanoun.retrieval.bm25 import BM25Index
 from qanoun.retrieval.corpus import load_articles, search_text
 from qanoun.retrieval.metrics import hit_at_k, recall_at_k, reciprocal_rank
@@ -258,6 +258,9 @@ def main(argv: list[str] | None = None) -> int:
     today = date.today().isoformat()
     questions = load_questions(args.questions)
     label = "" if args.questions is None else f"{args.questions.stem}-"
+    if settings.corpus != "core":  # e.g. "full-": the same questions among all Adala laws
+        label = f"{settings.corpus}-{label}"
+        print(f"corpus: {settings.corpus} ({len(load_articles())} articles)\n")
     results_by_method = {}
     for method in args.method:
         results = results_by_method[method] = run(SEARCHERS[method](), questions)
