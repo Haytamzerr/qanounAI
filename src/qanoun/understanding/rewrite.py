@@ -7,10 +7,14 @@ Converting Arabizi to Arabic script is available (`use_arabizi=True`) but off by
 measured with the real model, it lowered Arabizi scores (development 78% → 33%, held-out
 50% → 42%), because its approximate spellings ("الهق" for الحق) add noise. See decision 40.
 
-Keeping the original question means nothing is lost when the conversion or the lexicon is wrong:
-the search model sees all three and weighs them.
+With a `rewriter` (see llm_rewrite.py), a Darija question is also restated in formal Arabic by
+the language model, and that line is added too.
+
+Keeping the original question means nothing is lost when the conversion, the lexicon or the
+rewrite is wrong: the search model sees all of them and weighs them.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from qanoun.understanding.arabizi import transliterate
@@ -25,6 +29,7 @@ class Understanding:
     query: str  # what the search engines receive
     arabic_script: str | None = None  # Arabizi converted to Arabic letters
     terms: list[Entry] = field(default_factory=list)
+    rewritten: str | None = None  # the language model's formal-Arabic version
 
     @property
     def legal_terms(self) -> list[str]:
@@ -32,7 +37,11 @@ class Understanding:
 
 
 def understand(
-    question: str, *, use_arabizi: bool = False, use_lexicon: bool = True
+    question: str,
+    *,
+    use_arabizi: bool = False,
+    use_lexicon: bool = True,
+    rewriter: Callable[[str], str | None] | None = None,
 ) -> Understanding:
     language = detect_language(question)
     result = Understanding(question, language, question)
@@ -45,5 +54,8 @@ def understand(
     if use_lexicon:
         result.terms = find_terms(question)
         parts.append(" ".join(result.legal_terms))
+    if rewriter is not None:
+        result.rewritten = rewriter(question)
+        parts.append(result.rewritten or "")
     result.query = "\n".join(p for p in parts if p)
     return result

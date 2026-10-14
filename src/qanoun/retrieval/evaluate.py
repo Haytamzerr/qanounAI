@@ -7,7 +7,9 @@ Usage:
 `dense` and `hybrid` need Qdrant running and loaded (see qanoun.retrieval.index).
 Methods ending in `+darija` first pass the question through qanoun.understanding with its default
 settings (language detection + Darija lexicon). `+arabizi`, `+lexicon` and `+both` switch the two
-parts on separately, to measure what each one brings (an ablation study).
+parts on separately, to measure what each one brings (an ablation study). `+rewrite` adds the
+language model's formal-Arabic restatement of Darija questions, `+llm` uses it without the lexicon;
+both need a Gemini key.
 
     uv run python -m qanoun.retrieval.evaluate --method dense dense+darija \\
         --questions eval/darija_holdout.jsonl
@@ -94,13 +96,25 @@ def hybrid_searcher() -> Searcher:
     return HybridSearcher(_bm25(), _dense())
 
 
+@cache
+def _rewriter():
+    """One rewriter for all variants: each question is restated once, then reused."""
+    from qanoun.generation.llm import STATE_PATH, GeminiLLM
+    from qanoun.understanding.llm_rewrite import LLMRewriter
+
+    return LLMRewriter(GeminiLLM(state_path=STATE_PATH))
+
+
 def with_understanding(base: Callable[[], Searcher], **options) -> Callable[[], Searcher]:
     """The same search, run on the rewritten question instead of the raw one."""
     from qanoun.understanding.rewrite import understand
 
     def factory() -> Searcher:
         search = base()
-        return lambda question, k: search(understand(question, **options).query, k)
+        settings = dict(options)
+        if settings.pop("use_llm", False):  # needs a Gemini key
+            settings["rewriter"] = _rewriter()
+        return lambda question, k: search(understand(question, **settings).query, k)
 
     return factory
 
@@ -115,6 +129,8 @@ VARIANTS = {
     "arabizi": {"use_arabizi": True, "use_lexicon": False},
     "lexicon": {"use_arabizi": False, "use_lexicon": True},
     "both": {"use_arabizi": True, "use_lexicon": True},
+    "rewrite": {"use_lexicon": True, "use_llm": True},  # lexicon + language-model rewrite
+    "llm": {"use_lexicon": False, "use_llm": True},  # the rewrite alone
 }
 SEARCHERS: dict[str, Callable[[], Searcher]] = {
     **BASE_SEARCHERS,
@@ -224,6 +240,11 @@ def main(argv: list[str] | None = None) -> int:
         out.write_text(text, encoding="utf-8")
         print(text)
         print(f"report written to {out}\n")
+    if _rewriter.cache_info().currsize and _rewriter().failures:
+        print(
+            f"⚠ {_rewriter().failures} rewrites failed (model busy): those questions were "
+            "searched without the rewrite; scores for +rewrite / +llm are underestimated.\n"
+        )
     if len(results_by_method) > 1:
         text = comparison(results_by_method)
         out = reports_dir / f"retrieval-{label}comparison-{today}.md"
