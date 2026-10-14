@@ -87,6 +87,7 @@ def main(argv: list[str] | None = None) -> int:
     from qanoun.retrieval.embeddings import BGEM3Embedder
     from qanoun.retrieval.vector_store import ArticleStore, QdrantUnavailable
 
+    articles = load_articles()  # a missing dataset fails here, before anything is opened
     store = None
     if not args.embed_only:
         try:
@@ -95,16 +96,19 @@ def main(argv: list[str] | None = None) -> int:
             print(error)
             return 1
 
-    articles = load_articles()
-    print(f"loading the embedding model {settings.embedding_model}…")
-    embedder = BGEM3Embedder()
-    vectors = embed_articles(articles, embedder)
-
-    if store is not None:
-        store.recreate(embedder.dim)
-        store.upsert(articles, vectors)
-        print(f"Qdrant collection '{store.collection}': {store.count()} articles")
-        store.client.close()
+    try:
+        print(f"loading the embedding model {settings.embedding_model}…")
+        embedder = BGEM3Embedder()
+        vectors = embed_articles(articles, embedder)
+        if store is not None:
+            store.recreate(embedder.dim)
+            store.upsert(articles, vectors)
+            print(f"Qdrant collection '{store.collection}': {store.count()} articles")
+    finally:
+        # Always release Qdrant, even after an error: in folder mode an unreleased store keeps
+        # the folder locked, and the next run in the same notebook fails with "already accessed".
+        if store is not None:
+            store.client.close()
     return 0
 
 
