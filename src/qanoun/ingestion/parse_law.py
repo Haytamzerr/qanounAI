@@ -87,6 +87,7 @@ class LanguageRules:
     first_article: frozenset[str]  # words meaning "first"
     suffixes: dict[str, str]  # e.g. "مكرر" -> "bis"
     sentence_end: re.Pattern[str]
+    ordinals: dict[str, str] = field(default_factory=dict)  # e.g. "الثالث" -> "3"
 
 
 RULES: dict[Language, LanguageRules] = {
@@ -130,16 +131,37 @@ def normalize(text: str) -> str:
     return re.sub(r"\s+([,.،])", r"\1", text)
 
 
-def article_number(heading: str, language: Language = "fr") -> str | None:
-    """'Article premier' / 'المادة الأولى' -> '1', 'Article 25 bis' -> '25 bis', else None."""
-    rules = RULES[language]
+def article_heading(
+    heading: str, language: Language = "fr", rules: LanguageRules | None = None
+) -> tuple[str, str | None] | None:
+    """The number of an article heading, and the title printed on the same line if any.
+
+    'Article premier' / 'المادة الأولى' -> ('1', None), 'Article 25 bis' -> ('25 bis', None),
+    'الفصل 13: وثيقة التجنيس' -> ('13', 'وثيقة التجنيس') when the rules allow inline titles
+    (a third regex group). Anything else -> None.
+    """
+    rules = rules or RULES[language]
     match = rules.article.match(normalize(heading))
     if not match:
         return None
     raw = match.group(1)
-    number = "1" if raw.lower() in rules.first_article else raw
+    if raw.lower() in rules.first_article:
+        number = "1"
+    else:
+        number = rules.ordinals.get(raw, re.sub(r"\s+", "", raw))
     suffix = match.group(2)
-    return f"{number} {rules.suffixes[suffix.lower()]}" if suffix else number
+    if suffix:
+        number = f"{number} {rules.suffixes[suffix.lower()]}"
+    title = match.group(3) if match.re.groups >= 3 else None
+    return number, (title.strip() or None) if title else None
+
+
+def article_number(
+    heading: str, language: Language = "fr", rules: LanguageRules | None = None
+) -> str | None:
+    """'Article premier' / 'المادة الأولى' -> '1', 'Article 25 bis' -> '25 bis', else None."""
+    found = article_heading(heading, language, rules)
+    return found[0] if found else None
 
 
 def _close(a: float, b: float, tol: float) -> bool:
@@ -221,9 +243,20 @@ def _heading_candidates(line: Line, profile: LayoutProfile) -> list[int]:
     ]
 
 
-def parse_lines(lines: list[Line], source: Source, profile: LayoutProfile) -> list[Article]:
-    """Build the list of articles from the lines of one PDF."""
-    rules = RULES[source.language]
+def parse_lines(
+    lines: list[Line],
+    source: Source,
+    profile: LayoutProfile,
+    rules: LanguageRules | None = None,
+    start_on_article: bool = False,
+) -> list[Article]:
+    """Build the list of articles from the lines of one PDF.
+
+    By default the law starts at its first heading (book, chapter…): text before it is the
+    cover page and the promulgating dahir. Short texts have no headings at all, only articles:
+    `start_on_article` lets the first article start the law too.
+    """
+    rules = rules or RULES[source.language]
     tol = profile.tolerance
     headings: list[tuple[int, str]] = []  # open headings, top level first: (level, text)
     started = False
@@ -244,20 +277,34 @@ def parse_lines(lines: list[Line], source: Source, profile: LayoutProfile) -> li
             headings = [h for h in headings if h[0] < level] + [(level, text)]
             started, current, last_heading = True, None, level
             continue
-        if last_heading in candidates and headings and headings[-1][0] == last_heading:
+        wraps = last_heading in candidates and headings and headings[-1][0] == last_heading
+        if wraps and article_number(text, rules=rules) is None:
             headings[-1] = (last_heading, f"{headings[-1][1]} {text}")  # heading wrapped
             continue
 
-        if not started:
+        is_heading = line.bold and _close(line.size, profile.article_size, tol)
+        found = article_heading(text, rules=rules) if is_heading else None
+        number, inline_title = found or (None, None)
+        if not started and not (start_on_article and number is not None):
             continue  # cover page, promulgating dahir, preamble
 
-        if line.bold and _close(line.size, profile.article_size, tol):
-            number = article_number(text, source.language)
-            if number is not None:
-                current = _Draft(number=number, page=line.page, hierarchy=[t for _, t in headings])
-                drafts.append(current)
-                last_heading = None
-                continue
+        if is_heading and number is not None:
+            started = True
+            current = _Draft(
+                number=number,
+                page=line.page,
+                hierarchy=[t for _, t in headings],
+            )
+            if inline_title and (
+                len(inline_title) > 100 or rules.sentence_end.search(inline_title)
+            ):  # "الفصل الأول. - يحدث مجلس…": the heading line already holds the text
+                current.paragraphs.append(inline_title)
+                current.last_line = line
+            else:
+                current.title = inline_title
+            drafts.append(current)
+            last_heading = None
+            continue
 
         is_subtitle = (
             line.bold

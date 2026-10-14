@@ -36,7 +36,10 @@ def fingerprint(embedder_name: str, articles: Sequence[Article]) -> str:
 
 
 def cache_path(embedder_name: str, directory: Path | None = None) -> Path:
+    """One vectors file per model and corpus ("BAAI--bge-m3-1024.npz", "…-full.npz")."""
     slug = embedder_name.replace("/", "--").replace("@", "-")
+    if settings.corpus != "core":
+        slug += f"-{settings.corpus}"
     return (directory or settings.embeddings_dir) / f"{slug}.npz"
 
 

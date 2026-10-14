@@ -267,6 +267,11 @@ class _ShadowFilter:
         return False
 
 
+# The default "rawdict" extraction also decodes every image of the page (each Adala page has a
+# logo), which made reading 50 times slower and produced exactly the same text.
+TEXT_FLAGS = pymupdf.TEXTFLAGS_RAWDICT & ~pymupdf.TEXT_PRESERVE_IMAGES
+
+
 def read_spans(pdf_path: Path) -> list[Span]:
     """Read every text span of the PDF with its font and the position of each character."""
     spans: list[Span] = []
@@ -274,7 +279,7 @@ def read_spans(pdf_path: Path) -> list[Span]:
         for page in doc:
             shadows = _ShadowFilter()
             span_id = 0
-            for block in page.get_text("rawdict")["blocks"]:
+            for block in page.get_text("rawdict", flags=TEXT_FLAGS)["blocks"]:
                 for line in block.get("lines", []):
                     for s in line["spans"]:
                         span_id += 1
