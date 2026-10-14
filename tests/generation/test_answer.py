@@ -93,3 +93,12 @@ def test_a_refusal_on_retry_does_not_replace_the_first_answer():
     assert answer.status == "answered" and not answer.verified
     assert answer.text == "Règle (article 99) [1]."
     assert "attempt 2: not_covered" in render(answer)
+
+
+def test_progress_steps_are_reported_in_order():
+    steps = []
+    llm = ScriptedLLM(ok("Réponse [1]."))
+    Answerer(retriever, llm, k=2).answer("Question ?", on_step=lambda n, d: steps.append((n, d)))
+    assert [name for name, _ in steps] == ["understood", "sources", "writing"]
+    assert steps[0][1]["language"] == "fr"
+    assert steps[1][1]["articles"] == [a.id for a in ARTICLES[:2]]
