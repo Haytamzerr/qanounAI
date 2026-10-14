@@ -303,7 +303,7 @@ function openArticle(number, from) {
   $("panel-body").innerHTML = `
     <div dir="${rtl ? "rtl" : "ltr"}">
       <span class="badge">${c.official ? t("official") : t("translation")}</span>
-      <h2>${rtl ? "المادة" : "Article"} ${escapeHtml(c.article_number)}${c.title ? ` — ${escapeHtml(c.title)}` : ""}</h2>
+      <h2>${escapeHtml(c.label)} ${escapeHtml(c.article_number)}${c.title ? ` — ${escapeHtml(c.title)}` : ""}</h2>
       <p class="law">${escapeHtml(c.law_title)}</p>
       <ul class="path">${c.hierarchy.map((h) => `<li>${escapeHtml(h)}</li>`).join("")}</ul>
       <p class="article-text">${escapeHtml(c.text)}</p>

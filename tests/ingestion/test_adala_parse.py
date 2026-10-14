@@ -11,6 +11,7 @@ from qanoun.ingestion.adala import CatalogEntry
 from qanoun.ingestion.adala_parse import (
     ORDINALS,
     RULES,
+    article_word,
     detect_profile,
     is_repealed,
     law_key,
@@ -225,3 +226,11 @@ def test_a_law_filed_as_a_decree_is_still_a_law():
         law_type="مرسوم",
     )
     assert select([road_code], types={"ظهير"}, skip_keys=set()) == [road_code]
+
+
+def test_citations_use_the_word_the_law_uses():
+    penal = [line("الفصل 400", 16.0, True), line(BODY), line("الفصل 401", 16.0, True)]
+    assert article_word(penal) == "الفصل"
+    assert article_word([line("المادة 1", 16.0, True), line(BODY)]) == "المادة"
+    assert _article("نص").label == "المادة"
+    assert _article("نص").model_copy(update={"article_word": "الفصل"}).label == "الفصل"

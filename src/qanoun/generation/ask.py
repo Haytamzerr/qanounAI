@@ -60,9 +60,8 @@ def render(answer: Answer) -> str:
         lines.append("Sources:")
         for n in answer.cited:
             a = answer.sources[n - 1]
-            label = "Article" if a.language == "fr" else "المادة"
             official = "official text" if a.is_official_version else "translation"
-            lines.append(f"  [{n}] {a.law_title}, {label} {a.article_number} ({official})")
+            lines.append(f"  [{n}] {a.law_title}, {a.label} {a.article_number} ({official})")
             lines.append(f"      {a.source_url}")
     if not answer.verified:
         lines.append("\n⚠ Citation check failed: " + "; ".join(answer.problems))

@@ -273,6 +273,16 @@ def is_repealed(article: Article) -> bool:
     return len(ARABIC.findall(REPEAL_WORDS.sub("", article.text))) < 3
 
 
+def article_word(lines: list[Line]) -> str:
+    """ "الفصل" or "المادة": the word most article headings of this law start with."""
+    words = Counter(
+        "الفصل" if "فصل" in text.split()[0] else "المادة"
+        for line in lines
+        if line.bold and RULES.article.match(text := normalize(line.text))
+    )
+    return words.most_common(1)[0][0] if words else "المادة"
+
+
 def _drop_closing(article: Article) -> Article:
     """Cut the signature ("وحرر بالرباط في…") that follows the last article of old dahirs."""
     paragraphs = article.text.split("\n")
@@ -314,11 +324,12 @@ def parse_entry(entry: CatalogEntry, pdf: Path, key: str) -> tuple[list[Article]
         layout="auto",
         source_url=entry.url,
         downloaded_on=date.today().isoformat(),
-        is_official_version=False,  # Adala publishes consolidated texts, not the BO itself
+        is_official_version=True,  # the Arabic text (consolidated), not a translation
     )
     articles = parse_lines(lines, source, profile, rules=RULES, start_on_article=True)
+    word = article_word(lines)
     articles = [
-        a.model_copy(update={"text": a.text.translate(PERSIAN)})
+        a.model_copy(update={"text": a.text.translate(PERSIAN), "article_word": word})
         for a in map(_drop_closing, articles)
         if not is_repealed(a)
     ]
