@@ -28,8 +28,10 @@ def test_formal_questions_are_searched_unchanged():
         assert result.terms == []
 
 
-def test_arabizi_question_gets_script_and_legal_terms():
-    result = understand("tredouni mn lkhedma bla préavis, wach 3ndi l7e9?")
+def test_arabizi_question_gets_legal_terms_and_optionally_script():
+    question = "tredouni mn lkhedma bla préavis, wach 3ndi l7e9?"
+    assert understand(question).arabic_script is None  # off by default (decision 40)
+    result = understand(question, use_arabizi=True)
     assert result.language == "darija-latn"
     assert "الخدمة" in result.arabic_script
     assert {"الفصل من الشغل", "أجل الإخطار"} <= set(result.legal_terms)
@@ -40,3 +42,4 @@ def test_parts_can_be_switched_off():
     question = "tredouni mn lkhedma"
     assert understand(question, use_lexicon=False).terms == []
     assert understand(question, use_arabizi=False).arabic_script is None
+    assert understand(question, use_arabizi=True).arabic_script
