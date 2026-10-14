@@ -31,10 +31,10 @@ Beyond the five texts above, the assistant can answer from every law published o
 | --- | --- | --- |
 | Catalogue | `uv run python -m qanoun.ingestion.adala catalog` | 5,507 documents, 63 subjects, all in Arabic |
 | Download the laws | `uv run python -m qanoun.ingestion.adala download` | 971 PDFs, 1.3 GB, 17,755 pages |
-| Parse | `uv run python -m qanoun.ingestion.adala_parse` | 818 laws → 798 parsed, **33,184 articles** in `data/processed/adala_articles.jsonl`, one line per law in `adala_report.csv` |
+| Parse | `uv run python -m qanoun.ingestion.adala_parse` | 798 laws → 778 parsed, **32,777 articles** in `data/processed/adala_articles.jsonl`, one line per law in `adala_report.csv` |
 
-Left out on purpose (decision 62): annual finance laws, laws marked repealed, the 1962–1992
-constitutions, older PDFs of the same law, repealed articles. Not parsed: 16 texts without article
+Left out on purpose (decisions 62 and 65): annual finance laws, laws marked repealed, the 1962–1992
+constitutions, international treaties, older PDFs of the same law, repealed articles. Not parsed: 16 texts without article
 headings (appointments, one-decision dahirs) and 4 scanned PDFs (they would need OCR).
 
 The parser measures each PDF's fonts instead of using a hand-made profile (decision 60). Its report
