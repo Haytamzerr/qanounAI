@@ -21,6 +21,7 @@ def _articles() -> dict:
     return {a.id: a for a in load_articles()}
 
 
+@cache  # one per process: a notebook can ask, then evaluate, without reloading or relocking
 def bm25_retriever() -> Retriever:
     from qanoun.retrieval.bm25 import BM25Index
 
@@ -28,6 +29,7 @@ def bm25_retriever() -> Retriever:
     return lambda query, k: [_articles()[doc] for doc, _ in index.search(query, k)]
 
 
+@cache  # the model loads once, and Qdrant's folder is opened once (it allows one client)
 def dense_retriever() -> Retriever:
     from qanoun.retrieval.embeddings import BGEM3Embedder
     from qanoun.retrieval.search import DenseSearcher
@@ -66,7 +68,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--retriever", choices=list(RETRIEVERS), default="dense")
     parser.add_argument("--k", type=int, default=5, help="articles given to the model")
     args = parser.parse_args(argv)
-    sys.stdout.reconfigure(encoding="utf-8")  # Arabic in the Windows terminal
+    if hasattr(sys.stdout, "reconfigure"):  # a terminal, not a notebook
+        sys.stdout.reconfigure(encoding="utf-8")  # Arabic in the Windows terminal
     configure_logging()  # one line per model attempt, with its time
     answerer = Answerer(RETRIEVERS[args.retriever](), GeminiLLM(state_path=STATE_PATH), k=args.k)
     print(render(answerer.answer(args.question)))
