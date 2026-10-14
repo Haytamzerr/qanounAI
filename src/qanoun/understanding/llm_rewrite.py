@@ -35,6 +35,7 @@ class LLMRewriter:
     def __init__(self, llm: LLM):
         self.llm = llm
         self.cache: dict[str, str | None] = {}  # the same question is rewritten once
+        self.failures = 0  # rewrites skipped because the model failed (reported in evaluations)
 
     def __call__(self, question: str) -> str | None:
         if question not in self.cache:
@@ -42,6 +43,7 @@ class LLMRewriter:
                 rewritten = self.llm.generate(SYSTEM, question).strip().splitlines()
                 self.cache[question] = rewritten[0].strip() if rewritten else None
             except LLMError as error:
+                self.failures += 1
                 log.info("rewrite failed, searching without it: %s", error)
                 return None  # not cached: next time the model may be free
             log.info("rewrite: %s", self.cache[question])

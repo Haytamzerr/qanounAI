@@ -96,6 +96,15 @@ def hybrid_searcher() -> Searcher:
     return HybridSearcher(_bm25(), _dense())
 
 
+@cache
+def _rewriter():
+    """One rewriter for all variants: each question is restated once, then reused."""
+    from qanoun.generation.llm import STATE_PATH, GeminiLLM
+    from qanoun.understanding.llm_rewrite import LLMRewriter
+
+    return LLMRewriter(GeminiLLM(state_path=STATE_PATH))
+
+
 def with_understanding(base: Callable[[], Searcher], **options) -> Callable[[], Searcher]:
     """The same search, run on the rewritten question instead of the raw one."""
     from qanoun.understanding.rewrite import understand
@@ -104,10 +113,7 @@ def with_understanding(base: Callable[[], Searcher], **options) -> Callable[[], 
         search = base()
         settings = dict(options)
         if settings.pop("use_llm", False):  # needs a Gemini key
-            from qanoun.generation.llm import STATE_PATH, GeminiLLM
-            from qanoun.understanding.llm_rewrite import LLMRewriter
-
-            settings["rewriter"] = LLMRewriter(GeminiLLM(state_path=STATE_PATH))
+            settings["rewriter"] = _rewriter()
         return lambda question, k: search(understand(question, **settings).query, k)
 
     return factory
@@ -234,6 +240,11 @@ def main(argv: list[str] | None = None) -> int:
         out.write_text(text, encoding="utf-8")
         print(text)
         print(f"report written to {out}\n")
+    if _rewriter.cache_info().currsize and _rewriter().failures:
+        print(
+            f"⚠ {_rewriter().failures} rewrites failed (model busy): those questions were "
+            "searched without the rewrite; scores for +rewrite / +llm are underestimated.\n"
+        )
     if len(results_by_method) > 1:
         text = comparison(results_by_method)
         out = reports_dir / f"retrieval-{label}comparison-{today}.md"
