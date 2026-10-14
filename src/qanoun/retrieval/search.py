@@ -7,9 +7,10 @@ a cosine of 0.61 are on unrelated scales. An article ranked well by both searche
 ranked first by only one of them.
 """
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Sequence
 
+from qanoun.ingestion.models import Article
 from qanoun.retrieval.bm25 import BM25Index
 from qanoun.retrieval.embeddings import Embedder
 from qanoun.retrieval.vector_store import ArticleStore
@@ -56,3 +57,33 @@ class HybridSearcher:
 
     def __call__(self, question: str, k: int = 10) -> list[str]:
         return [doc_id for doc_id, _ in self.search(question, k)]
+
+
+class SectionExpander:
+    """Add the opening articles of the section most results come from.
+
+    Searches favour short, focused articles over the long one that states a section's main
+    rule: for "how many days of paid leave a year?" they found articles 232–236 of the Labour
+    Code (bonus days, fixed-term contracts…) but not 231, which gives the figure. When two or
+    more results share a section, its first articles are added, the way a lawyer reads a law:
+    the section's opening article first.
+    """
+
+    def __init__(self, articles: Sequence[Article]):
+        self.section_of = {a.id: (a.law_number, a.language, tuple(a.hierarchy)) for a in articles}
+        self.members: dict[tuple, list[str]] = defaultdict(list)
+        for a in articles:  # in law order
+            self.members[self.section_of[a.id]].append(a.id)
+
+    def expand(self, ids: Sequence[str], extra: int = 3) -> list[str]:
+        out = list(ids)
+        counts = Counter(self.section_of[i] for i in ids if i in self.section_of)
+        for section, count in counts.most_common():
+            if count < 2 or len(out) >= len(ids) + extra:
+                break
+            for member in self.members[section]:
+                if len(out) >= len(ids) + extra:
+                    break
+                if member not in out:
+                    out.append(member)
+        return out

@@ -73,7 +73,7 @@ def _parse(raw: str) -> tuple[str, str, list[int]]:
 
 
 class Answerer:
-    def __init__(self, retriever: Retriever, llm: LLM, k: int = 5, retries: int = 1):
+    def __init__(self, retriever: Retriever, llm: LLM, k: int = 6, retries: int = 1):
         self.retriever = retriever
         self.llm = llm
         self.k = k

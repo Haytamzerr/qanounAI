@@ -105,3 +105,18 @@ def test_folder_mode_keeps_the_data(tmp_path):
     store.upsert(ARTICLES, embedder.embed([search_text(a) for a in ARTICLES]))
     store.client.close()  # only one process may open the folder at a time
     assert ArticleStore.connect(folder, "test").count() == len(ARTICLES)
+
+
+def test_section_expansion_adds_the_opening_articles():
+    from qanoun.retrieval.search import SectionExpander
+
+    def art(n, section):
+        a = make_article("65-99", "ar", n, f"نص المادة {n}")
+        return a.model_copy(update={"hierarchy": [section]})
+
+    articles = [art(231, "leave"), art(232, "leave"), art(233, "leave"), art(234, "leave"),
+                art(13, "trial")]  # fmt: skip
+    expander = SectionExpander(articles)
+    found = ["loi-65-99-ar-art-234", "loi-65-99-ar-art-233", "loi-65-99-ar-art-13"]
+    assert expander.expand(found, extra=1) == [*found, "loi-65-99-ar-art-231"]
+    assert expander.expand(found[1:], extra=3) == found[1:]  # no section seen twice: unchanged

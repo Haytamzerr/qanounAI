@@ -1,6 +1,8 @@
 """Measure the answers, not just the search.
 
 For every test question we ask the full assistant and record:
+- retrieved: an article that answers the question was among the sources given to the model
+  (if not, a failure is the search's fault, not the model's);
 - answered: it gave an answer rather than "not covered";
 - correct citation: it cites at least one of the articles that really answer the question;
 - verified: the citation check passed (no unknown source, no invented article number);
@@ -48,6 +50,10 @@ class AnswerResult:
     @property
     def answered(self) -> bool:
         return self.status == "answered"
+
+    @property
+    def retrieved(self) -> bool:
+        return bool(set(self.sources) & set(self.expected))
 
     @property
     def correct_citation(self) -> bool:
@@ -98,6 +104,7 @@ def summarize(results: list[AnswerResult]) -> dict[str, dict[str, float]]:
     return {
         name: {
             "questions": len(rs),
+            "retrieved": mean(r.retrieved for r in rs),
             "answered": mean(r.answered for r in rs),
             "correct citation": mean(r.correct_citation for r in rs),
             "verified": _share_verified(rs),
@@ -118,14 +125,15 @@ def report(label: str, results: list[AnswerResult]) -> str:
         "",
         f"{date.today().isoformat()} · {len(results)} questions · models: {models}",
         "",
-        "| Group | Questions | Answered | Correct citation | Verified | Refused with answer "
-        "in hand | Errors | Median s |",
-        "| --- | --- | --- | --- | --- | --- | --- | --- |",
+        "| Group | Questions | Retrieved | Answered | Correct citation | Verified | Refused with "
+        "answer in hand | Errors | Median s |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for name in names:
         s = summary[name]
         lines.append(
-            f"| {name} | {s['questions']} | {s['answered']:.0%} | {s['correct citation']:.0%} | "
+            f"| {name} | {s['questions']} | {s['retrieved']:.0%} | {s['answered']:.0%} | "
+            f"{s['correct citation']:.0%} | "
             f"{s['verified']:.0%} | {s['refused with answer in hand']:.0%} | {s['errors']} | "
             f"{s['median seconds']:.1f} |"
         )

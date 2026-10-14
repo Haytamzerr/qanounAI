@@ -26,7 +26,7 @@ def bm25_retriever() -> Retriever:
     from qanoun.retrieval.bm25 import BM25Index
 
     index = BM25Index.build({a.id: search_text(a) for a in _articles().values()})
-    return lambda query, k: [_articles()[doc] for doc, _ in index.search(query, k)]
+    return _with_sections(lambda query, k: [doc for doc, _ in index.search(query, k)])
 
 
 @cache  # the model loads once, and Qdrant's folder is opened once (it allows one client)
@@ -36,7 +36,15 @@ def dense_retriever() -> Retriever:
     from qanoun.retrieval.vector_store import ArticleStore
 
     searcher = DenseSearcher(BGEM3Embedder(), ArticleStore.connect())
-    return lambda query, k: [_articles()[doc] for doc in searcher(query, k)]
+    return _with_sections(searcher)
+
+
+def _with_sections(search, extra: int = 3) -> Retriever:
+    """Top k results, plus up to `extra` opening articles of their main section (decision 50)."""
+    from qanoun.retrieval.search import SectionExpander
+
+    expander = SectionExpander(list(_articles().values()))
+    return lambda query, k: [_articles()[i] for i in expander.expand(search(query, k), extra)]
 
 
 RETRIEVERS = {"dense": dense_retriever, "bm25": bm25_retriever}
@@ -68,7 +76,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Ask a question about Moroccan law.")
     parser.add_argument("question")
     parser.add_argument("--retriever", choices=list(RETRIEVERS), default="dense")
-    parser.add_argument("--k", type=int, default=5, help="articles given to the model")
+    parser.add_argument(
+        "--k", type=int, default=6, help="search results (+ up to 3 from their section)"
+    )
     args = parser.parse_args(argv)
     if hasattr(sys.stdout, "reconfigure"):  # a terminal, not a notebook
         sys.stdout.reconfigure(encoding="utf-8")  # Arabic in the Windows terminal
