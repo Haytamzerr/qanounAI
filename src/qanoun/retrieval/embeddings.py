@@ -12,6 +12,8 @@ only matches words. Every vector has length 1, so the similarity of two texts is
 - `HashingEmbedder` is a tiny stand-in for tests: it needs no download and runs in microseconds.
 """
 
+import logging
+import os
 import zlib
 from collections.abc import Sequence
 from typing import Protocol
@@ -95,6 +97,10 @@ class OnnxEmbedder:
         self.max_tokens = max_tokens or settings.embedding_max_tokens
         self.batch_size = batch_size or settings.embedding_batch_size
         if session is None or tokenizer is None:
+            # Harmless on Windows: no symlinks in the download cache (files are copied instead),
+            # and no Hugging Face account needed for this public model.
+            os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
+            logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
             import onnxruntime
             from huggingface_hub import hf_hub_download
             from tokenizers import Tokenizer
