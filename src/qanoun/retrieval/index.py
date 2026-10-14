@@ -81,24 +81,29 @@ def embed_articles(
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Embed the articles and load them into Qdrant.")
     parser.add_argument("--embed-only", action="store_true", help="don't touch Qdrant")
+    parser.add_argument(
+        "--backend", choices=["sentence-transformers", "onnx"], default=None,
+        help="embedding model (default: QANOUN_EMBEDDING_BACKEND)",
+    )  # fmt: skip
+    parser.add_argument("--collection", default=None, help="Qdrant collection to fill")
     args = parser.parse_args(argv)
 
     # Imported here so `--help` answers instantly, without loading torch.
-    from qanoun.retrieval.embeddings import BGEM3Embedder
+    from qanoun.retrieval.embeddings import make_embedder
     from qanoun.retrieval.vector_store import ArticleStore, QdrantUnavailable
 
     articles = load_articles()  # a missing dataset fails here, before anything is opened
     store = None
     if not args.embed_only:
         try:
-            store = ArticleStore.connect()  # fail now rather than after embedding
+            store = ArticleStore.connect(collection=args.collection)  # fail before embedding
         except QdrantUnavailable as error:
             print(error)
             return 1
 
     try:
-        print(f"loading the embedding model {settings.embedding_model}…")
-        embedder = BGEM3Embedder()
+        print(f"loading the embedding model ({args.backend or settings.embedding_backend})…")
+        embedder = make_embedder(args.backend)
         vectors = embed_articles(articles, embedder)
         if store is not None:
             store.recreate(embedder.dim)

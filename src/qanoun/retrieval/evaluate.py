@@ -64,21 +64,31 @@ def _bm25() -> BM25Index:
 
 
 @cache
-def _dense():
-    # Imported here: loading torch and the model takes a while and isn't needed for BM25.
-    from qanoun.retrieval.embeddings import BGEM3Embedder
+def _dense(backend: str = "sentence-transformers", collection: str | None = None):
+    """Dense search: questions embedded with `backend`, articles read from `collection`."""
+    # Imported here: loading the model takes a while and isn't needed for BM25.
+    from qanoun.retrieval.embeddings import make_embedder
     from qanoun.retrieval.search import DenseSearcher
     from qanoun.retrieval.vector_store import ArticleStore
 
-    store = ArticleStore.connect()
-    atexit.register(store.client.close)  # release Qdrant cleanly at exit (needed in folder mode)
+    store = ArticleStore(_qdrant_client(), collection)
     expected = len(load_articles())
     if store.count() != expected:
         raise SystemExit(
             f"Qdrant holds {store.count()} articles, the corpus {expected}: "
             "run `uv run python -m qanoun.retrieval.index` first."
         )
-    return DenseSearcher(BGEM3Embedder(), store)
+    return DenseSearcher(make_embedder(backend), store)
+
+
+@cache
+def _qdrant_client():
+    """One client for every collection: in folder mode Qdrant allows only one per process."""
+    from qanoun.retrieval.vector_store import ArticleStore
+
+    store = ArticleStore.connect()
+    atexit.register(store.client.close)  # release Qdrant cleanly at exit (needed in folder mode)
+    return store.client
 
 
 def bm25_searcher() -> Searcher:
@@ -88,6 +98,20 @@ def bm25_searcher() -> Searcher:
 
 def dense_searcher() -> Searcher:
     return _dense()
+
+
+def dense_onnx_searcher() -> Searcher:
+    """Questions embedded by the 8-bit model, articles by the full one (what an 8 GB PC needs)."""
+    return _dense("onnx")
+
+
+def dense_int8_searcher() -> Searcher:
+    """Questions and articles both embedded by the 8-bit model (`index --backend onnx
+    --collection articles_int8` first)."""
+    return _dense("onnx", INT8_COLLECTION)
+
+
+INT8_COLLECTION = "articles_int8"
 
 
 def hybrid_searcher() -> Searcher:
@@ -122,6 +146,8 @@ def with_understanding(base: Callable[[], Searcher], **options) -> Callable[[], 
 BASE_SEARCHERS: dict[str, Callable[[], Searcher]] = {
     "bm25": bm25_searcher,
     "dense": dense_searcher,
+    "dense-onnx": dense_onnx_searcher,
+    "dense-int8": dense_int8_searcher,
     "hybrid": hybrid_searcher,
 }
 VARIANTS = {
