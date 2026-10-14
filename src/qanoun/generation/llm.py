@@ -70,6 +70,7 @@ class GeminiLLM:
         self.sleep = sleep
         self.name = model or settings.llm_fast_model or pick_model(self.list_models())
         self._fallbacks: list[str] | None = None  # listed only if the first model stays busy
+        self._retired: set[str] = set()  # listed by Google but refused (404): never retried
 
     def list_models(self) -> list[str]:
         """Models this key can use to generate text, e.g. "gemini-2.5-flash"."""
@@ -105,10 +106,13 @@ class GeminiLLM:
     def _generate_with_fallbacks(self, body: dict) -> dict:
         """Try each model once, best first; only when all are busy, wait (2 s, then 4 s) and go
         round again. Waiting on one busy model while others are free wasted up to a minute.
-        Other errors (bad key…) stop at once."""
+        A model refused with 404 (listed, but "no longer available to new users") is skipped
+        for good. Other errors (bad key…) stop at once."""
         last: LLMError | None = None
         for round_ in range(self.attempts):
             if round_:
+                if not list(self._candidates()):
+                    break  # every model was retired: waiting won't help
                 self.sleep(2**round_)
             for model in self._candidates():
                 url = f"{GEMINI_URL}/models/{model}:generateContent"
@@ -117,6 +121,9 @@ class GeminiLLM:
                     response = self._request("POST", url, json=body)
                 except LLMError as error:
                     log.info("%s → %s (%.1f s)", model, error.status, time.perf_counter() - start)
+                    if error.status == 404:
+                        self._retired.add(model)
+                        continue
                     if not error.retryable:
                         raise
                     last = error
@@ -124,14 +131,17 @@ class GeminiLLM:
                 log.info("%s → ok (%.1f s)", model, time.perf_counter() - start)
                 self.name = model  # keep using the model that answered
                 return response
+        if last is None:  # every model refused with 404
+            raise LLMError("None of the listed Gemini models accepted the request (404).", 404)
         raise LLMError(f"All Gemini models are busy, try again later ({last})", 503)
 
     def _candidates(self) -> Iterator[str]:
         """The chosen model first, then the others; listed only once, when first needed."""
-        yield self.name
+        if self.name not in self._retired:
+            yield self.name
         if self._fallbacks is None:
             self._fallbacks = rank_models(self.list_models())
-        yield from (m for m in self._fallbacks if m != self.name)
+        yield from (m for m in self._fallbacks if m != self.name and m not in self._retired)
 
     def _request(self, method: str, url: str, **kwargs) -> dict:
         try:
