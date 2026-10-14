@@ -66,6 +66,25 @@ Reads the PDFs listed in `data/sources.csv` from `data/raw/`, writes one JSON re
 `data/processed/articles.jsonl`, and fails if a quality check does not pass. See
 [docs/corpus.md](docs/corpus.md) for the sources and how the parser reads them.
 
+### All Moroccan laws (34,513 articles)
+
+```bash
+uv run python -m qanoun.ingestion.adala catalog     # list Adala's 5,500 documents (~10 min)
+uv run python -m qanoun.ingestion.adala download    # the ~970 laws (1.3 GB)
+uv run python -m qanoun.ingestion.adala_parse       # → data/processed/adala_articles.jsonl
+```
+
+Then set `QANOUN_CORPUS=full` in `.env`: search, answers and evaluations use the 5 curated laws plus
+798 laws parsed from Adala (33,184 articles), in their own Qdrant collection (`articles_full`) and
+vectors file. See [docs/corpus.md](docs/corpus.md#the-full-corpus-every-law-on-adala).
+
+| Same 45 questions | 5 laws (1,329 articles) | All laws (34,513 articles) |
+| --- | --- | --- |
+| Correct citation in the answer | 100% | 96% |
+| Citations verified | 100% | 100% |
+| Held-out Arabizi, correct citation | 92% | 92% |
+| Median answer time (Kaggle) | 1.5 s | 2.5 s |
+
 ## Index the articles for meaning-based search
 
 Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) running.
@@ -195,7 +214,7 @@ progress steps first (Server-Sent Events); `GET /articles/{id}` opens a citation
 ## Roadmap
 
 - [x] Phase 0: project setup
-- [x] Phase 1: legal corpus: 1,329 articles from 5 texts: personal data (09-08, Arabic + French), Labour Code (65.99, July 2026), Family Code (70.03), Consumer Protection (31.08)
+- [x] Phase 1: legal corpus: 1,329 hand-checked articles from 5 texts: personal data (09-08, Arabic + French), Labour Code (65.99, July 2026), Family Code (70.03), Consumer Protection (31.08); then **every law on Adala: 34,513 articles from 803 laws**
 - [x] Phase 2: indexing and retrieval (dense BGE-M3 + Qdrant, Darija lexicon, section expansion)
 - [x] Phase 3: grounded answers with checked citations (Gemini)
 - [ ] Phase 4: evaluation framework
