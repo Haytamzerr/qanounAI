@@ -8,6 +8,7 @@ file, for a PC short of memory.
 """
 
 import argparse
+import logging
 import sys
 from functools import cache
 
@@ -53,7 +54,10 @@ def render(answer: Answer) -> str:
     if not answer.verified:
         lines.append("\n⚠ Citation check failed: " + "; ".join(answer.problems))
     timing = ", ".join(f"{k} {v:.1f} s" for k, v in answer.seconds.items())
-    lines.append(f"\n[{answer.language} · {answer.status} · {timing} · attempts {answer.attempts}]")
+    lines.append(
+        f"\n[{answer.language} · {answer.status} · {timing} · attempts {answer.attempts}"
+        f" · {answer.model}]"
+    )
     return "\n".join(lines)
 
 
@@ -64,6 +68,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--k", type=int, default=5, help="articles given to the model")
     args = parser.parse_args(argv)
     sys.stdout.reconfigure(encoding="utf-8")  # Arabic in the Windows terminal
+    logging.basicConfig(level=logging.INFO, format="  gemini: %(message)s")  # each attempt, timed
     answerer = Answerer(RETRIEVERS[args.retriever](), GeminiLLM(), k=args.k)
     print(render(answerer.answer(args.question)))
     return 0

@@ -97,30 +97,33 @@ def flaky_gemini(failures: dict[str, int], calls: list[str], status: int = 503):
     return httpx.Client(transport=httpx.MockTransport(handler))
 
 
-def test_busy_model_is_retried_with_growing_waits():
-    calls, waits = [], []
-    client = flaky_gemini({"gemini-3.0-flash": 2}, calls)
-    llm = GeminiLLM(api_key="k", client=client, sleep=waits.append)
-    assert llm.generate("s", "u") == "hello from gemini-3.0-flash"
-    assert calls == ["gemini-3.0-flash"] * 3
-    assert waits == [2, 4]
-
-
-def test_model_still_busy_falls_back_to_the_next_one():
+def test_busy_model_hands_over_to_the_next_without_waiting():
     calls, waits = [], []
     client = flaky_gemini({"gemini-3.0-flash": 99}, calls)
     llm = GeminiLLM(api_key="k", client=client, sleep=waits.append)
     assert llm.generate("s", "u") == "hello from gemini-2.5-flash"
+    assert calls == ["gemini-3.0-flash", "gemini-2.5-flash"]
+    assert waits == []
     assert llm.name == "gemini-2.5-flash"  # later questions go straight to the one that works
+    llm.generate("s", "u")
+    assert calls[-1] == "gemini-2.5-flash"
+
+
+def test_waits_only_when_every_model_is_busy():
+    calls, waits = [], []
+    busy_once = {"gemini-3.0-flash": 1, "gemini-2.5-flash": 1, "gemini-3.5-flash-lite": 1}
+    llm = GeminiLLM(api_key="k", client=flaky_gemini(busy_once, calls), sleep=waits.append)
+    assert llm.generate("s", "u") == "hello from gemini-3.0-flash"
+    assert len(calls) == 4 and waits == [2]  # one full round, one wait, then success
 
 
 def test_all_busy_gives_a_clear_message():
-    client = flaky_gemini(
-        {m: 99 for m in ("gemini-3.0-flash", "gemini-2.5-flash", "gemini-3.5-flash-lite")}, []
-    )
-    llm = GeminiLLM(api_key="k", client=client, sleep=lambda s: None)
+    all_busy = {m: 99 for m in ("gemini-3.0-flash", "gemini-2.5-flash", "gemini-3.5-flash-lite")}
+    waits = []
+    llm = GeminiLLM(api_key="k", client=flaky_gemini(all_busy, []), sleep=waits.append)
     with pytest.raises(LLMError, match="All Gemini models are busy"):
         llm.generate("s", "u")
+    assert waits == [2, 4]
 
 
 def test_bad_key_is_not_retried():
