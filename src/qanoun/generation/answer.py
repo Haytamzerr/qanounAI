@@ -24,6 +24,7 @@ from qanoun.understanding.rewrite import understand
 log = logging.getLogger("qanoun.answer")
 
 Retriever = Callable[[str, int], list[Article]]  # (search query, k) -> articles, best first
+StepCallback = Callable[[str, dict], None]  # (step name, details)
 
 NOT_COVERED = {
     "ar": "لم أجد في النصوص المتوفرة لدي ما يجيب عن هذا السؤال. "
@@ -87,12 +88,17 @@ class Answerer:
         self.k = k
         self.retries = retries
 
-    def answer(self, question: str) -> Answer:
+    def answer(self, question: str, on_step: StepCallback | None = None) -> Answer:
+        """`on_step(name, details)` is called as the work progresses, so an interface can show
+        "searching…", "writing…" while the user waits (see the API's streaming endpoint)."""
+        step = on_step or (lambda name, details: None)
         clock = time.perf_counter()
         understood = understand(question, rewriter=self.rewriter)
+        language = understood.language
+        step("understood", {"language": language, "rewritten": understood.rewritten})
         sources = self.retriever(understood.query, self.k)
         seconds = {"retrieval": time.perf_counter() - clock}
-        language = understood.language
+        step("sources", {"articles": [a.id for a in sources]})
         if not sources:
             return Answer(
                 question, language, "not_covered", NOT_COVERED[language], [], seconds=seconds
@@ -104,6 +110,7 @@ class Answerer:
         clock = time.perf_counter()
         history, best = [], None
         for attempt in range(1, self.retries + 2):
+            step("writing", {"attempt": attempt})
             raw = self.llm.generate(system, prompt, json_schema=ANSWER_SCHEMA)
             status, text, used = _parse(raw)
             answered = status != "not_covered"

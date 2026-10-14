@@ -175,6 +175,15 @@ Before the Arabizi restatement, the held-out set scored 50% on every one of thes
 development set helped build the lexicon, so it flatters the system; the held-out set is the
 honest number.
 
+## Web service
+
+```bash
+uv run python -m qanoun.api        # http://127.0.0.1:8000/docs
+```
+
+`POST /ask` returns a checked answer with the cited articles in full; `POST /ask/stream` sends the
+progress steps first (Server-Sent Events); `GET /articles/{id}` opens a citation; `GET /health`.
+
 ## Roadmap
 
 - [x] Phase 0: project setup
