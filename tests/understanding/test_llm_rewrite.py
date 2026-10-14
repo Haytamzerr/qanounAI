@@ -24,10 +24,14 @@ def test_darija_question_gets_the_formal_restatement():
     assert result.query.endswith(result.rewritten)
 
 
-def test_formal_questions_are_not_sent_to_the_model():
+def test_only_arabizi_is_sent_to_the_model():
     llm = FakeLLM()
-    for question in ("ما هي مدة فترة الاختبار؟", "Quelle est la durée du préavis ?"):
-        assert understand(question, rewriter=LLMRewriter(llm)).query == question
+    for question in (
+        "ما هي مدة فترة الاختبار؟",
+        "Quelle est la durée du préavis ?",
+        "شحال من ساعة خاصني نخدم فالسيمانة؟",  # Darija in Arabic letters: the lexicon suffices
+    ):
+        assert understand(question, rewriter=LLMRewriter(llm)).rewritten is None
     assert llm.calls == 0  # no cost, no delay
 
 

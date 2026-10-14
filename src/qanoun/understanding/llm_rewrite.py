@@ -3,7 +3,8 @@
 The lexicon only knows the words it lists; real Arabizi has endless spellings ("yjri 3liya",
 "ykhrjni", "louhni"). A language model reads them the way a Moroccan does. For Darija questions
 only, it restates the question as a short formal question in Modern Standard Arabic, using the
-vocabulary of Moroccan legislation, and that line is added to what we search with.
+vocabulary of Moroccan legislation, and that line is added to what we search with. It is used
+for Arabizi only (decision 53).
 
 The rewrite is never shown to the user and never replaces the question: if the model is busy or
 wrong, the search still has the original question and the lexicon terms.

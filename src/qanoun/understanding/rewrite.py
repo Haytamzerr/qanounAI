@@ -7,8 +7,10 @@ Converting Arabizi to Arabic script is available (`use_arabizi=True`) but off by
 measured with the real model, it lowered Arabizi scores (development 78% → 33%, held-out
 50% → 42%), because its approximate spellings ("الهق" for الحق) add noise. See decision 40.
 
-With a `rewriter` (see llm_rewrite.py), a Darija question is also restated in formal Arabic by
-the language model, and that line is added too.
+With a `rewriter` (see llm_rewrite.py), an Arabizi question is also restated in formal Arabic
+by the language model, and that line is added too. Measured (decision 53): held-out Arabizi
+50% → 92% hit@5; Darija in Arabic letters is already at 100% with the lexicon and lost a
+question with the rewrite, so it is not rewritten.
 
 Keeping the original question means nothing is lost when the conversion, the lexicon or the
 rewrite is wrong: the search model sees all of them and weighs them.
@@ -54,7 +56,7 @@ def understand(
     if use_lexicon:
         result.terms = find_terms(question)
         parts.append(" ".join(result.legal_terms))
-    if rewriter is not None:
+    if rewriter is not None and language == "darija-latn":
         result.rewritten = rewriter(question)
         parts.append(result.rewritten or "")
     result.query = "\n".join(p for p in parts if p)
