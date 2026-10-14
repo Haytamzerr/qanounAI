@@ -122,6 +122,21 @@ saw the lexicon and were scored before any change: on its own, the model finds n
 Arabizi → Arabic-script conversion lowers the scores (its approximate spellings add noise), so it
 is off by default.
 
+## Ask a question
+
+Put a Gemini API key (free at https://aistudio.google.com/apikey) in `.env` as `QANOUN_LLM_API_KEY`,
+then:
+
+```bash
+uv run python -m qanoun.generation.llm --list-models     # check the key, see the models
+uv run python -m qanoun.generation.ask "chhal dyal lconji 3ndi f l3am?"
+uv run python -m qanoun.generation.ask "…" --retriever bm25   # without the embedding model
+```
+
+The answer is written only from the retrieved articles, in the language and script of the question,
+with numbered citations. Every citation is checked before it is shown (no unknown source, no article
+number that isn't in the sources); a failed check gets one retry, then a visible warning.
+
 ## Roadmap
 
 - [x] Phase 0: project setup
