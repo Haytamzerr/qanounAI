@@ -97,3 +97,11 @@ def test_the_assistant_is_built_once():
     client.post("/ask", json={"question": "Un ?"})
     client.post("/ask", json={"question": "Deux ?"})
     assert built == [1]
+
+
+def test_the_interface_is_served():
+    client = client_with()
+    page = client.get("/")
+    assert page.status_code == 200 and "Qanoun AI" in page.text
+    assert client.get("/static/app.js").status_code == 200
+    assert client.get("/static/app.css").status_code == 200

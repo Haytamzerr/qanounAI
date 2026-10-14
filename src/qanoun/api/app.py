@@ -6,6 +6,7 @@
 - `POST /ask/stream` → the same, with progress events first (Server-Sent Events)
 - `GET /articles/{id}` → one article, to open a citation
 - `GET /health` → is the service up, how many articles it knows
+- `GET /` → the web interface (static/: plain HTML, CSS and JavaScript, no build step)
 
 Answers are not streamed word by word on purpose: every citation is checked before anything is
 shown (decision 56). The stream sends the steps instead ("understood", "sources", "writing"), so
@@ -16,16 +17,20 @@ import asyncio
 import json
 import threading
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from qanoun.generation.answer import Answer, Answerer
 from qanoun.generation.llm import LLMError
 from qanoun.ingestion.models import Article
+
+STATIC = Path(__file__).parent / "static"
 
 
 class AskRequest(BaseModel):
@@ -104,6 +109,12 @@ def create_app(
             if state["answerer"] is None:
                 state["answerer"] = (answerer_factory or default_answerer)()
             return state["answerer"]
+
+    app.mount("/static", StaticFiles(directory=STATIC), name="static")
+
+    @app.get("/", include_in_schema=False)
+    def home() -> FileResponse:
+        return FileResponse(STATIC / "index.html")
 
     @app.get("/health")
     def health() -> dict:
