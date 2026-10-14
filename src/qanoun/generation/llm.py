@@ -206,7 +206,7 @@ STATE_PATH = settings.data_dir / "cache" / "llm.json"  # git-ignored
 
 def configure_logging() -> None:
     """Print one line per model attempt; hide httpx's own request lines."""
-    logging.basicConfig(level=logging.INFO, format="  gemini: %(message)s")
+    logging.basicConfig(level=logging.INFO, format="  %(name)s: %(message)s")
     logging.getLogger("httpx").setLevel(logging.WARNING)
 
 

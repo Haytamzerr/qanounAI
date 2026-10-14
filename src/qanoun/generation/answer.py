@@ -3,12 +3,14 @@
     question → understand (language, Darija lexicon) → retrieve k articles
              → the model writes from them → citations checked → (one retry if needed) → answer
 
-If the check fails, the model gets one second chance with the problems spelled out. If it still
-fails, the answer is returned marked as unverified, so the interface can warn instead of hiding
-the problem.
+If the check fails, the model gets one second chance: its previous answer and the problems are
+shown, so it corrects rather than rewrites. If the second answer still fails, or refuses although
+the first one answered, the best answer is returned marked as unverified, so the interface warns
+instead of hiding the problem. Each attempt is logged ("qanoun.answer") for error analysis.
 """
 
 import json
+import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -18,6 +20,8 @@ from qanoun.generation.llm import LLM
 from qanoun.generation.prompts import ANSWER_SCHEMA, system_prompt, user_prompt
 from qanoun.ingestion.models import Article
 from qanoun.understanding.rewrite import understand
+
+log = logging.getLogger("qanoun.answer")
 
 Retriever = Callable[[str, int], list[Article]]  # (search query, k) -> articles, best first
 
@@ -44,6 +48,7 @@ class Answer:
     attempts: int = 1
     seconds: dict[str, float] = field(default_factory=dict)
     model: str = ""
+    history: list[str] = field(default_factory=list)  # one line per attempt
 
     @property
     def verified(self) -> bool:
@@ -85,22 +90,35 @@ class Answerer:
                 question, language, "not_covered", NOT_COVERED[language], [], seconds=seconds
             )
 
+        log.info("sources: %s", ", ".join(a.id for a in sources))
         system = system_prompt(language)
         prompt = user_prompt(question, sources)
         clock = time.perf_counter()
+        history, best = [], None
         for attempt in range(1, self.retries + 2):
             raw = self.llm.generate(system, prompt, json_schema=ANSWER_SCHEMA)
             status, text, used = _parse(raw)
             answered = status != "not_covered"
             checked = check(text, sources, used, answered=answered)
+            line = f"attempt {attempt}: {status}" + (
+                f" — rejected: {'; '.join(checked.problems)}" if checked.problems else ""
+            )
+            history.append(line)
+            log.info(line)
+            if best is None or (answered and not best[0]) or (answered and checked.ok):
+                best = (answered, checked)  # a refusal never replaces an answer
             if checked.ok or attempt > self.retries:
                 break
             prompt = (
                 user_prompt(question, sources)
-                + "\n\nYOUR PREVIOUS ANSWER BROKE THE RULES:\n- "
+                + "\n\nYOUR PREVIOUS ANSWER:\n"
+                + text
+                + "\n\nIT BROKE THE RULES:\n- "
                 + "\n- ".join(checked.problems)
-                + "\nWrite it again, citing only the numbered sources."
+                + "\nCorrect only these problems and keep what was right. Cite only the numbered "
+                "sources; if the sources answer the question, do not refuse."
             )
+        answered, checked = best
         seconds["generation"] = time.perf_counter() - clock
         return Answer(
             question,
@@ -113,4 +131,5 @@ class Answerer:
             attempt,
             seconds,
             self.llm.name,
+            history,
         )
