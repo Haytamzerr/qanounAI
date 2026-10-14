@@ -143,16 +143,18 @@ number that isn't in the sources); a failed check gets one retry, then a visible
 
 ### Answer quality
 
-Full assistant (dense search + Darija lexicon + section expansion → Gemini → citation check),
-measured with `python -m qanoun.generation.evaluate` on Kaggle (2026-10-14):
+Full assistant (dense search + Darija lexicon + LLM restatement of Arabizi + section expansion →
+Gemini → citation check), measured with `python -m qanoun.generation.evaluate` on Kaggle
+(2026-10-14):
 
 | Question set | Right article retrieved | Answered | Cites the right article | Citation check passed | Refused although the answer was in the sources | Median time |
 | --- | --- | --- | --- | --- | --- | --- |
-| 45 questions (Arabic, French, Darija) | 98% | 98% | **98%** | **100%** | **0%** | 1.4 s |
-| 12 held-out Arabizi questions | 50% | 58% | 50% | 100% | 0% | 1.6 s |
+| 45 development questions (Arabic, French, Darija) | 100% | 100% | **100%** | **100%** | **0%** | 1.5 s |
+| **12 held-out Arabizi questions** (native speaker, never seen) | 92% | 100% | **92%** | **100%** | **0%** | 4.7 s |
 
-Every answer given passed the citation check, and the model never refused when the right article
-was in front of it: the remaining failures are search failures on real Arabizi.
+Before the Arabizi restatement, the held-out set scored 50% on every one of these lines. The
+development set helped build the lexicon, so it flatters the system; the held-out set is the
+honest number.
 
 ## Roadmap
 
