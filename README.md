@@ -137,12 +137,25 @@ The answer is written only from the retrieved articles, in the language and scri
 with numbered citations. Every citation is checked before it is shown (no unknown source, no article
 number that isn't in the sources); a failed check gets one retry, then a visible warning.
 
+### Answer quality
+
+Full assistant (dense search + Darija lexicon + section expansion → Gemini → citation check),
+measured with `python -m qanoun.generation.evaluate` on Kaggle (2026-10-14):
+
+| Question set | Right article retrieved | Answered | Cites the right article | Citation check passed | Refused although the answer was in the sources | Median time |
+| --- | --- | --- | --- | --- | --- | --- |
+| 45 questions (Arabic, French, Darija) | 98% | 98% | **98%** | **100%** | **0%** | 1.4 s |
+| 12 held-out Arabizi questions | 50% | 58% | 50% | 100% | 0% | 1.6 s |
+
+Every answer given passed the citation check, and the model never refused when the right article
+was in front of it: the remaining failures are search failures on real Arabizi.
+
 ## Roadmap
 
 - [x] Phase 0: project setup
 - [x] Phase 1: legal corpus: 1,329 articles from 5 texts: personal data (09-08, Arabic + French), Labour Code (65.99, July 2026), Family Code (70.03), Consumer Protection (31.08)
-- [ ] Phase 2: indexing and hybrid retrieval
-- [ ] Phase 3: grounded answers with citations
+- [x] Phase 2: indexing and retrieval (dense BGE-M3 + Qdrant, Darija lexicon, section expansion)
+- [x] Phase 3: grounded answers with checked citations (Gemini)
 - [ ] Phase 4: evaluation framework
 - [ ] Phase 5: agent and MCP server
 - [ ] Phase 6: API, interface, Docker, deployment
