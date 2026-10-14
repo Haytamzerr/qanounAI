@@ -224,6 +224,7 @@ __marimo__/
 data/raw/*
 data/interim/*
 data/processed/*
+data/cache/*
 !data/**/.gitkeep
 # Local services and caches
 qdrant_storage/

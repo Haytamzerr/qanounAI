@@ -17,6 +17,7 @@ import logging
 import re
 import time
 from collections.abc import Callable, Iterator
+from pathlib import Path
 from typing import Protocol
 
 import httpx
@@ -58,19 +59,32 @@ class GeminiLLM:
         client: httpx.Client | None = None,
         attempts: int = 3,
         sleep: Callable[[float], None] = time.sleep,
+        timeout: float = 25,
+        state_path: Path | None = None,
     ):
         key = api_key or (settings.llm_api_key and settings.llm_api_key.get_secret_value())
         if not key:
             raise LLMError("No API key: put QANOUN_LLM_API_KEY=... in the .env file.")
-        self.client = client or httpx.Client(timeout=60)
+        # An overloaded model can hang for a minute before answering "busy"; a real answer takes
+        # a few seconds. Giving up after `timeout` seconds moves on to a free model sooner.
+        self.client = client or httpx.Client(timeout=httpx.Timeout(timeout, connect=10))
         self.headers = {"x-goog-api-key": key}
         self.temperature = temperature
         self.max_output_tokens = max_output_tokens
         self.attempts = attempts
         self.sleep = sleep
-        self.name = model or settings.llm_fast_model or pick_model(self.list_models())
+        # Remembered between runs: the model that last answered, and the models refused with 404.
+        self.state_path = state_path
+        state = self._load_state()
+        self._retired: set[str] = set(state.get("retired", []))  # listed but refused: never retried
+        self._busy: set[str] = set()  # busy during this session: tried last
         self._fallbacks: list[str] | None = None  # listed only if the first model stays busy
-        self._retired: set[str] = set()  # listed by Google but refused (404): never retried
+        self.name = (
+            model
+            or settings.llm_fast_model
+            or state.get("model")
+            or pick_model([m for m in self.list_models() if m not in self._retired])
+        )
 
     def list_models(self) -> list[str]:
         """Models this key can use to generate text, e.g. "gemini-2.5-flash"."""
@@ -123,25 +137,55 @@ class GeminiLLM:
                     log.info("%s → %s (%.1f s)", model, error.status, time.perf_counter() - start)
                     if error.status == 404:
                         self._retired.add(model)
+                        self._save_state()
                         continue
                     if not error.retryable:
                         raise
+                    self._busy.add(model)
                     last = error
                     continue
                 log.info("%s → ok (%.1f s)", model, time.perf_counter() - start)
+                self._busy.discard(model)
                 self.name = model  # keep using the model that answered
+                self._save_state()
                 return response
         if last is None:  # every model refused with 404
             raise LLMError("None of the listed Gemini models accepted the request (404).", 404)
         raise LLMError(f"All Gemini models are busy, try again later ({last})", 503)
 
     def _candidates(self) -> Iterator[str]:
-        """The chosen model first, then the others; listed only once, when first needed."""
-        if self.name not in self._retired:
-            yield self.name
+        """Models to try, in order: the current one, then the others best first, and those that
+        were busy earlier in this session last. Refused (404) models are left out. Lazy: the
+        model list is fetched only when the current model fails."""
+        seen: set[str] = set()
+
+        def fresh(models):
+            for m in models:
+                if m not in seen and m not in self._retired:
+                    seen.add(m)
+                    yield m
+
+        if self.name not in self._busy:
+            yield from fresh([self.name])
         if self._fallbacks is None:
             self._fallbacks = rank_models(self.list_models())
-        yield from (m for m in self._fallbacks if m != self.name and m not in self._retired)
+        yield from fresh(m for m in self._fallbacks if m not in self._busy)
+        yield from fresh([self.name, *self._fallbacks])  # the busy ones, last
+
+    def _load_state(self) -> dict:
+        if not self.state_path or not self.state_path.exists():
+            return {}
+        try:
+            return json.loads(self.state_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}  # a damaged cache is just ignored
+
+    def _save_state(self) -> None:
+        if not self.state_path:
+            return
+        self.state_path.parent.mkdir(parents=True, exist_ok=True)
+        state = {"model": self.name, "retired": sorted(self._retired)}
+        self.state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
 
     def _request(self, method: str, url: str, **kwargs) -> dict:
         try:
@@ -155,6 +199,15 @@ class GeminiLLM:
                 message = response.text[:300]
             raise LLMError(f"Gemini error {response.status_code}: {message}", response.status_code)
         return response.json()
+
+
+STATE_PATH = settings.data_dir / "cache" / "llm.json"  # git-ignored
+
+
+def configure_logging() -> None:
+    """Print one line per model attempt; hide httpx's own request lines."""
+    logging.basicConfig(level=logging.INFO, format="  gemini: %(message)s")
+    logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 def rank_models(available: list[str]) -> list[str]:
@@ -187,8 +240,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Check the LLM connection.")
     parser.add_argument("--list-models", action="store_true")
     args = parser.parse_args(argv)
-    logging.basicConfig(level=logging.INFO, format="  gemini: %(message)s")
-    llm = GeminiLLM()
+    configure_logging()
+    llm = GeminiLLM(state_path=STATE_PATH)
     if args.list_models:
         print("\n".join(sorted(llm.list_models())))
         print("\norder of preference:", ", ".join(rank_models(llm.list_models())))

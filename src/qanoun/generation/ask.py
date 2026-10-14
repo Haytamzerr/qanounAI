@@ -8,12 +8,11 @@ file, for a PC short of memory.
 """
 
 import argparse
-import logging
 import sys
 from functools import cache
 
 from qanoun.generation.answer import Answer, Answerer, Retriever
-from qanoun.generation.llm import GeminiLLM
+from qanoun.generation.llm import STATE_PATH, GeminiLLM, configure_logging
 from qanoun.retrieval.corpus import load_articles, search_text
 
 
@@ -68,8 +67,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--k", type=int, default=5, help="articles given to the model")
     args = parser.parse_args(argv)
     sys.stdout.reconfigure(encoding="utf-8")  # Arabic in the Windows terminal
-    logging.basicConfig(level=logging.INFO, format="  gemini: %(message)s")  # each attempt, timed
-    answerer = Answerer(RETRIEVERS[args.retriever](), GeminiLLM(), k=args.k)
+    configure_logging()  # one line per model attempt, with its time
+    answerer = Answerer(RETRIEVERS[args.retriever](), GeminiLLM(state_path=STATE_PATH), k=args.k)
     print(render(answerer.answer(args.question)))
     return 0
 
