@@ -80,6 +80,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--k", type=int, default=6, help="search results (+ up to 3 from their section)"
     )
+    parser.add_argument(
+        "--no-rewrite", action="store_true", help="don't restate Arabizi questions with the LLM"
+    )
     args = parser.parse_args(argv)
     if hasattr(sys.stdout, "reconfigure"):  # a terminal, not a notebook
         sys.stdout.reconfigure(encoding="utf-8")  # Arabic in the Windows terminal
