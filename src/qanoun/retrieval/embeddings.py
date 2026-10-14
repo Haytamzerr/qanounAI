@@ -138,6 +138,15 @@ class OnnxEmbedder:
         return np.stack(vectors) if vectors else np.zeros((0, 0), dtype=np.float32)
 
 
+def embedder_name(backend: str | None = None) -> str:
+    """The name the chosen backend's embedder will have, known without loading the model:
+    enough to find its cached vectors."""
+    backend = backend or settings.embedding_backend
+    if backend == "onnx":
+        return f"{settings.onnx_repo}/{settings.onnx_file}@{settings.embedding_max_tokens}"
+    return f"{settings.embedding_model}@{settings.embedding_max_tokens}"
+
+
 def make_embedder(backend: str | None = None) -> Embedder:
     """The embedding model chosen in the settings (QANOUN_EMBEDDING_BACKEND)."""
     backend = backend or settings.embedding_backend

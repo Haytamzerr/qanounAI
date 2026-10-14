@@ -82,6 +82,25 @@ article or the model changes. The Qdrant dashboard is at http://localhost:6333/d
 Without Docker (in a cloud notebook, or on a PC short of memory), set `QANOUN_QDRANT_URL=data/qdrant`:
 Qdrant then runs inside Python and saves to that folder.
 
+### On a laptop with 8 GB of RAM
+
+The full model (2.3 GB + torch) may not fit. Compute the article vectors once on a machine that can
+(a free Kaggle GPU notebook works), copy the `.npz` file into `data/processed/embeddings/`, then
+use the 8-bit version of the same model (568 MB, onnxruntime only) for questions. In `.env`:
+
+```bash
+QANOUN_EMBEDDING_BACKEND=onnx      # questions: 8-bit BGE-M3 (Xenova/bge-m3)
+QANOUN_QDRANT_URL=data/qdrant      # Qdrant as a folder, no Docker needed
+```
+
+```bash
+uv run python -m qanoun.retrieval.index --backend sentence-transformers   # loads the saved vectors, no model
+uv run python -m qanoun.generation.ask "chhal dyal lconji 3ndi f l3am?"
+```
+
+Measured cost of the 8-bit model for questions: none on Arabic, French or Arabizi; one of the four
+Darija questions in Arabic script (decision 55).
+
 ## Evaluate search
 
 ```bash

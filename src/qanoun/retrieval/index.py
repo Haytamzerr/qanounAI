@@ -89,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     # Imported here so `--help` answers instantly, without loading torch.
-    from qanoun.retrieval.embeddings import make_embedder
+    from qanoun.retrieval.embeddings import embedder_name, make_embedder
     from qanoun.retrieval.vector_store import ArticleStore, QdrantUnavailable
 
     articles = load_articles()  # a missing dataset fails here, before anything is opened
@@ -102,11 +102,17 @@ def main(argv: list[str] | None = None) -> int:
             return 1
 
     try:
-        print(f"loading the embedding model ({args.backend or settings.embedding_backend})…")
-        embedder = make_embedder(args.backend)
-        vectors = embed_articles(articles, embedder)
+        # Cached vectors are used without loading the model: a PC that can't hold the full
+        # model (2.3 GB) can still load the vectors computed elsewhere (decision 55).
+        name = embedder_name(args.backend)
+        vectors = load_cached(cache_path(name), fingerprint(name, articles))
+        if vectors is not None:
+            print(f"reusing {len(vectors)} vectors from {cache_path(name).name} (model not loaded)")
+        else:
+            print(f"loading the embedding model ({args.backend or settings.embedding_backend})…")
+            vectors = embed_articles(articles, make_embedder(args.backend))
         if store is not None:
-            store.recreate(embedder.dim)
+            store.recreate(vectors.shape[1])
             store.upsert(articles, vectors)
             print(f"Qdrant collection '{store.collection}': {store.count()} articles")
     finally:
