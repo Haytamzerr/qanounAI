@@ -210,8 +210,18 @@ def test_selection_keeps_one_current_pdf_per_law():
             entry("بتنفيذ القانون رقم 05.00 بشأن التعليم الأولي (نسخ)", path="r"),  # repealed
             entry("بتنفيذ القانون رقم 65.99 المتعلق بمدونة الشغل", path="c"),  # curated
             entry("مرسوم رقم 2.20.292", law_type="مرسوم", path="d"),  # not a law
+            entry("دستور المملكة المغربية لسنة 1970", path="h"),  # history
         ],
         types={"ظهير"},
         skip_keys={"65-99"},
     )
     assert chosen == [new]
+
+
+def test_a_law_filed_as_a_decree_is_still_a_law():
+    road_code = entry(
+        "ظهير شريف رقم 1.10.07 صادر في 26 من صفر 1431 (11 فبراير 2010) "
+        "بتنفيذ القانون رقم 52.05 المتعلق بمدونة السير على الطرق",
+        law_type="مرسوم",
+    )
+    assert select([road_code], types={"ظهير"}, skip_keys=set()) == [road_code]

@@ -31,7 +31,7 @@ from datetime import date
 from pathlib import Path
 
 from qanoun.config import settings
-from qanoun.ingestion.adala import CatalogEntry, load_catalog
+from qanoun.ingestion.adala import LAW_TYPES, CatalogEntry, is_law, load_catalog
 from qanoun.ingestion.models import Article, Source
 from qanoun.ingestion.parse_law import (
     PAGE_NUMBER,
@@ -196,6 +196,8 @@ DAHIR_PREFIX = re.compile(r"^(?:ال)?ظهير[^)]{0,140}\)\s*")  # "ظهير ش
 # Annual finance laws: hundreds of pages of budget tables, out of date every January
 FINANCE_LAW = re.compile(r"قانون المالية|القانون المالي|السنة المالية|معدل للمالية|قانون مالية")
 REPEALED_LAW = re.compile(r"\(\s*(?:نسخ|منسوخ|ملغى)\s*\)")  # "(نسخ)", not "(نسخ المواد 4 و5)"
+# The 1962-1992 constitutions are history, not law in force (2011: "بتنفيذ نص الدستور")
+OLD_CONSTITUTION = re.compile(r"دستور المملكة المغربية\s+لسنة")
 PERSIAN = str.maketrans({"ی": "ي", "ک": "ك"})  # look-alike letters some PDFs use
 CLOSING = re.compile(r"^و\s?حرر\s?ب|^وقعه\s+بالعطف")
 
@@ -228,7 +230,11 @@ def select(entries: list[CatalogEntry], types: set[str], skip_keys: set[str]) ->
     newest), and none of the laws already curated by hand (`skip_keys`)."""
     newest: dict[str, CatalogEntry] = {}
     for e in entries:
-        if e.law_type not in types or FINANCE_LAW.search(e.object):
+        if (
+            not is_law(e, types)
+            or FINANCE_LAW.search(e.object)
+            or OLD_CONSTITUTION.search(e.object)
+        ):
             continue
         if REPEALED_LAW.search(e.object) or REPEALED_LAW.search(e.name):
             continue
@@ -338,7 +344,7 @@ def _dedupe_ids(articles: list[Article]) -> list[Article]:
 
 # --- Command line -------------------------------------------------------------------------
 
-DEFAULT_TYPES = ("ظهير", "ظهير بمثابة قانون", "قانون", "قانون تنظيمي", "مدونة")
+DEFAULT_TYPES = LAW_TYPES
 
 
 def curated_keys() -> set[str]:
