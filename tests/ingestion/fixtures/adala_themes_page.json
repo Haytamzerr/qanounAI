@@ -1,0 +1,29 @@
+{
+ "props": {
+  "pageProps": {
+   "themes": [
+    {
+     "id": 106,
+     "name": "المادة الأسرية",
+     "language": "AR",
+     "createdAt": "2024-04-16T08:18:26.283Z",
+     "updatedAt": "2024-04-16T08:18:26.283Z",
+     "_count": {
+      "FileMeta": 15
+     }
+    },
+    {
+     "id": 185,
+     "name": "اتفاقيات إقليمية",
+     "language": "AR",
+     "createdAt": "2024-10-23T14:44:22.844Z",
+     "updatedAt": "2024-10-23T14:44:22.844Z",
+     "_count": {
+      "FileMeta": 30
+     }
+    }
+   ]
+  }
+ },
+ "page": "/themes"
+}
