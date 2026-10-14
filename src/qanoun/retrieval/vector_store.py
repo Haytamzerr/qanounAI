@@ -46,7 +46,9 @@ class ArticleStore:
         if not url.startswith(("http://", "https://")):
             Path(url).mkdir(parents=True, exist_ok=True)
             return cls(QdrantClient(path=url), collection)
-        client = QdrantClient(url=url, timeout=30)
+        # Versions are pinned together (docker-compose.yml, uv.lock); our own check below gives
+        # a clearer message than the client's version warning when the server is down.
+        client = QdrantClient(url=url, timeout=30, check_compatibility=False)
         try:
             client.get_collections()
         except Exception as error:

@@ -31,7 +31,8 @@ claim is tied to an article, and every citation is verified before it is shown.
 src/qanoun/
 ├── ingestion/    # PDFs → clean text → one record per article
 ├── retrieval/    # embeddings, hybrid search, re-ranking, cache
-├── generation/   # question understanding (Darija), answers, citation checks
+├── understanding/ # language detection, Arabizi → Arabic script, Darija legal lexicon
+├── generation/   # answers, citation checks
 ├── agent/        # tools and agent loop
 ├── mcp_server/   # MCP server
 └── api/          # FastAPI service
@@ -99,6 +100,23 @@ Meaning-based search finds the right article for every Arabic and French questio
 questions answered by Arabic-only laws. Plain RRF fusion *lowers* the score: BM25 can't match across
 languages, so it pushes wrong articles into the fused list. Arabizi (Darija in Latin letters) is the
 open problem: the next step converts it to Arabic script before searching.
+
+### Darija: understanding the question first
+
+Before searching, each question goes through `qanoun.understanding`: language detection (rules,
+45/45 correct), Arabizi → Arabic script ("l7e9" → "الحق"), and an open
+[Darija → legal-Arabic lexicon](data/lexicon/darija_legal.csv) ("tredouni mn lkhedma" →
+"الفصل من الشغل"). Measured part by part (`--method bm25+arabizi bm25+lexicon bm25+darija`):
+
+| BM25 + … | Arabizi, development (9 q.) | Arabizi, held-out (12 q.) |
+| --- | --- | --- |
+| nothing | 11% | 0% |
+| Arabizi → Arabic script | 22% | 0% |
+| lexicon | 56% | 50% |
+| both | 44% | 50% |
+
+The held-out questions ([eval/darija_holdout.jsonl](eval/darija_holdout.jsonl)) were written by a
+native speaker who never saw the lexicon, and scored before any change: the lexicon generalises.
 
 ## Roadmap
 
