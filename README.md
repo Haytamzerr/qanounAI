@@ -92,6 +92,13 @@ Scores each search method on 45 test questions (`eval/retrieval_set.jsonl`) in A
 | Method | Hit@5 | Arabic | French | Darija (Arabic script) | Arabizi |
 | --- | --- | --- | --- | --- | --- |
 | BM25 keywords (baseline) | 47% | 78% | 11% | 25% | 11% |
+| **Dense (BGE-M3 + Qdrant)** | **82%** | **100%** | **100%** | **75%** | 22% |
+| Hybrid (BM25 + dense, RRF) | 73% | 96% | 89% | 25% | 22% |
+
+Meaning-based search finds the right article for every Arabic and French question, including French
+questions answered by Arabic-only laws. Plain RRF fusion *lowers* the score: BM25 can't match across
+languages, so it pushes wrong articles into the fused list. Arabizi (Darija in Latin letters) is the
+open problem: the next step converts it to Arabic script before searching.
 
 ## Roadmap
 
