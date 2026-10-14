@@ -81,14 +81,19 @@ def test_missing_key_is_explained(monkeypatch):
         GeminiLLM("gemini-x")
 
 
-def flaky_gemini(failures: dict[str, int], calls: list[str], status: int = 503):
-    """Each model fails `failures[model]` times with `status`, then answers."""
+def flaky_gemini(
+    failures: dict[str, int], calls: list[str], status: int = 503, retired: tuple[str, ...] = ()
+):
+    """Each model fails `failures[model]` times with `status`, then answers; `retired` models
+    always answer 404, like a model listed but no longer open to new users."""
 
     def handler(request: httpx.Request) -> httpx.Response:
         if request.url.path.endswith("/models"):
             return httpx.Response(200, json=MODELS)
         model = request.url.path.split("/models/")[1].split(":")[0]
         calls.append(model)
+        if model in retired:
+            return httpx.Response(404, json={"error": {"message": "no longer available"}})
         if failures.get(model, 0) > 0:
             failures[model] -= 1
             return httpx.Response(status, json={"error": {"message": "high demand"}})
@@ -140,3 +145,22 @@ def test_lite_models_are_the_last_resort():
 
     ranked = rank_models([m["name"].removeprefix("models/") for m in MODELS["models"]])
     assert ranked == ["gemini-3.0-flash", "gemini-2.5-flash", "gemini-3.5-flash-lite"]
+
+
+def test_retired_model_is_skipped_for_good():
+    calls = []
+    client = flaky_gemini({"gemini-3.0-flash": 1}, calls, retired=("gemini-2.5-flash",))
+    llm = GeminiLLM(api_key="k", client=client, sleep=lambda s: None)
+    # 3.0 busy → 2.5 retired (404) → lite answers; no crash
+    assert llm.generate("s", "u") == "hello from gemini-3.5-flash-lite"
+    calls.clear()
+    llm.name = "gemini-3.0-flash"
+    llm.generate("s", "u")
+    assert "gemini-2.5-flash" not in calls
+
+
+def test_every_model_retired_is_explained():
+    all_models = ("gemini-3.0-flash", "gemini-2.5-flash", "gemini-3.5-flash-lite")
+    llm = GeminiLLM(api_key="k", client=flaky_gemini({}, [], retired=all_models))
+    with pytest.raises(LLMError, match="404"):
+        llm.generate("s", "u")
