@@ -32,11 +32,11 @@ def bm25_retriever() -> Retriever:
 
 @cache  # the model loads once, and Qdrant's folder is opened once (it allows one client)
 def dense_retriever() -> Retriever:
-    from qanoun.retrieval.embeddings import BGEM3Embedder
+    from qanoun.retrieval.embeddings import make_embedder
     from qanoun.retrieval.search import DenseSearcher
     from qanoun.retrieval.vector_store import ArticleStore
 
-    searcher = DenseSearcher(BGEM3Embedder(), ArticleStore.connect())
+    searcher = DenseSearcher(make_embedder(), ArticleStore.connect())
     return _with_sections(searcher)
 
 

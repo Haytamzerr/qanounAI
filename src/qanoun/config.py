@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     embedding_model: str = "BAAI/bge-m3"
     embedding_max_tokens: int = 1024  # longer articles are cut; only 2 of 1,329 exceed it
     embedding_batch_size: int = 8  # small batches keep memory low on an 8 GB laptop
+    # "sentence-transformers": the full model (2.3 GB, needs torch); "onnx": the same model
+    # compressed to 8-bit integers (568 MB, onnxruntime only), for an 8 GB laptop or a small server
+    embedding_backend: str = "sentence-transformers"
+    onnx_repo: str = "Xenova/bge-m3"
+    onnx_file: str = "onnx/model_int8.onnx"
 
     # Services (filled in from Phase 2)
     qdrant_url: str = "http://localhost:6333"
