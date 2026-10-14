@@ -31,7 +31,7 @@ def test_only_arabizi_is_sent_to_the_model():
         "Quelle est la durée du préavis ?",
         "شحال من ساعة خاصني نخدم فالسيمانة؟",  # Darija in Arabic letters: the lexicon suffices
     ):
-        assert understand(question, rewriter=LLMRewriter(llm)).query == question
+        assert understand(question, rewriter=LLMRewriter(llm)).rewritten is None
     assert llm.calls == 0  # no cost, no delay
 
 
