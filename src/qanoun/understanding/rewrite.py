@@ -1,8 +1,11 @@
 """Turn a question into the text we search with.
 
 - formal Arabic and French: searched as they are (the model already gets 100% on them);
-- Darija in Arabic letters: the question plus the legal terms of the Darija words it uses;
-- Arabizi: the question, its Arabic-script version, plus the legal terms.
+- Darija, in either script: the question plus the legal terms of the Darija words it uses.
+
+Converting Arabizi to Arabic script is available (`use_arabizi=True`) but off by default:
+measured with the real model, it lowered Arabizi scores (development 78% → 33%, held-out
+50% → 42%), because its approximate spellings ("الهق" for الحق) add noise. See decision 40.
 
 Keeping the original question means nothing is lost when the conversion or the lexicon is wrong:
 the search model sees all three and weighs them.
@@ -29,7 +32,7 @@ class Understanding:
 
 
 def understand(
-    question: str, *, use_arabizi: bool = True, use_lexicon: bool = True
+    question: str, *, use_arabizi: bool = False, use_lexicon: bool = True
 ) -> Understanding:
     language = detect_language(question)
     result = Understanding(question, language, question)

@@ -5,9 +5,9 @@ Usage:
     uv run python -m qanoun.retrieval.evaluate --method bm25 dense hybrid   # compare methods
 
 `dense` and `hybrid` need Qdrant running and loaded (see qanoun.retrieval.index).
-Methods ending in `+darija` first pass the question through qanoun.understanding (language
-detection, Arabizi → Arabic script, Darija lexicon); `+arabizi` and `+lexicon` use one part only,
-to measure what each part brings.
+Methods ending in `+darija` first pass the question through qanoun.understanding with its default
+settings (language detection + Darija lexicon). `+arabizi`, `+lexicon` and `+both` switch the two
+parts on separately, to measure what each one brings (an ablation study).
 
     uv run python -m qanoun.retrieval.evaluate --method dense dense+darija \\
         --questions eval/darija_holdout.jsonl
@@ -111,9 +111,10 @@ BASE_SEARCHERS: dict[str, Callable[[], Searcher]] = {
     "hybrid": hybrid_searcher,
 }
 VARIANTS = {
-    "darija": {},
-    "arabizi": {"use_lexicon": False},
-    "lexicon": {"use_arabizi": False},
+    "darija": {},  # the default pipeline
+    "arabizi": {"use_arabizi": True, "use_lexicon": False},
+    "lexicon": {"use_arabizi": False, "use_lexicon": True},
+    "both": {"use_arabizi": True, "use_lexicon": True},
 }
 SEARCHERS: dict[str, Callable[[], Searcher]] = {
     **BASE_SEARCHERS,
