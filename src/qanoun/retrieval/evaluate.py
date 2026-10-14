@@ -17,6 +17,7 @@ Results are broken down by language, because Darija is the hard case we must tra
 """
 
 import argparse
+import atexit
 import json
 from collections import defaultdict
 from collections.abc import Callable
@@ -68,6 +69,7 @@ def _dense():
     from qanoun.retrieval.vector_store import ArticleStore
 
     store = ArticleStore.connect()
+    atexit.register(store.client.close)  # release Qdrant cleanly at exit (needed in folder mode)
     expected = len(load_articles())
     if store.count() != expected:
         raise SystemExit(
@@ -227,8 +229,6 @@ def main(argv: list[str] | None = None) -> int:
         out.write_text(text, encoding="utf-8")
         print(text)
         print(f"comparison written to {out}")
-    if _dense.cache_info().currsize:  # release Qdrant cleanly (needed in folder mode)
-        _dense().store.client.close()
     return 0
 
 

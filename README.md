@@ -108,12 +108,15 @@ Before searching, each question goes through `qanoun.understanding`: language de
 [Darija → legal-Arabic lexicon](data/lexicon/darija_legal.csv) ("tredouni mn lkhedma" →
 "الفصل من الشغل"). Measured part by part (`--method bm25+arabizi bm25+lexicon bm25+darija`):
 
-| BM25 + … | Arabizi hit@5 |
-| --- | --- |
-| nothing | 11% |
-| Arabizi → Arabic script | 22% |
-| lexicon | 56% |
-| both | 44% |
+| BM25 + … | Arabizi, development (9 q.) | Arabizi, held-out (12 q.) |
+| --- | --- | --- |
+| nothing | 11% | 0% |
+| Arabizi → Arabic script | 22% | 0% |
+| lexicon | 56% | 50% |
+| both | 44% | 50% |
+
+The held-out questions ([eval/darija_holdout.jsonl](eval/darija_holdout.jsonl)) were written by a
+native speaker who never saw the lexicon, and scored before any change: the lexicon generalises.
 
 ## Roadmap
 
