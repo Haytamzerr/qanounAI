@@ -37,5 +37,5 @@ def test_metrics_on_scripted_answers():
     assert fr["questions"] == 3 and fr["errors"] == 1
     assert fr["answered"] == 1 / 3
     text = report("test", results)
-    assert "| all | 4 | 50% | 25% |" in text
+    assert "| all | 4 | 75% | 50% | 25% |" in text  # q1-q3 had an expected article in the sources
     assert "### `q1` (darija-latn) correct" in text
