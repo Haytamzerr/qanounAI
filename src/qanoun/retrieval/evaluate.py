@@ -5,6 +5,12 @@ Usage:
     uv run python -m qanoun.retrieval.evaluate --method bm25 dense hybrid   # compare methods
 
 `dense` and `hybrid` need Qdrant running and loaded (see qanoun.retrieval.index).
+Methods ending in `+darija` first pass the question through qanoun.understanding (language
+detection, Arabizi → Arabic script, Darija lexicon); `+arabizi` and `+lexicon` use one part only,
+to measure what each part brings.
+
+    uv run python -m qanoun.retrieval.evaluate --method dense dense+darija \\
+        --questions eval/darija_holdout.jsonl
 
 The test set (eval/retrieval_set.jsonl) lists questions with the articles that answer them.
 Results are broken down by language, because Darija is the hard case we must track.
@@ -86,10 +92,34 @@ def hybrid_searcher() -> Searcher:
     return HybridSearcher(_bm25(), _dense())
 
 
-SEARCHERS: dict[str, Callable[[], Searcher]] = {
+def with_understanding(base: Callable[[], Searcher], **options) -> Callable[[], Searcher]:
+    """The same search, run on the rewritten question instead of the raw one."""
+    from qanoun.understanding.rewrite import understand
+
+    def factory() -> Searcher:
+        search = base()
+        return lambda question, k: search(understand(question, **options).query, k)
+
+    return factory
+
+
+BASE_SEARCHERS: dict[str, Callable[[], Searcher]] = {
     "bm25": bm25_searcher,
     "dense": dense_searcher,
     "hybrid": hybrid_searcher,
+}
+VARIANTS = {
+    "darija": {},
+    "arabizi": {"use_lexicon": False},
+    "lexicon": {"use_arabizi": False},
+}
+SEARCHERS: dict[str, Callable[[], Searcher]] = {
+    **BASE_SEARCHERS,
+    **{
+        f"{name}+{variant}": with_understanding(base, **options)
+        for name, base in BASE_SEARCHERS.items()
+        for variant, options in VARIANTS.items()
+    },
 }
 
 
@@ -173,23 +203,27 @@ def comparison(results_by_method: dict[str, list[QuestionResult]]) -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Evaluate a search method.")
     parser.add_argument("--method", nargs="+", choices=list(SEARCHERS), default=["bm25"])
+    parser.add_argument(
+        "--questions", type=Path, default=None, help="default: eval/retrieval_set.jsonl"
+    )
     args = parser.parse_args(argv)
 
     reports_dir = EVAL_DIR / "reports"
     reports_dir.mkdir(parents=True, exist_ok=True)
     today = date.today().isoformat()
-    questions = load_questions()
+    questions = load_questions(args.questions)
+    label = "" if args.questions is None else f"{args.questions.stem}-"
     results_by_method = {}
     for method in args.method:
         results = results_by_method[method] = run(SEARCHERS[method](), questions)
         text = report(method, results)
-        out = reports_dir / f"retrieval-{method}-{today}.md"
+        out = reports_dir / f"retrieval-{label}{method}-{today}.md"
         out.write_text(text, encoding="utf-8")
         print(text)
         print(f"report written to {out}\n")
     if len(results_by_method) > 1:
         text = comparison(results_by_method)
-        out = reports_dir / f"retrieval-comparison-{today}.md"
+        out = reports_dir / f"retrieval-{label}comparison-{today}.md"
         out.write_text(text, encoding="utf-8")
         print(text)
         print(f"comparison written to {out}")

@@ -1,0 +1,55 @@
+domain,arabizi,darija_ar,legal_ar,legal_fr
+travail,khe?d[ea]?m|khdm|5e?dm|travail,خدم;خدمة;الخدمة,الشغل,travail
+travail,tr[ae]d|tard|jra(?:w|ou)|jrrit|louh(?:ni|ouni)|vir[eé]|licenci,طرد;جراو;لوحوني,الفصل من الشغل;الفصل التعسفي,licenciement
+travail,patron|bo?ss\b|m3all?em|mol (?:l)?(?:charika|chrika|lkhdma)|employeur,باطرون;الباطرون;المعلم;مول الشركة,المشغل,employeur
+travail,kh?add?am\b|5addam\b|kh?ddama|mowa?dd?af|salari[eé]|ouvrier,خدام;خدامة;الخدامة;موظف,الأجير;الأجيرة,salarié
+travail,kh?l[ae]s\b|5las|kh?elsa|salaire|ratib|ojra|l?ojra,خلاص;الخلاص;الخلصة;السالير;الأجرة;الراتب,الأجر,salaire
+travail,smig|smag|l?7ad l?adna,السميك;الحد الأدنى,الحد الأدنى القانوني للأجر,salaire minimum
+travail,cong[eé]|conji|konji|kong[eé]|3otla|vacances?,كونجي;الكونجي;عطلة;العطلة,العطلة السنوية المؤدى عنها;العطلة,congé
+travail,wilada|wlada|wl?edt|tolid|accouch|maternit|7amla|7mel|7aml\b,الولادة;ولدت;حاملة;الحمل,إجازة الولادة;الأجيرة الحامل;حماية الأمومة,congé de maternité
+travail,rda3|rde3|tr[ae]dd?[ae]3|allait,رضاعة;الرضاعة;ترضع,استراحة الرضاعة;الأم الأجيرة,allaitement
+travail,lil\b|lila\b|blil|fllil|nuit,الليل;بالليل;فالليل,الشغل الليلي,travail de nuit
+travail,heures? sup|sa3at zay?d|sway[ae]3 zay?d|sa3at idafi|swaye3 zayda|supp\b,سوايع زايدين;ساعات زايدة;الساعات الزايدة,الساعات الإضافية;التعويض عن الساعات الإضافية,heures supplémentaires
+travail,sa3a\b|sa3at|swaye3|swa3[ae]|heures?\b,ساعة;سوايع;ساعات,مدة الشغل,durée du travail
+travail,s[ei]mana|smana|semaine,السيمانة;سيمانة,الأسبوع,semaine
+travail,ra7a\b|r7a\b|repos|nhar l?3otla,راحة;الراحة,الراحة الأسبوعية,repos
+travail,nst[ae]9al|st[ae]9al|st[ae]9[ae]lt|d[eé]mission|nkhrj mn l?kh|nkhroj mn l?kh|nmchi mn l?kh|nkhli l?khdma,نستاقل;استقالة;نخرج من الخدمة;نخلي الخدمة,الاستقالة;إنهاء عقد الشغل بإرادة الأجير;أجل الإخطار,démission
+travail,pr[eé]avis|i5tar|ikhtar,البريافي;الإخطار,أجل الإخطار,préavis
+travail,ta3wi?d|t3wi?d|indemni|da?dommag,تعويض;التعويض,التعويض عن الفصل;التعويض عن الضرر,indemnité
+travail,contrat|kontra|cdi\b|cdd\b|3a9d|3e9d,كونطرا;الكونطرا;العقد,عقد الشغل,contrat de travail
+travail,p[eé]riode d.?essai|ta?jriba|tajrib|ikhtibar|f test\b,فترة التجربة;التجربة;الاختبار,فترة الاختبار,période d'essai
+travail,chah[ae]d[ae]t? (?:l?3a?mal|l?kh?e?dma|travail)|attestation de travail|certificat de travail,شهادة العمل;شهادة الخدمة,شهادة الشغل,certificat de travail
+travail,cnss|dman ijtima3i|daman ijtima3i|s[eé]curit[eé] sociale,الضمان الاجتماعي;السي إن إس إس,الضمان الاجتماعي,sécurité sociale
+travail,accident|7adita|ksida|t9a3 lia f l?kh|tjre7t f l?kh,كسيدة;حادثة,حادثة شغل,accident du travail
+travail,sandika|ni9aba|nikaba|syndicat|gr[eè]ve|idrab|i?drab,نقابة;النقابة;الإضراب;إضراب,النقابة;الإضراب,syndicat
+famille,zwaj|zewj|zwej|zawaj|t?zew?w?ej|y?zew?w?ej|zawj|mariage|3e?rs\b,زواج;الزواج;تزوج;يتزوج;تزوجت;نتزوج;العرس,الزواج;عقد الزواج,mariage
+famille,tla9|tl[ae]q|tal?a9|t?te?l[ae]9|divorc|tle9,الطلاق;طلاق;طلقها;طلقني;تطلقت,الطلاق;التطليق,divorce
+famille,mra (?:tanya|tania|okhra|jdida)|zawja (?:tanya|tania)|polygam|ta3addod,مرا تانية;مرا اخرى;زوجة ثانية,تعدد الزوجات,polygamie
+famille,mra\b|mrat[ou]\b|mrato|mratu|mrati|mratk|zawja|l?mra\b,مرا;المرا;مراتو;مراتي,الزوجة;المرأة,épouse
+famille,rajl|rajel|rajlha|rajli|zawj\b|mari\b|marie\b,راجل;راجلها;راجلي,الزوج,mari
+famille,wlad|lwlad|drari|wlid|wlidat|bnat\b|weld\b|bent\b|enfants?,الولاد;ولاد;الدراري;دراري;وليدات;وليداتي,الأطفال;الأولاد;المحضون,enfants
+famille,7a?dana|hadana|garde des enfants|b9aw m3a|yb9aw m3a|ib9aw m3a|ychd l?wlad|yakhod l?wlad|ychdd l?wlad,الحضانة;حضانة;يبقاو مع;ياخد الولاد,الحضانة,garde
+famille,nafa9a|nfa9a|nafaqa|pension alimentaire|masrouf|mesrouf|msrouf,النفقة;نفقة;المصروف,النفقة,pension alimentaire
+famille,sdaq|sda9|sadaq|sada9|mahr|\bdot\b,الصداق;صداق;المهر,الصداق,dot
+famille,mot3a|mut3a|mout3a|l?3idda|3edda|mousta7a9at|mosta7a9at|7o9o9 l?mra,المتعة;العدة;مستحقات,مستحقات الزوجة;المتعة;نفقة العدة,droits de l'épouse
+famille,wra9|wra9i|lwra9|papiers|dossier|watha2i9|wtha2e9|documents,الوراق;الأوراق;الوثائق;دوسي,الوثائق;ملف عقد الزواج,documents
+famille,3dol|3doul|l3doul|adoul|notaire,العدول;عدول,العدلان;توثيق عقد الزواج,adoul
+famille,wirt|wert|mirat|wrata|h[eé]ritage|tarika|tarka,الورث;الميراث;التركة,الميراث;التركة,héritage
+famille,idn|izn|permission|mwaf9a|mwafa9a|consentement|accord\b,إذن;الإذن;موافقة;الموافقة,الإذن;الموافقة;الرضى,consentement
+consommation,chrit|chra\b|nchri|tchra|chrina|achat|achet,شريت;شرا;نشري;الشراء,الشراء;المستهلك;عقد البيع,achat
+consommation,7anout|l7anout|mol l?7anout|bay3\b|vendeur|magasin|boutique,الحانوت;مول الحانوت;البايع,المورد;البائع,fournisseur
+consommation,nraj3|rj3|nraddha|nrdha|rembours|retour|annul|rja3 l?flous|rj3 l?flous|refund|nlghi,نرجع;رجع;نرد;نرجعها;نلغي,التراجع;حق التراجع;استرجاع المبلغ المدفوع,droit de rétractation
+consommation,flous|flousi|lflous,الفلوس;فلوسي,المبلغ المدفوع,argent
+consommation,internet|online|en ligne|\bsite\b|jumia|command|livraison|livreur,الانترنت;أونلاين;الكوموند,البيع عن بعد;التعاقد عن بعد,vente à distance
+consommation,khas[e3]r|mkhas[e3]r|m3[ae]wj|3ib\b|d[eé]fectu|d[eé]faut|panne|ma ?khdamch|ma ?bgatch tkh|t3e?wel,خاسر;مخسر;عيب;معوج,عيوب الشيء المبيع;الضمان القانوني,défaut
+consommation,garantie|garanti\b|dmana|damana,الضمانة;الكارانتي,الضمان القانوني;الضمان الاتفاقي,garantie
+consommation,taman|thaman|\bprix|facture|fatoura|ticket|tiket,الثمن;الفاتورة,الثمن;الفاتورة;إعلام المستهلك,prix
+consommation,kridi|cr[eé]dit|9ard|sellef|tslif,الكريدي;القرض;السلف,القرض;القروض الاستهلاكية,crédit
+donnees,pub\b|publicit|i3lan|ichhar|ich?har|messages? publi|\bsms\b|spam,الإشهار;الإعلانات;البوب,الإشهار;الاستقراء المباشر,prospection
+donnees,donn[eé]es|ma3loumat|m3loumat|ma3tayat|m3tayat|\bdata\b|infos?\b|informations?\b|nmra dyali|num[eé]ro dyali,معلوماتي;المعلومات;المعطيات;الداطا,المعطيات ذات الطابع الشخصي,données personnelles
+donnees,s[ae]7?7a7|ys[ae]7?7?7|t?ss?a7i7|corrig|rectif|ybedd?lo|ybdl|tbdl|modifi|ghalta|ghalat|ghlat|ghalet,يصحح;تصحيح;غالطة;الغلط;يبدلو,الحق في التصحيح;تصحيح المعطيات,droit de rectification
+donnees,yms[ae]7|ms[ae]7|supprim|y7aydo|effac,يمسح;مسح;يحيدو,مسح المعطيات;الحق في التصحيح,effacement
+donnees,nrfd|nerfod|nrfod|rf[ae]d|refus|oppos|ma ?bghitch|nmn3|nmne3,نرفض;رفض;ما بغيتش;نمنع,الحق في التعرض,droit d'opposition
+donnees,n3ref chno 3ndhom|chno 3ndhom 3li|acc[eè]s|nchouf l?ma3loumat|consult,نعرف شنو عندهم,الحق في الولوج,droit d'accès
+donnees,charika|chrika|sharika|soci[eé]t[eé]|entreprise|boite\b,الشركة;شركة,المسؤول عن المعالجة;المقاولة,entreprise
+donnees,cndp|lajna l?wataniya,اللجنة الوطنية,اللجنة الوطنية لمراقبة حماية المعطيات ذات الطابع الشخصي,CNDP
