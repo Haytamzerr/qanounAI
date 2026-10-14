@@ -164,3 +164,64 @@ def test_every_model_retired_is_explained():
     llm = GeminiLLM(api_key="k", client=flaky_gemini({}, [], retired=all_models))
     with pytest.raises(LLMError, match="404"):
         llm.generate("s", "u")
+
+
+def test_replay_of_the_slow_answer_busy_models_are_not_retried_first():
+    """2026-10-14: the first try fell back past two hanging models, then the retry of the same
+    answer started again with those two models, adding 2 minutes."""
+    calls = []
+    client = flaky_gemini({"gemini-3.0-flash": 99}, calls)
+    llm = GeminiLLM(api_key="k", client=client, sleep=lambda s: None)
+    llm.generate("s", "first try")
+    calls.clear()
+    llm.generate("s", "retry")
+    assert calls == ["gemini-2.5-flash"]  # straight to the model that worked
+
+
+def test_busy_models_are_tried_after_the_free_ones():
+    calls = []
+    failures = {"gemini-3.0-flash": 99, "gemini-2.5-flash": 0}
+    llm = GeminiLLM(api_key="k", client=flaky_gemini(failures, calls), sleep=lambda s: None)
+    llm.generate("s", "u")  # 3.0 busy → 2.5
+    failures["gemini-2.5-flash"] = 1
+    calls.clear()
+    llm.generate("s", "u")  # 2.5 busy now → the free lite model, not the busy 3.0
+    assert calls == ["gemini-2.5-flash", "gemini-3.5-flash-lite"]
+
+
+def test_a_hanging_model_counts_as_busy():
+    calls = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/models"):
+            return httpx.Response(200, json=MODELS)
+        model = request.url.path.split("/models/")[1].split(":")[0]
+        calls.append(model)
+        if model == "gemini-3.0-flash":
+            raise httpx.ReadTimeout("no answer", request=request)
+        return httpx.Response(200, json=reply("ok"))
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+    llm = GeminiLLM(api_key="k", client=client, sleep=lambda s: None)
+    assert llm.generate("s", "u") == "ok"
+    assert calls == ["gemini-3.0-flash", "gemini-2.5-flash"]
+
+
+def test_the_working_model_and_refused_ones_are_remembered(tmp_path):
+    state = tmp_path / "llm.json"
+    client = flaky_gemini({"gemini-3.0-flash": 99}, [], retired=("gemini-2.5-flash",))
+    GeminiLLM(api_key="k", client=client, sleep=lambda s: None, state_path=state).generate("s", "u")
+    saved = json.loads(state.read_text())
+    assert saved == {"model": "gemini-3.5-flash-lite", "retired": ["gemini-2.5-flash"]}
+
+    requests: list[httpx.Request] = []
+    again = GeminiLLM(api_key="k", client=fake_gemini(requests, reply("hi")), state_path=state)
+    assert again.name == "gemini-3.5-flash-lite"
+    assert requests == []  # no need to list the models again
+
+
+def test_a_damaged_state_file_is_ignored(tmp_path):
+    state = tmp_path / "llm.json"
+    state.write_text("not json")
+    llm = GeminiLLM(api_key="k", client=fake_gemini([], reply("")), state_path=state)
+    assert llm.name == "gemini-3.0-flash"

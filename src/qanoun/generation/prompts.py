@@ -15,8 +15,10 @@ LANGUAGE_INSTRUCTIONS = {
     "fr": "Answer in French.",
     "darija-ar": "Answer in Moroccan Darija written in Arabic letters, simply and clearly.",
     "darija-latn": (
-        "Answer in Moroccan Darija written in Latin letters (Arabizi, as the user wrote), "
-        "simply and clearly. You may quote the legal term in Arabic in parentheses."
+        "Answer in everyday Moroccan Darija written in Latin letters with digits, the way "
+        "Moroccans text on WhatsApp (3 = ع, 7 = ح, 9 = ق), e.g. \"3ndek l7e9 f 18 nhar dyal "
+        "lconji f l3am\". Not classical Arabic in Latin letters. You may quote the legal term in "
+        "Arabic in parentheses."
     ),
 }
 
