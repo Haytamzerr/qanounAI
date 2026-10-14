@@ -152,6 +152,19 @@ DARIJA_LATN_WORDS = set(
     ]
 )
 DIGIT_AS_LETTER = re.compile(r"[a-z]*[235789][a-z]|[a-z][235789]", re.IGNORECASE)
+# A number glued to a unit is ordinary French, not Arabizi: "2ans", "3mois", "2e", "44h", "300dh".
+NUMBER_WITH_UNIT = re.compile(
+    r"\d+(?:ans?|mois|jours?|j|h|heures?|min|e|ème|eme|er|ère|ere|nd|nde|semaines?|sem|dh|mad"
+    r"|dhs|%|kg|km|m|cm|ml|l|x)",
+    re.IGNORECASE,
+)
+
+
+def _digit_as_letter(word: str) -> bool:
+    """A digit standing for a letter ("3ndi", "l7e9"), not a number with its unit ("2ans")."""
+    if word.isdigit() or NUMBER_WITH_UNIT.fullmatch(word):
+        return False
+    return bool(DIGIT_AS_LETTER.search(word))
 
 
 def detect_language(text: str) -> str:
@@ -162,7 +175,7 @@ def detect_language(text: str) -> str:
         normalized = {normalize(w) for w in words}
         return "darija-ar" if normalized & DARIJA_AR_WORDS else "ar"
     lowered = [w.lower() for w in words]
-    if any(DIGIT_AS_LETTER.search(w) and not w.isdigit() for w in lowered):
+    if any(_digit_as_letter(w) for w in lowered):
         return "darija-latn"
     return "darija-latn" if set(lowered) & DARIJA_LATN_WORDS else "fr"
 

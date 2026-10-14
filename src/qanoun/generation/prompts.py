@@ -12,7 +12,10 @@ from qanoun.ingestion.models import Article
 
 LANGUAGE_INSTRUCTIONS = {
     "ar": "Answer in Modern Standard Arabic.",
-    "fr": "Answer in French.",
+    "fr": (
+        "Answer in French, even though most sources are in Arabic: translate what they say. "
+        "You may add the Arabic legal term in parentheses."
+    ),
     "darija-ar": "Answer in Moroccan Darija written in Arabic letters, simply and clearly.",
     "darija-latn": (
         "Answer in everyday Moroccan Darija written in Latin letters with digits, the way "
