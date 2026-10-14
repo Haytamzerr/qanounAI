@@ -116,6 +116,10 @@ with the real model (dense search, hit@5):
 | **lexicon (default)** | **96%** | **100%** | **78%** | **50%** |
 | both | 87% | 100% | 33% | 42% |
 
+With the language model restating Arabizi questions in formal legal Arabic before the search
+(`+rewrite`), the held-out Arabizi score goes from **50% to 92%** (MRR 0.32 → 0.79), development
+Arabizi from 78% to 89%. It is on by default, for Arabizi only.
+
 Arabic and French stay at 100% in every row. The held-out questions
 ([eval/darija_holdout.jsonl](eval/darija_holdout.jsonl)) were written by a native speaker who never
 saw the lexicon and were scored before any change: on its own, the model finds none of them. The
