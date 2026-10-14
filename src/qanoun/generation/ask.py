@@ -8,6 +8,7 @@ file, for a PC short of memory.
 """
 
 import argparse
+import atexit
 import sys
 from functools import cache
 
@@ -36,7 +37,9 @@ def dense_retriever() -> Retriever:
     from qanoun.retrieval.search import DenseSearcher
     from qanoun.retrieval.vector_store import ArticleStore
 
-    searcher = DenseSearcher(make_embedder(), ArticleStore.connect())
+    store = ArticleStore.connect()
+    atexit.register(store.client.close)  # close before Python shuts down, not during
+    searcher = DenseSearcher(make_embedder(), store)
     return _with_sections(searcher)
 
 
