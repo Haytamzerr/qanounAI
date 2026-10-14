@@ -153,20 +153,25 @@ def report(label: str, results: list[AnswerResult]) -> str:
 def main(argv: list[str] | None = None) -> int:
     from qanoun.generation.ask import RETRIEVERS
     from qanoun.generation.llm import STATE_PATH, GeminiLLM, configure_logging
+    from qanoun.understanding.llm_rewrite import LLMRewriter
 
     parser = argparse.ArgumentParser(description="Evaluate full answers on a question set.")
     parser.add_argument("--questions", type=Path, default=None)
     parser.add_argument("--retriever", choices=list(RETRIEVERS), default="dense")
     parser.add_argument("--limit", type=int, default=None, help="only the first N questions")
+    parser.add_argument("--no-rewrite", action="store_true", help="no LLM rewrite of Darija")
     parser.add_argument("--pause", type=float, default=4.0, help="seconds between questions")
     args = parser.parse_args(argv)
 
     configure_logging()
     questions = load_questions(args.questions)[: args.limit]
-    answerer = Answerer(RETRIEVERS[args.retriever](), GeminiLLM(state_path=STATE_PATH))
+    llm = GeminiLLM(state_path=STATE_PATH)
+    rewriter = None if args.no_rewrite else LLMRewriter(llm)
+    answerer = Answerer(RETRIEVERS[args.retriever](), llm, rewriter=rewriter)
     results = run(answerer, questions, pause=args.pause)
 
-    label = f"{args.retriever}" + ("" if args.questions is None else f"-{args.questions.stem}")
+    label = args.retriever + ("" if args.no_rewrite else "-rewrite")
+    label += "" if args.questions is None else f"-{args.questions.stem}"
     out = EVAL_DIR / "reports" / f"answers-{label}-{date.today().isoformat()}"
     out.parent.mkdir(parents=True, exist_ok=True)
     text = report(label, results)

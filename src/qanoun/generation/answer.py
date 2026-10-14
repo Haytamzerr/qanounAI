@@ -73,15 +73,23 @@ def _parse(raw: str) -> tuple[str, str, list[int]]:
 
 
 class Answerer:
-    def __init__(self, retriever: Retriever, llm: LLM, k: int = 6, retries: int = 1):
+    def __init__(
+        self,
+        retriever: Retriever,
+        llm: LLM,
+        k: int = 6,
+        retries: int = 1,
+        rewriter: Callable[[str], str | None] | None = None,
+    ):
         self.retriever = retriever
         self.llm = llm
+        self.rewriter = rewriter
         self.k = k
         self.retries = retries
 
     def answer(self, question: str) -> Answer:
         clock = time.perf_counter()
-        understood = understand(question)
+        understood = understand(question, rewriter=self.rewriter)
         sources = self.retriever(understood.query, self.k)
         seconds = {"retrieval": time.perf_counter() - clock}
         language = understood.language

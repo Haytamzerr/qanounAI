@@ -14,6 +14,7 @@ from functools import cache
 from qanoun.generation.answer import Answer, Answerer, Retriever
 from qanoun.generation.llm import STATE_PATH, GeminiLLM, configure_logging
 from qanoun.retrieval.corpus import load_articles, search_text
+from qanoun.understanding.llm_rewrite import LLMRewriter
 
 
 @cache
@@ -83,7 +84,9 @@ def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):  # a terminal, not a notebook
         sys.stdout.reconfigure(encoding="utf-8")  # Arabic in the Windows terminal
     configure_logging()  # one line per model attempt, with its time
-    answerer = Answerer(RETRIEVERS[args.retriever](), GeminiLLM(state_path=STATE_PATH), k=args.k)
+    llm = GeminiLLM(state_path=STATE_PATH)
+    rewriter = None if args.no_rewrite else LLMRewriter(llm)
+    answerer = Answerer(RETRIEVERS[args.retriever](), llm, k=args.k, rewriter=rewriter)
     print(render(answerer.answer(args.question)))
     return 0
 

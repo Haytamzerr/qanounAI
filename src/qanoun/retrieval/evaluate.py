@@ -7,7 +7,9 @@ Usage:
 `dense` and `hybrid` need Qdrant running and loaded (see qanoun.retrieval.index).
 Methods ending in `+darija` first pass the question through qanoun.understanding with its default
 settings (language detection + Darija lexicon). `+arabizi`, `+lexicon` and `+both` switch the two
-parts on separately, to measure what each one brings (an ablation study).
+parts on separately, to measure what each one brings (an ablation study). `+rewrite` adds the
+language model's formal-Arabic restatement of Darija questions, `+llm` uses it without the lexicon;
+both need a Gemini key.
 
     uv run python -m qanoun.retrieval.evaluate --method dense dense+darija \\
         --questions eval/darija_holdout.jsonl
@@ -100,7 +102,13 @@ def with_understanding(base: Callable[[], Searcher], **options) -> Callable[[], 
 
     def factory() -> Searcher:
         search = base()
-        return lambda question, k: search(understand(question, **options).query, k)
+        settings = dict(options)
+        if settings.pop("use_llm", False):  # needs a Gemini key
+            from qanoun.generation.llm import STATE_PATH, GeminiLLM
+            from qanoun.understanding.llm_rewrite import LLMRewriter
+
+            settings["rewriter"] = LLMRewriter(GeminiLLM(state_path=STATE_PATH))
+        return lambda question, k: search(understand(question, **settings).query, k)
 
     return factory
 
@@ -115,6 +123,8 @@ VARIANTS = {
     "arabizi": {"use_arabizi": True, "use_lexicon": False},
     "lexicon": {"use_arabizi": False, "use_lexicon": True},
     "both": {"use_arabizi": True, "use_lexicon": True},
+    "rewrite": {"use_lexicon": True, "use_llm": True},  # lexicon + language-model rewrite
+    "llm": {"use_lexicon": False, "use_llm": True},  # the rewrite alone
 }
 SEARCHERS: dict[str, Callable[[], Searcher]] = {
     **BASE_SEARCHERS,
