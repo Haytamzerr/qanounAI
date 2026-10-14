@@ -79,3 +79,61 @@ def test_missing_key_is_explained(monkeypatch):
     monkeypatch.setattr(settings, "llm_api_key", None)
     with pytest.raises(LLMError, match=r"\.env"):
         GeminiLLM("gemini-x")
+
+
+def flaky_gemini(failures: dict[str, int], calls: list[str], status: int = 503):
+    """Each model fails `failures[model]` times with `status`, then answers."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path.endswith("/models"):
+            return httpx.Response(200, json=MODELS)
+        model = request.url.path.split("/models/")[1].split(":")[0]
+        calls.append(model)
+        if failures.get(model, 0) > 0:
+            failures[model] -= 1
+            return httpx.Response(status, json={"error": {"message": "high demand"}})
+        return httpx.Response(200, json=reply(f"hello from {model}"))
+
+    return httpx.Client(transport=httpx.MockTransport(handler))
+
+
+def test_busy_model_is_retried_with_growing_waits():
+    calls, waits = [], []
+    client = flaky_gemini({"gemini-3.0-flash": 2}, calls)
+    llm = GeminiLLM(api_key="k", client=client, sleep=waits.append)
+    assert llm.generate("s", "u") == "hello from gemini-3.0-flash"
+    assert calls == ["gemini-3.0-flash"] * 3
+    assert waits == [2, 4]
+
+
+def test_model_still_busy_falls_back_to_the_next_one():
+    calls, waits = [], []
+    client = flaky_gemini({"gemini-3.0-flash": 99}, calls)
+    llm = GeminiLLM(api_key="k", client=client, sleep=waits.append)
+    assert llm.generate("s", "u") == "hello from gemini-2.5-flash"
+    assert llm.name == "gemini-2.5-flash"  # later questions go straight to the one that works
+
+
+def test_all_busy_gives_a_clear_message():
+    client = flaky_gemini(
+        {m: 99 for m in ("gemini-3.0-flash", "gemini-2.5-flash", "gemini-3.5-flash-lite")}, []
+    )
+    llm = GeminiLLM(api_key="k", client=client, sleep=lambda s: None)
+    with pytest.raises(LLMError, match="All Gemini models are busy"):
+        llm.generate("s", "u")
+
+
+def test_bad_key_is_not_retried():
+    calls = []
+    client = flaky_gemini({"gemini-x": 99}, calls, status=400)
+    llm = GeminiLLM("gemini-x", api_key="bad", client=client, sleep=lambda s: None)
+    with pytest.raises(LLMError, match="400"):
+        llm.generate("s", "u")
+    assert calls == ["gemini-x"]
+
+
+def test_lite_models_are_the_last_resort():
+    from qanoun.generation.llm import rank_models
+
+    ranked = rank_models([m["name"].removeprefix("models/") for m in MODELS["models"]])
+    assert ranked == ["gemini-3.0-flash", "gemini-2.5-flash", "gemini-3.5-flash-lite"]
