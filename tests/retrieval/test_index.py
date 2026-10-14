@@ -39,6 +39,17 @@ def test_cache_is_reused_then_invalidated(tmp_path):
     assert embedder.calls == 2  # one article changed: everything is recomputed
 
 
+def test_a_smaller_corpus_reuses_the_saved_vectors(tmp_path):
+    embedder = CountingEmbedder()
+    full = embed_articles(ARTICLES, embedder, tmp_path, log=lambda _: None)
+    fewer = embed_articles(ARTICLES[1:], embedder, tmp_path, log=lambda _: None)
+    assert embedder.calls == 1  # articles removed: rows taken from the file, nothing computed
+    assert np.array_equal(fewer, full[1:])
+    edited = [*ARTICLES[1:-1], make_article("09-08", "fr", 7, "Texte modifié")]
+    embed_articles(edited, embedder, tmp_path, log=lambda _: None)
+    assert embedder.calls == 2  # an edited article still forces a new computation
+
+
 def test_cache_file_name_is_safe():
     assert cache_path("BAAI/bge-m3@1024").name == "BAAI--bge-m3-1024.npz"
 

@@ -199,6 +199,15 @@ REPEALED_LAW = re.compile(r"\(\s*(?:نسخ|منسوخ|ملغى)\s*\)")  # "(نس
 # The 1962-1992 constitutions are history, not law in force (2011: "بتنفيذ نص الدستور")
 OLD_CONSTITUTION = re.compile(r"دستور المملكة المغربية\s+لسنة")
 PERSIAN = str.maketrans({"ی": "ي", "ک": "ك"})  # look-alike letters some PDFs use
+# International treaties published or approved by a dahir ("الموافق بموجبه على الاتفاقية…",
+# "ظهير بنشر الاتفاقية…"): their articles bind states, and they crowded out Moroccan laws in the
+# answers to everyday questions (a rent question found the UN migrant workers convention)
+TREATY = re.compile(
+    r"الموافق بموجبه?\s+(?:من حيث المبدأ\s+)?على"
+    r"|بنشر\s+(?:ال)?(?:اتفاق|ميثاق|بر[و]?توكول|تعديلات|معاهدة)"
+    r"|^\s*(?:ال)?(?:اتفاقية|اتفاق|بر[و]?توكول|معاهدة)"
+    r"|اتفاق(?:ية)?\s+بين"
+)
 CLOSING = re.compile(r"^و\s?حرر\s?ب|^وقعه\s+بالعطف")
 
 
@@ -226,14 +235,15 @@ def short_title(entry: CatalogEntry) -> str:
 
 
 def select(entries: list[CatalogEntry], types: set[str], skip_keys: set[str]) -> list[CatalogEntry]:
-    """The laws to parse: chosen types, no finance laws, no repealed laws, one PDF per law (the
-    newest), and none of the laws already curated by hand (`skip_keys`)."""
+    """The laws to parse: chosen types, no finance laws, repealed laws, old constitutions or
+    treaties, one PDF per law (the newest), and none of the laws curated by hand (`skip_keys`)."""
     newest: dict[str, CatalogEntry] = {}
     for e in entries:
         if (
             not is_law(e, types)
             or FINANCE_LAW.search(e.object)
             or OLD_CONSTITUTION.search(e.object)
+            or TREATY.search(e.object.translate(PERSIAN))
         ):
             continue
         if REPEALED_LAW.search(e.object) or REPEALED_LAW.search(e.name):

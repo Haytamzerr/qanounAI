@@ -212,6 +212,8 @@ def test_selection_keeps_one_current_pdf_per_law():
             entry("بتنفيذ القانون رقم 65.99 المتعلق بمدونة الشغل", path="c"),  # curated
             entry("مرسوم رقم 2.20.292", law_type="مرسوم", path="d"),  # not a law
             entry("دستور المملكة المغربية لسنة 1970", path="h"),  # history
+            entry("ظهير شريف بنشر الاتفاقية الدولية لحماية جميع الأشخاص", path="t1"),  # treaty
+            entry("بتنفيذ القانون رقم 81.18 الموافق بموجب على اتفاقية الاتحاد", path="t2"),
         ],
         types={"ظهير"},
         skip_keys={"65-99"},
@@ -234,3 +236,10 @@ def test_citations_use_the_word_the_law_uses():
     assert article_word([line("المادة 1", 16.0, True), line(BODY)]) == "المادة"
     assert _article("نص").label == "المادة"
     assert _article("نص").model_copy(update={"article_word": "الفصل"}).label == "الفصل"
+
+
+def test_domestic_charters_are_not_treaties():
+    charter = entry("بتنفيذ القانون رقم 78.00 المتعلق بالميثاق الجماعي")
+    arbitration = entry("بتنفيذ القانون رقم 95.17 المتعلق بالتحكيم والوساطة الاتفاقية", path="b")
+    chosen = select([charter, arbitration], types={"ظهير"}, skip_keys=set())
+    assert chosen == [charter, arbitration]
