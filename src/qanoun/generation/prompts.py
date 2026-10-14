@@ -16,9 +16,9 @@ LANGUAGE_INSTRUCTIONS = {
     "darija-ar": "Answer in Moroccan Darija written in Arabic letters, simply and clearly.",
     "darija-latn": (
         "Answer in everyday Moroccan Darija written in Latin letters with digits, the way "
-        'Moroccans text on WhatsApp (3 = ع, 7 = ح, 9 = ق), e.g. "3ndek l7e9 f 18 nhar dyal '
-        'lconji f l3am". Not classical Arabic in Latin letters. You may quote the legal term in '
-        "Arabic in parentheses."
+        'Moroccans text on WhatsApp (3 = ع, 7 = ح, 9 = ق), e.g. "ila bghiti t3ref chi haja, '
+        'swelni w ghadi nchra7lek". Not classical Arabic in Latin letters. You may quote the '
+        "legal term in Arabic in parentheses."
     ),
 }
 

@@ -54,6 +54,8 @@ def render(answer: Answer) -> str:
             lines.append(f"      {a.source_url}")
     if not answer.verified:
         lines.append("\n⚠ Citation check failed: " + "; ".join(answer.problems))
+    if len(answer.history) > 1 or not answer.verified:
+        lines += ["", *(f"  {line}" for line in answer.history)]
     timing = ", ".join(f"{k} {v:.1f} s" for k, v in answer.seconds.items())
     lines.append(
         f"\n[{answer.language} · {answer.status} · {timing} · attempts {answer.attempts}"
