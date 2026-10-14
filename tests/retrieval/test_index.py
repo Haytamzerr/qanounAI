@@ -41,3 +41,18 @@ def test_cache_is_reused_then_invalidated(tmp_path):
 
 def test_cache_file_name_is_safe():
     assert cache_path("BAAI/bge-m3@1024").name == "BAAI--bge-m3-1024.npz"
+
+
+def test_cached_names_match_the_real_embedders():
+    """The index finds cached vectors by name before loading any model: names must agree."""
+    from types import SimpleNamespace
+
+    from qanoun.config import settings
+    from qanoun.retrieval.embeddings import OnnxEmbedder, embedder_name
+
+    from .test_onnx_embedder import FakeSession, FakeTokenizer
+
+    onnx = OnnxEmbedder(session=FakeSession(), tokenizer=FakeTokenizer())
+    assert embedder_name("onnx") == onnx.name
+    full = SimpleNamespace(name=f"{settings.embedding_model}@{settings.embedding_max_tokens}")
+    assert embedder_name("sentence-transformers") == full.name == "BAAI/bge-m3@1024"
