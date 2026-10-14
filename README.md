@@ -175,11 +175,19 @@ Before the Arabizi restatement, the held-out set scored 50% on every one of thes
 development set helped build the lexicon, so it flatters the system; the held-out set is the
 honest number.
 
-## Web service
+## Web app
 
 ```bash
-uv run python -m qanoun.api        # http://127.0.0.1:8000/docs
+uv run python -m qanoun.api        # open http://127.0.0.1:8000 (API docs: /docs)
 ```
+
+| Home | Answer with citations | Official article |
+| --- | --- | --- |
+| ![Home](docs/screenshots/home.png) | ![Answer](docs/screenshots/answer.png) | ![Article](docs/screenshots/article-panel.png) |
+
+Ask in Darija (Arabic letters or Arabizi), Arabic or French; the steps show live; every [n] opens the
+official article; copy or share the answer with its sources; interface in Arabic, French or Darija;
+light and dark themes; history kept on the device. Design brief: [docs/design.md](docs/design.md).
 
 `POST /ask` returns a checked answer with the cited articles in full; `POST /ask/stream` sends the
 progress steps first (Server-Sent Events); `GET /articles/{id}` opens a citation; `GET /health`.

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Qanoun AI · قانون</title>
+  <meta name="description" content="Moroccan law, explained in Darija, Arabic or French, with the exact articles.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23B08A3E' d='M50 2l13 21 24-5-5 24 21 13-21 13 5 24-24-5-13 21-13-21-24 5 5-24L-3 55l21-13-5-24 24 5z'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+    <defs>
+      <!-- The 8-point zellige star (two squares, one turned 45°) with balance scales inside -->
+      <symbol id="star" viewBox="-50 -50 100 100">
+        <g class="star-frame">
+          <rect x="-34" y="-34" width="68" height="68" rx="2"/>
+          <rect x="-34" y="-34" width="68" height="68" rx="2" transform="rotate(45)"/>
+          <circle r="27"/>
+        </g>
+        <g class="star-scales">
+          <path d="M0 -18 V16 M-9 16 H9 M-17 -10 H17"/>
+          <path d="M-17 -10 L-23 3 M-17 -10 L-11 3 M-25 3 a8 5 0 0 0 16 0 Z"/>
+          <path d="M17 -10 L11 3 M17 -10 L23 3 M9 3 a8 5 0 0 0 16 0 Z"/>
+          <circle cy="-20" r="2.4"/>
+        </g>
+      </symbol>
+      <pattern id="zellige" width="120" height="120" patternUnits="userSpaceOnUse">
+        <g transform="translate(60 60)" class="zellige-tile">
+          <rect x="-26" y="-26" width="52" height="52"/>
+          <rect x="-26" y="-26" width="52" height="52" transform="rotate(45)"/>
+          <path d="M-60 0 H-37 M37 0 H60 M0 -60 V-37 M0 37 V60"/>
+          <path d="M-60 -60 L-26 -26 M60 60 L26 26 M60 -60 L26 -26 M-60 60 L-26 26"/>
+        </g>
+      </pattern>
+    </defs>
+  </svg>
+
+  <header class="bar">
+    <a class="brand" href="/" aria-label="Qanoun AI">
+      <svg class="brand-star"><use href="#star"/></svg>
+      <span class="brand-ar">قانون</span>
+      <span class="brand-latin">Qanoun AI</span>
+    </a>
+    <nav class="bar-tools">
+      <div class="lang" role="radiogroup" data-i18n-label="interfaceLanguage">
+        <button role="radio" data-lang="ar">ع</button>
+        <button role="radio" data-lang="fr">Fr</button>
+        <button role="radio" data-lang="darija">الدارجة</button>
+      </div>
+      <button class="icon-btn" id="theme" data-i18n-title="theme" aria-label="theme">
+        <svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+      <button class="icon-btn" id="history-open" data-i18n-title="history" aria-label="history">
+        <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v4h4M12 7v5l3 2"/></svg>
+      </button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <svg class="hero-pattern" aria-hidden="true"><rect width="100%" height="100%" fill="url(#zellige)"/></svg>
+      <div class="hero-inner">
+        <h1 data-i18n="heroTitle"></h1>
+        <p class="hero-sub" data-i18n="heroSub"></p>
+        <form id="ask" class="ask" autocomplete="off">
+          <textarea id="question" rows="2" maxlength="1000" required dir="auto" data-i18n-placeholder="placeholder"></textarea>
+          <button type="submit" class="ask-btn"><span data-i18n="ask"></span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </form>
+        <div class="scripts">
+          <button type="button" dir="ltr">chhal dyal lconji?</button><button type="button" dir="rtl">شحال ديال الكونجي؟</button>
+          <button type="button" dir="rtl">ما مدة العطلة السنوية؟</button><button type="button" dir="ltr">Combien de jours de congé ?</button>
+        </div>
+        <p class="scripts-note" data-i18n="scriptsNote"></p>
+        <p class="corpus" id="corpus"></p>
+      </div>
+    </section>
+
+    <div class="workspace idle" id="workspace">
+      <section class="result" id="result" aria-live="polite" hidden>
+        <p class="asked" id="asked" dir="auto"></p>
+        <ol class="steps" id="steps">
+          <li data-step="understood"><span class="dot"></span><span data-i18n="stepUnderstand"></span></li>
+          <li data-step="sources"><span class="dot"></span><span data-i18n="stepSearch"></span></li>
+          <li data-step="writing"><span class="dot"></span><span data-i18n="stepWrite"></span></li>
+          <li data-step="answer"><span class="dot"></span><span data-i18n="stepCheck"></span></li>
+        </ol>
+        <div class="thinking" id="thinking"><svg class="thinking-star"><use href="#star"/></svg></div>
+        <article class="answer" id="answer" hidden>
+          <div class="answer-text" id="answer-text"></div>
+          <p class="flag" id="flag" hidden></p>
+          <div class="cited" id="cited"></div>
+          <div class="answer-actions">
+            <button class="ghost" id="copy"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg><span data-i18n="copy"></span></button>
+            <button class="ghost" id="share"><svg viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 3v13M7 8l5-5 5 5"/></svg><span data-i18n="share"></span></button>
+            <span class="meta" id="meta"></span>
+          </div>
+        </article>
+        <p class="error" id="error" role="alert" hidden></p>
+      </section>
+
+      <aside class="topics" aria-labelledby="topics-title">
+        <h2 id="topics-title" data-i18n="topicsTitle"></h2>
+        <p class="topics-sub" data-i18n="topicsSub"></p>
+        <div class="topic-list" id="topics"></div>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <p data-i18n="disclaimer"></p>
+  </footer>
+
+  <div class="scrim" id="scrim" hidden></div>
+  <aside class="panel" id="panel" aria-hidden="true" tabindex="-1">
+    <button class="icon-btn panel-close" id="panel-close" data-i18n-title="close" aria-label="close">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div id="panel-body"></div>
+  </aside>
+
+  <aside class="panel" id="history" aria-hidden="true" tabindex="-1">
+    <button class="icon-btn panel-close" id="history-close" data-i18n-title="close" aria-label="close">
+      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <h2 data-i18n="history"></h2>
+    <ul class="history-list" id="history-list"></ul>
+    <button class="ghost" id="history-clear" data-i18n="clearHistory"></button>
+  </aside>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
