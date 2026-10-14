@@ -43,6 +43,7 @@ class Answer:
     problems: list[str] = field(default_factory=list)
     attempts: int = 1
     seconds: dict[str, float] = field(default_factory=dict)
+    model: str = ""
 
     @property
     def verified(self) -> bool:
@@ -111,4 +112,5 @@ class Answerer:
             checked.problems,
             attempt,
             seconds,
+            self.llm.name,
         )

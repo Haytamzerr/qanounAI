@@ -13,9 +13,10 @@ Usage:
 
 import argparse
 import json
+import logging
 import re
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from typing import Protocol
 
 import httpx
@@ -23,6 +24,7 @@ import httpx
 from qanoun.config import settings
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta"
+log = logging.getLogger("qanoun.llm")
 
 
 RETRYABLE = {429, 500, 502, 503, 504}  # busy or temporarily failing: worth trying again
@@ -101,29 +103,35 @@ class GeminiLLM:
             raise LLMError(f"Gemini returned no answer: {reason}") from error
 
     def _generate_with_fallbacks(self, body: dict) -> dict:
-        """Try the chosen model, waiting longer between attempts while it is busy (2 s, 4 s…);
-        if it stays busy, move on to the next model. Other errors (bad key…) stop at once."""
-        model, tried = self.name, []
-        while True:
-            tried.append(model)
-            url = f"{GEMINI_URL}/models/{model}:generateContent"
-            for attempt in range(self.attempts):
+        """Try each model once, best first; only when all are busy, wait (2 s, then 4 s) and go
+        round again. Waiting on one busy model while others are free wasted up to a minute.
+        Other errors (bad key…) stop at once."""
+        last: LLMError | None = None
+        for round_ in range(self.attempts):
+            if round_:
+                self.sleep(2**round_)
+            for model in self._candidates():
+                url = f"{GEMINI_URL}/models/{model}:generateContent"
+                start = time.perf_counter()
                 try:
                     response = self._request("POST", url, json=body)
-                    self.name = model  # keep using the model that answered
-                    return response
                 except LLMError as error:
+                    log.info("%s → %s (%.1f s)", model, error.status, time.perf_counter() - start)
                     if not error.retryable:
                         raise
                     last = error
-                    if attempt < self.attempts - 1:
-                        self.sleep(2 ** (attempt + 1))
-            if self._fallbacks is None:
-                self._fallbacks = rank_models(self.list_models())
-            remaining = [m for m in self._fallbacks if m not in tried]
-            if not remaining:
-                raise LLMError(f"All Gemini models are busy, try again later ({last})", 503)
-            model = remaining[0]
+                    continue
+                log.info("%s → ok (%.1f s)", model, time.perf_counter() - start)
+                self.name = model  # keep using the model that answered
+                return response
+        raise LLMError(f"All Gemini models are busy, try again later ({last})", 503)
+
+    def _candidates(self) -> Iterator[str]:
+        """The chosen model first, then the others; listed only once, when first needed."""
+        yield self.name
+        if self._fallbacks is None:
+            self._fallbacks = rank_models(self.list_models())
+        yield from (m for m in self._fallbacks if m != self.name)
 
     def _request(self, method: str, url: str, **kwargs) -> dict:
         try:
@@ -169,6 +177,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Check the LLM connection.")
     parser.add_argument("--list-models", action="store_true")
     args = parser.parse_args(argv)
+    logging.basicConfig(level=logging.INFO, format="  gemini: %(message)s")
     llm = GeminiLLM()
     if args.list_models:
         print("\n".join(sorted(llm.list_models())))
