@@ -64,3 +64,5 @@ route,permis|lpermi|ro5sa|rokhsa|rokhssa,البيرمي;البرمي;البير�
 route,kh?tiya|5tiya|ghrama|gharama|amende|\bpv\b|mokhalafa|mu?5alafa,الخطية;خطية;غرامة;الغرامة;مخالفة,الغرامة;المخالفة,amende
 penal,sr9a|ser9a|sre9|sar9a|s9er|vol\b|voleur,سرقة;السرقة;سرق;شفر;الشفرة;شفار,السرقة;السارق,vol
 penal,l?7bs|habs|prison|sjn|sijn,الحبس;حبس;السجن;الحبسية,العقوبة الحبسية;الحبس;السجن,prison
+logement,y?s(?:a|e)ll?e?7|islah|r[eé]par|fuite|kay9tar|ki9tar|9tar,يصلح;صلح;تصليح;الإصلاح;كيقطر;قطر;تيقطر,الإصلاحات;صيانة المحل,réparations
+logement,n?khl(?:a|e)?s|khlas|khlass|nkhless|payer|paiement,نخلص;خلص;الخلاص;تخلص,أداء الوجيبة الكرائية;الأداء,paiement du loyer
