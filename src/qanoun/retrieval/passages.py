@@ -3,10 +3,11 @@
 Article 185 of the Highway Code fines 15 different offences (speeding, priority, a phone held
 while driving…) in 4,640 characters. One vector for the whole article is an average of all of
 them, and a question about the phone did not find it (decision 67). Long articles are therefore
-also cut into passages of about 900 characters, each starting with the article's opening
-sentence ("يعاقب بغرامة من 500 إلى 1000 درهم…"), so the passage keeps the penalty that applies
-to the items it lists. Search scores an article by its best vector: the article's or a passage's.
-The answer still receives the whole article.
+also cut into passages: one per list item, and windows of about 900 characters for the other
+paragraphs, each starting with the article's opening sentence ("يعاقب بغرامة من 500 إلى 1000
+درهم…"), so the passage keeps the penalty that applies to the items it lists. Search scores an
+article by its best vector: the article's or a passage's. The answer still receives the whole
+article.
 
 Usage (after the article vectors exist; the configured embedder, e.g. 8-bit ONNX on the PC):
     uv run python -m qanoun.retrieval.passages
@@ -49,34 +50,50 @@ def _units(text: str) -> list[str]:
     return units
 
 
+LIST_ITEM = re.compile(r"^\s*(?:\d{1,2}|[أ-ي])\s*[.)\-–]\s|^\s*[-–•\u00ad]\s*")
+INTRO = 200  # characters of the sentence that opens a list ("…إحدى المخالفات التالية:")
+
+
 def split_passages(article: Article) -> list[Passage]:
-    """The passages of a long article (none for a short one)."""
+    """The passages of a long article (none for a short one).
+
+    Each item of a list ("4. الاستعمال أو التحدث بالهاتف…") is a passage of its own, preceded by
+    the article's opening sentence and the sentence that opens the list: a list item says what
+    is forbidden, the opening sentence says the penalty. The other paragraphs are grouped into
+    windows of about WINDOW characters (decision 67).
+    """
     if len(article.text) <= LONG:
         return []
     units = _units(article.text)
     lead = units[0][:LEAD]
     where = " > ".join(article.hierarchy)
     header = f"{article.law_title}\n{where}\n{article.label} {article.article_number}"
-    windows: list[str] = []
+    texts: list[str] = []
     current = ""
+    intro = ""
+
+    def flush() -> None:
+        nonlocal current
+        if current:
+            texts.append(f"{header}\n{lead}\n{current}")
+            current = ""
+
     for unit in units[1:]:
+        if LIST_ITEM.match(unit):
+            flush()
+            context = f"{intro}\n" if intro else ""
+            texts.append(f"{header}\n{lead}\n{context}{unit[:WINDOW]}")
+            continue
+        intro = unit[:INTRO]  # a paragraph that is not an item may open the next list
         while len(unit) > WINDOW:  # a single very long paragraph: cut it
-            if current:
-                windows.append(current)
-                current = ""
-            windows.append(unit[:WINDOW])
+            flush()
+            texts.append(f"{header}\n{lead}\n{unit[:WINDOW]}")
             unit = unit[WINDOW:]
         if current and len(current) + len(unit) + 1 > WINDOW:
-            windows.append(current)
-            current = unit
-        else:
-            current = f"{current}\n{unit}" if current else unit
-    if current:
-        windows.append(current)
-    return [
-        Passage(article.id, n, f"{header}\n{lead}\n{window}")
-        for n, window in enumerate(windows, start=1)
-    ]
+            flush()
+        current = f"{current}\n{unit}" if current else unit
+    flush()
+    return [Passage(article.id, n, text) for n, text in enumerate(texts, start=1)]
 
 
 def all_passages(articles: Sequence[Article]) -> list[Passage]:
