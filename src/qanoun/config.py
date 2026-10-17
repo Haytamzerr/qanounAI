@@ -41,6 +41,9 @@ class Settings(BaseSettings):
     onnx_file: str = "onnx/model_int8.onnx"
 
     # Services (filled in from Phase 2)
+    # "qdrant": the Qdrant server or folder below; "numpy": the saved vectors searched in memory,
+    # no database and no index step (best on a small PC with the full corpus, decision 66)
+    vector_store: str = "qdrant"
     qdrant_url: str = "http://localhost:6333"
     qdrant_collection: str = "articles"
     redis_url: str = "redis://localhost:6379/0"

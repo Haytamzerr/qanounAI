@@ -33,12 +33,18 @@ def bm25_retriever() -> Retriever:
 
 @cache  # the model loads once, and Qdrant's folder is opened once (it allows one client)
 def dense_retriever() -> Retriever:
-    from qanoun.retrieval.embeddings import make_embedder
+    from qanoun.config import settings
+    from qanoun.retrieval.embeddings import embedder_name, make_embedder
     from qanoun.retrieval.search import DenseSearcher
-    from qanoun.retrieval.vector_store import ArticleStore
+    from qanoun.retrieval.vector_store import ArticleStore, NumpyStore
 
-    store = ArticleStore.connect()
-    atexit.register(store.client.close)  # close before Python shuts down, not during
+    if settings.vector_store == "numpy":
+        # Article vectors of the full model if present (decision 55), else the current one's
+        names = dict.fromkeys([embedder_name("sentence-transformers"), embedder_name()])
+        store = NumpyStore.from_cache(list(_articles().values()), list(names))
+    else:
+        store = ArticleStore.connect()
+        atexit.register(store.client.close)  # close before Python shuts down, not during
     searcher = DenseSearcher(make_embedder(), store)
     return _with_sections(searcher)
 

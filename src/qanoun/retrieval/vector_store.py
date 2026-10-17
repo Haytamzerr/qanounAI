@@ -116,3 +116,65 @@ class ArticleStore:
             with_payload=["id"],
         )
         return [(point.payload["id"], point.score) for point in response.points]
+
+
+class NumpyStore:
+    """The saved article vectors searched directly in memory, without a database.
+
+    Qdrant's folder mode rewrites its files on every insert and slows down past 20,000 articles:
+    loading the 34,106 articles of the full corpus on the 8 GB PC did not finish. Comparing a
+    question with every article is one matrix product (34,106 × 1,024 numbers, a few
+    milliseconds), and the vectors file computed once on Kaggle is all it needs: no index step.
+    Enable with QANOUN_VECTOR_STORE=numpy (decision 66).
+    """
+
+    def __init__(self, articles: Sequence[Article], vectors: np.ndarray):
+        if len(articles) != len(vectors):
+            raise ValueError(f"{len(articles)} articles but {len(vectors)} vectors")
+        self.ids = [a.id for a in articles]
+        self.vectors = np.ascontiguousarray(vectors, dtype=np.float32)
+        self.law_numbers = np.array([a.law_number for a in articles])
+        self.languages = np.array([a.language for a in articles])
+
+    @classmethod
+    def from_cache(cls, articles: Sequence[Article], names: Sequence[str]) -> "NumpyStore":
+        """Vectors from the first cache file (one per embedder name) that matches `articles`."""
+        from qanoun.retrieval.index import article_hashes, cache_path, fingerprint, load_cached
+
+        for name in names:
+            vectors = load_cached(
+                cache_path(name), fingerprint(name, articles), article_hashes(name, articles)
+            )
+            if vectors is not None:
+                return cls(articles, vectors)
+        tried = ", ".join(cache_path(n).name for n in names)
+        raise FileNotFoundError(
+            f"No vectors file matches the {len(articles)} articles (looked for {tried} in "
+            f"{settings.embeddings_dir}). Compute it with `python -m qanoun.retrieval.index "
+            "--embed-only` (a Kaggle GPU works) and copy it there."
+        )
+
+    def count(self) -> int:
+        return len(self.ids)
+
+    def search(
+        self,
+        vector: np.ndarray,
+        k: int = 10,
+        *,
+        law_number: str | None = None,
+        language: str | None = None,
+    ) -> list[tuple[str, float]]:
+        """The `k` nearest articles as (article id, cosine similarity), best first."""
+        scores = self.vectors @ np.asarray(vector, dtype=np.float32)  # unit vectors: cosine
+        if law_number is not None:
+            scores = np.where(self.law_numbers == law_number, scores, -np.inf)
+        if language is not None:
+            scores = np.where(self.languages == language, scores, -np.inf)
+        k = min(k, len(scores))
+        top = np.argpartition(-scores, k - 1)[:k] if k else np.array([], dtype=int)
+        top = top[np.argsort(-scores[top])]
+        return [(self.ids[i], float(scores[i])) for i in top if np.isfinite(scores[i])]
+
+    def close(self) -> None:  # same shape as a Qdrant client, nothing to release
+        pass

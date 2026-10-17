@@ -117,6 +117,10 @@ uv run python -m qanoun.retrieval.index --backend sentence-transformers   # load
 uv run python -m qanoun.generation.ask "chhal dyal lconji 3ndi f l3am?"
 ```
 
+With the full corpus (34,106 articles), skip Qdrant on the PC: add `QANOUN_VECTOR_STORE=numpy` to
+`.env` and the app searches the vectors file from Kaggle directly in memory (~4 ms per question,
+no index step; decision 66).
+
 Measured cost of the 8-bit model for questions: none on Arabic, French or Arabizi; one of the four
 Darija questions in Arabic script (decision 55).
 
