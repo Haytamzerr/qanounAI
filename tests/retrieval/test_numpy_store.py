@@ -66,6 +66,8 @@ def test_long_articles_get_passages_that_keep_the_opening_sentence():
     assert all(p.article_id == article.id for p in passages)
     assert all("يعاقب بغرامة من خمسمائة" in p.text for p in passages)  # the penalty travels
     assert any("الهاتف ممسوكا" in p.text for p in passages)
+    items = [p for p in passages if "مخالفة رقم" in p.text]
+    assert all(p.text.count("مخالفة رقم") == 1 for p in items)  # one list item per passage
     assert split_passages(ARTICLES[0]) == []  # short articles: none
 
 
