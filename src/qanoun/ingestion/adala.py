@@ -31,8 +31,18 @@ from qanoun.config import settings
 BASE = "https://adala.justice.gov.ma"
 USER_AGENT = "QanounAI/0.1 (student research project; github.com/Haytamzerr/qanounAI)"
 NEXT_DATA = re.compile(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', re.S)
-# Laws are enacted by a dahir (ظهير); decrees, circulars and treaties are left out by default.
-DEFAULT_TYPES = ("ظهير",)
+# Laws: dahirs, dahirs with force of law, laws, organic laws, codes. Decrees, circulars,
+# treaties and reports are left out.
+LAW_TYPES = ("ظهير", "ظهير بمثابة قانون", "قانون", "قانون تنظيمي", "مدونة")
+DAHIR_TITLE = re.compile(r"\s*(?:ال)?ظه[يی]ر")
+
+
+def is_law(entry: "CatalogEntry", types: Iterable[str] = LAW_TYPES) -> bool:
+    """A law by its type, or a law Adala filed as a decree: the Highway Code (52.05) is listed
+    as "مرسوم" although its title is "ظهير شريف … بتنفيذ القانون رقم 52.05"."""
+    if entry.law_type in types:
+        return True
+    return entry.law_type == "مرسوم" and bool(DAHIR_TITLE.match(entry.object))
 
 
 class CatalogEntry(BaseModel):
@@ -215,7 +225,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("catalog", help="list every document of every subject")
     sub.add_parser("stats", help="what the catalogue contains")
     download = sub.add_parser("download", help="download the PDFs of the chosen types")
-    download.add_argument("--types", default=",".join(DEFAULT_TYPES), help="comma-separated")
+    download.add_argument("--types", default=",".join(LAW_TYPES), help="comma-separated")
     download.add_argument("--limit", type=int, default=None)
     args = parser.parse_args(argv)
 
@@ -227,7 +237,7 @@ def main(argv: list[str] | None = None) -> int:
         print(stats(load_catalog()))
     else:
         types = {t.strip() for t in args.types.split(",")}
-        chosen = [e for e in load_catalog() if e.law_type in types][: args.limit]
+        chosen = [e for e in load_catalog() if is_law(e, types)][: args.limit]
         folder = settings.raw_dir / "adala"
         adala = Adala()
         failed = []

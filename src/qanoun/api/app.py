@@ -43,6 +43,7 @@ class Citation(BaseModel):
     law_number: str
     law_title: str
     article_number: str
+    label: str  # "Article", "المادة" or "الفصل": how the law itself names its articles
     title: str | None
     hierarchy: list[str]
     text: str
@@ -53,7 +54,8 @@ class Citation(BaseModel):
     def of(cls, number: int, a: Article) -> "Citation":
         return cls(
             number=number, id=a.id, law_number=a.law_number, law_title=a.law_title,
-            article_number=a.article_number, title=a.title, hierarchy=a.hierarchy, text=a.text,
+            article_number=a.article_number, label=a.label, title=a.title,
+            hierarchy=a.hierarchy, text=a.text,
             source_url=a.source_url, official=a.is_official_version,
         )  # fmt: skip
 

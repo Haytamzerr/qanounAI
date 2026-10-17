@@ -51,3 +51,11 @@ class Article(BaseModel):
     bulletin_officiel: str | None = None
     consolidated_as_of: str | None = None
     is_official_version: bool
+    # The word the law itself uses: old dahirs and the codes of 1913–1962 number "الفصل 230",
+    # newer laws "المادة 5". None means the usual word for the language.
+    article_word: str | None = None
+
+    @property
+    def label(self) -> str:
+        """How to name this article in a citation: "Article", "المادة" or "الفصل"."""
+        return self.article_word or ("Article" if self.language == "fr" else "المادة")

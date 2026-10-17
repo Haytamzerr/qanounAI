@@ -7,7 +7,7 @@ in `.env`, which is git-ignored, and document their names in `.env.example`.
 
 from pathlib import Path
 
-from pydantic import SecretStr
+from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -18,6 +18,9 @@ class Settings(BaseSettings):
 
     # Data locations
     data_dir: Path = PROJECT_ROOT / "data"
+    # "core": the five hand-checked laws (articles.jsonl, used by the evaluations);
+    # "full": also every law parsed from the Adala catalogue (adala_articles.jsonl)
+    corpus: str = "core"
 
     # Language used when the question's language can't be detected
     default_language: str = "fr"
@@ -41,6 +44,20 @@ class Settings(BaseSettings):
     qdrant_url: str = "http://localhost:6333"
     qdrant_collection: str = "articles"
     redis_url: str = "redis://localhost:6379/0"
+
+    @model_validator(mode="after")
+    def _full_corpus_collection(self) -> "Settings":
+        """The full corpus gets its own Qdrant collection, so switching back is instant."""
+        if self.corpus == "full" and self.qdrant_collection == "articles":
+            self.qdrant_collection = "articles_full"
+        return self
+
+    @property
+    def corpus_files(self) -> list[Path]:
+        files = [self.processed_dir / "articles.jsonl"]
+        if self.corpus == "full":
+            files.append(self.processed_dir / "adala_articles.jsonl")
+        return files
 
     @property
     def raw_dir(self) -> Path:

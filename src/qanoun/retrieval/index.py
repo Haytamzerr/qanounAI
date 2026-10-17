@@ -35,18 +35,40 @@ def fingerprint(embedder_name: str, articles: Sequence[Article]) -> str:
     return digest.hexdigest()
 
 
+def article_hashes(embedder_name: str, articles: Sequence[Article]) -> np.ndarray:
+    """One fingerprint per article: lets a smaller corpus reuse the vectors of a bigger one."""
+    return np.array(
+        [
+            hashlib.sha256(f"{embedder_name}\0{a.id}\0{search_text(a)}".encode()).hexdigest()[:32]
+            for a in articles
+        ]
+    )
+
+
 def cache_path(embedder_name: str, directory: Path | None = None) -> Path:
+    """One vectors file per model and corpus ("BAAI--bge-m3-1024.npz", "…-full.npz")."""
     slug = embedder_name.replace("/", "--").replace("@", "-")
+    if settings.corpus != "core":
+        slug += f"-{settings.corpus}"
     return (directory or settings.embeddings_dir) / f"{slug}.npz"
 
 
-def load_cached(path: Path, expected_fingerprint: str) -> np.ndarray | None:
+def load_cached(
+    path: Path, expected_fingerprint: str, hashes: np.ndarray | None = None
+) -> np.ndarray | None:
+    """The saved vectors if they are for exactly these articles; or, when articles were only
+    removed from the corpus (`hashes` given and all found in the file), the matching rows."""
     if not path.exists():
         return None
     with np.load(path) as saved:
-        if str(saved["fingerprint"]) != expected_fingerprint:
+        if str(saved["fingerprint"]) == expected_fingerprint:
+            return saved["vectors"]
+        if hashes is None or "hashes" not in saved.files:
             return None
-        return saved["vectors"]
+        row = {h: i for i, h in enumerate(saved["hashes"])}
+        if not all(h in row for h in hashes):
+            return None  # a new or edited article: its vector must be computed
+        return saved["vectors"][[row[h] for h in hashes]]
 
 
 def embed_articles(
@@ -58,7 +80,8 @@ def embed_articles(
     """Vectors for `articles`, in the same order: from the cache if valid, else computed."""
     path = cache_path(embedder.name, directory)
     expected = fingerprint(embedder.name, articles)
-    vectors = load_cached(path, expected)
+    hashes = article_hashes(embedder.name, articles)
+    vectors = load_cached(path, expected, hashes)
     if vectors is not None:
         log(f"reusing {len(vectors)} vectors from {path.name}")
         return vectors
@@ -72,6 +95,7 @@ def embed_articles(
         path,
         vectors=vectors,
         ids=np.array([a.id for a in articles]),
+        hashes=hashes,
         fingerprint=np.array(expected),
     )
     log(f"saved to {path}")
@@ -105,7 +129,9 @@ def main(argv: list[str] | None = None) -> int:
         # Cached vectors are used without loading the model: a PC that can't hold the full
         # model (2.3 GB) can still load the vectors computed elsewhere (decision 55).
         name = embedder_name(args.backend)
-        vectors = load_cached(cache_path(name), fingerprint(name, articles))
+        vectors = load_cached(
+            cache_path(name), fingerprint(name, articles), article_hashes(name, articles)
+        )
         if vectors is not None:
             print(f"reusing {len(vectors)} vectors from {cache_path(name).name} (model not loaded)")
         else:

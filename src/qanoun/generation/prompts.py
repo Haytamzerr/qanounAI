@@ -52,10 +52,10 @@ ANSWER_SCHEMA = {
 
 def describe(article: Article) -> str:
     """How a source is introduced: law, article number, where it sits, and its text."""
-    label = "Article" if article.language == "fr" else "المادة"
     where = " > ".join(article.hierarchy)
     title = f" ({article.title})" if article.title else ""
-    return f"{article.law_title}, {label} {article.article_number}{title}\n{where}\n{article.text}"
+    heading = f"{article.law_title}, {article.label} {article.article_number}{title}"
+    return f"{heading}\n{where}\n{article.text}"
 
 
 def system_prompt(language: str) -> str:

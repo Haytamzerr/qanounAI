@@ -1,6 +1,9 @@
 # Corpus
 
-The legal texts the assistant can answer from. Each file is listed in [`data/sources.csv`](../data/sources.csv)
+The five hand-checked texts below are the **core corpus** used by the evaluations. The assistant
+also answers from every law on Adala: see [the full corpus](#the-full-corpus-every-law-on-adala).
+
+The core texts: Each file is listed in [`data/sources.csv`](../data/sources.csv)
 with its download URL; the PDFs themselves are not committed.
 
 | Law | Language | Articles | Source | Bulletin officiel | Consolidated as of | Official version? |
@@ -18,6 +21,28 @@ with its download URL; the PDFs themselves are not committed.
 The Family Code is under reform discussions; check before any demo whether a newer consolidated version has been published. The Labour Code has no up-to-date French text (Adala's French version dates from October 2011), so French questions are answered from the official Arabic text.
 
 For Law 09-08, the French and Arabic versions have the same 67 articles, so `loi-09-08-fr-art-N` and `loi-09-08-ar-art-N` are translations of each other (checked by a test).
+
+## The full corpus: every law on Adala
+
+Beyond the five texts above, the assistant can answer from every law published on
+[Adala](https://adala.justice.gov.ma), the Ministry of Justice's portal (`QANOUN_CORPUS=full`, decision 64).
+
+| Step | Command | Result (14 October 2026) |
+| --- | --- | --- |
+| Catalogue | `uv run python -m qanoun.ingestion.adala catalog` | 5,507 documents, 63 subjects, all in Arabic |
+| Download the laws | `uv run python -m qanoun.ingestion.adala download` | 971 PDFs, 1.3 GB, 17,755 pages |
+| Parse | `uv run python -m qanoun.ingestion.adala_parse` | 798 laws → 778 parsed, **32,777 articles** in `data/processed/adala_articles.jsonl`, one line per law in `adala_report.csv` |
+
+Left out on purpose (decisions 62 and 65): annual finance laws, laws marked repealed, the 1962–1992
+constitutions, international treaties, older PDFs of the same law, repealed articles. Not parsed: 16 texts without article
+headings (appointments, one-decision dahirs) and 4 scanned PDFs (they would need OCR).
+
+The parser measures each PDF's fonts instead of using a hand-made profile (decision 60). Its report
+flags 164 laws with a gap in the article numbers: almost always repealed articles that were removed,
+or articles the consolidated text itself skips (Penal Code 19 to 23).
+
+Largest texts: Obligations and Contracts (الفصل, 1,313 articles), Criminal Procedure (914), Commerce
+(823), Penal Code (723), Civil Procedure 58.25 (644), Highway Code (328), Real Rights (333).
 
 ## How to rebuild it
 
