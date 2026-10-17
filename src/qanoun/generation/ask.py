@@ -9,6 +9,7 @@ file, for a PC short of memory.
 
 import argparse
 import atexit
+import logging
 import sys
 from functools import cache
 
@@ -16,6 +17,8 @@ from qanoun.generation.answer import Answer, Answerer, Retriever
 from qanoun.generation.llm import STATE_PATH, GeminiLLM, configure_logging
 from qanoun.retrieval.corpus import load_articles, search_text
 from qanoun.understanding.llm_rewrite import LLMRewriter
+
+log = logging.getLogger("qanoun.answer")
 
 
 @cache
@@ -34,14 +37,13 @@ def bm25_retriever() -> Retriever:
 @cache  # the model loads once, and Qdrant's folder is opened once (it allows one client)
 def dense_retriever() -> Retriever:
     from qanoun.config import settings
-    from qanoun.retrieval.embeddings import embedder_name, make_embedder
+    from qanoun.retrieval.embeddings import make_embedder
     from qanoun.retrieval.search import DenseSearcher
-    from qanoun.retrieval.vector_store import ArticleStore, NumpyStore
+    from qanoun.retrieval.vector_store import ArticleStore, open_numpy_store
 
     if settings.vector_store == "numpy":
-        # Article vectors of the full model if present (decision 55), else the current one's
-        names = dict.fromkeys([embedder_name("sentence-transformers"), embedder_name()])
-        store = NumpyStore.from_cache(list(_articles().values()), list(names))
+        store = open_numpy_store(list(_articles().values()))
+        log.info("in-memory search: %d articles, %d passages", store.count(), store.passages)
     else:
         store = ArticleStore.connect()
         atexit.register(store.client.close)  # close before Python shuts down, not during

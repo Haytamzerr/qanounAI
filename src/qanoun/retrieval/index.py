@@ -118,6 +118,12 @@ def main(argv: list[str] | None = None) -> int:
 
     articles = load_articles()  # a missing dataset fails here, before anything is opened
     store = None
+    if settings.vector_store == "numpy" and not args.embed_only:
+        print(
+            "QANOUN_VECTOR_STORE=numpy: the app reads the vectors file directly, there is no "
+            "database to fill. Only computing missing vectors (--embed-only)."
+        )
+        args.embed_only = True
     if not args.embed_only:
         try:
             store = ArticleStore.connect(collection=args.collection)  # fail before embedding

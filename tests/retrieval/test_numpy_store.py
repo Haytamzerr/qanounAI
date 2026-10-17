@@ -47,3 +47,57 @@ def test_loads_the_saved_vectors_file(tmp_path, monkeypatch):
     assert np.array_equal(store.vectors, saved[1:])
     with pytest.raises(FileNotFoundError):
         NumpyStore.from_cache(ARTICLES, ["missing@1"])
+
+
+def _long_article():
+    from .test_search import make_article
+
+    items = "\n".join(f"{n}. مخالفة رقم {n} " + "تفاصيل " * 20 for n in range(1, 16))
+    lead = "يعاقب بغرامة من خمسمائة إلى ألف درهم كل شخص ارتكب مخالفة من الدرجة الثانية."
+    return make_article("52-05", "ar", 185, f"{lead}\n{items}\nالهاتف ممسوكا باليد أثناء السياقة")
+
+
+def test_long_articles_get_passages_that_keep_the_opening_sentence():
+    from qanoun.retrieval.passages import split_passages
+
+    article = _long_article()
+    passages = split_passages(article)
+    assert len(passages) >= 2
+    assert all(p.article_id == article.id for p in passages)
+    assert all("يعاقب بغرامة من خمسمائة" in p.text for p in passages)  # the penalty travels
+    assert any("الهاتف ممسوكا" in p.text for p in passages)
+    assert split_passages(ARTICLES[0]) == []  # short articles: none
+
+
+def test_an_article_scores_as_its_best_passage():
+    from qanoun.retrieval.passages import split_passages
+
+    article = _long_article()
+    articles = [*ARTICLES, article]
+    embedder = HashingEmbedder()
+    vectors = embedder.embed([a.text for a in articles])
+    passages = split_passages(article)
+    passage_vectors = embedder.embed([p.text for p in passages])
+    [q] = embedder.embed(["الهاتف ممسوكا باليد أثناء السياقة"])
+    plain = NumpyStore(articles, vectors).search(q, len(articles))
+    with_passages = NumpyStore(
+        articles, vectors, [p.article_id for p in passages], passage_vectors
+    ).search(q, len(articles))
+    score = {i: s for i, s in plain}
+    boosted = {i: s for i, s in with_passages}
+    assert boosted[article.id] > score[article.id]
+    rank = [i for i, _ in plain].index(article.id)
+    assert [i for i, _ in with_passages].index(article.id) <= rank  # never moves down
+
+
+def test_passage_vectors_are_saved_and_reloaded(tmp_path, monkeypatch):
+    from qanoun.config import settings
+    from qanoun.retrieval.passages import all_passages, embed_passages
+
+    monkeypatch.setattr(settings, "data_dir", tmp_path)
+    articles = [*ARTICLES, _long_article()]
+    embedder = HashingEmbedder()
+    embed_articles(articles, embedder, log=lambda _: None)
+    embed_passages(all_passages(articles), embedder, log=lambda _: None)
+    store = NumpyStore.from_cache(articles, [embedder.name])
+    assert store.passages == len(all_passages(articles)) > 0

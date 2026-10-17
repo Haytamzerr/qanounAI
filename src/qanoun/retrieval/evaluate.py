@@ -69,8 +69,10 @@ def _dense(backend: str = "sentence-transformers", collection: str | None = None
     # Imported here: loading the model takes a while and isn't needed for BM25.
     from qanoun.retrieval.embeddings import make_embedder
     from qanoun.retrieval.search import DenseSearcher
-    from qanoun.retrieval.vector_store import ArticleStore
+    from qanoun.retrieval.vector_store import ArticleStore, open_numpy_store
 
+    if settings.vector_store == "numpy" and collection is None:
+        return DenseSearcher(make_embedder(backend), open_numpy_store(load_articles(), backend))
     store = ArticleStore(_qdrant_client(), collection)
     expected = len(load_articles())
     if store.count() != expected:
