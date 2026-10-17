@@ -20,6 +20,9 @@ def fake_world(monkeypatch):
     )
     monkeypatch.setattr(ask, "GeminiLLM", lambda **_: llm)
     monkeypatch.setattr(ask, "RETRIEVERS", {"dense": lambda: lambda query, k: ARTICLES[:k]})
+    from qanoun.understanding.references import ReferenceResolver
+
+    monkeypatch.setattr(ask, "reference_resolver", lambda: ReferenceResolver(ARTICLES).resolve)
     return llm
 
 
