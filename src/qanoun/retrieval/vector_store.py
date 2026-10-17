@@ -128,24 +128,46 @@ class NumpyStore:
     Enable with QANOUN_VECTOR_STORE=numpy (decision 66).
     """
 
-    def __init__(self, articles: Sequence[Article], vectors: np.ndarray):
+    def __init__(
+        self,
+        articles: Sequence[Article],
+        vectors: np.ndarray,
+        passage_owners: Sequence[str] = (),
+        passage_vectors: np.ndarray | None = None,
+    ):
         if len(articles) != len(vectors):
             raise ValueError(f"{len(articles)} articles but {len(vectors)} vectors")
         self.ids = [a.id for a in articles]
         self.vectors = np.ascontiguousarray(vectors, dtype=np.float32)
         self.law_numbers = np.array([a.law_number for a in articles])
         self.languages = np.array([a.language for a in articles])
+        # Passages of long articles (decision 67): each row belongs to one article
+        row = {article_id: i for i, article_id in enumerate(self.ids)}
+        keep = [i for i, owner in enumerate(passage_owners) if owner in row]
+        self.passage_owner = np.array([row[passage_owners[i]] for i in keep], dtype=np.int64)
+        self.passage_vectors = (
+            np.ascontiguousarray(passage_vectors[keep], dtype=np.float32)
+            if passage_vectors is not None and keep
+            else np.zeros((0, self.vectors.shape[1]), dtype=np.float32)
+        )
 
     @classmethod
     def from_cache(cls, articles: Sequence[Article], names: Sequence[str]) -> "NumpyStore":
         """Vectors from the first cache file (one per embedder name) that matches `articles`."""
         from qanoun.retrieval.index import article_hashes, cache_path, fingerprint, load_cached
+        from qanoun.retrieval.passages import all_passages, load_passage_vectors
 
         for name in names:
             vectors = load_cached(
                 cache_path(name), fingerprint(name, articles), article_hashes(name, articles)
             )
             if vectors is not None:
+                passages = all_passages(articles)
+                for passage_name in names:  # passages may come from another (smaller) model
+                    found, passage_vectors = load_passage_vectors(passage_name, passages)
+                    if found:
+                        owners = [p.article_id for p in found]
+                        return cls(articles, vectors, owners, passage_vectors)
                 return cls(articles, vectors)
         tried = ", ".join(cache_path(n).name for n in names)
         raise FileNotFoundError(
@@ -157,6 +179,10 @@ class NumpyStore:
     def count(self) -> int:
         return len(self.ids)
 
+    @property
+    def passages(self) -> int:
+        return len(self.passage_owner)
+
     def search(
         self,
         vector: np.ndarray,
@@ -166,7 +192,10 @@ class NumpyStore:
         language: str | None = None,
     ) -> list[tuple[str, float]]:
         """The `k` nearest articles as (article id, cosine similarity), best first."""
-        scores = self.vectors @ np.asarray(vector, dtype=np.float32)  # unit vectors: cosine
+        query = np.asarray(vector, dtype=np.float32)
+        scores = self.vectors @ query  # unit vectors: cosine
+        if len(self.passage_owner):  # an article scores as its best vector
+            np.maximum.at(scores, self.passage_owner, self.passage_vectors @ query)
         if law_number is not None:
             scores = np.where(self.law_numbers == law_number, scores, -np.inf)
         if language is not None:
@@ -178,3 +207,12 @@ class NumpyStore:
 
     def close(self) -> None:  # same shape as a Qdrant client, nothing to release
         pass
+
+
+def open_numpy_store(articles: Sequence[Article], backend: str | None = None) -> NumpyStore:
+    """The in-memory store for these articles: article vectors of the full model if present
+    (decision 55), else of the question model; passages of whichever model computed them."""
+    from qanoun.retrieval.embeddings import embedder_name
+
+    names = dict.fromkeys([embedder_name("sentence-transformers"), embedder_name(backend)])
+    return NumpyStore.from_cache(articles, list(names))

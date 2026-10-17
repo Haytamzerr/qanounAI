@@ -1,0 +1,4 @@
+{"id": "o01", "question": "شنو العقوبة ديال السرقة؟", "language": "darija-ar", "style": "owner-test", "expected": ["loi-dahir-1-59-413-ar-art-505"]}
+{"id": "o02", "question": "chhal dyal lghrama ila sou9t b tilifoun f yddi?", "language": "darija-latn", "style": "owner-test", "expected": ["loi-52-05-ar-art-185"]}
+{"id": "o03", "question": "واش الكاري يقدر يزيد فالكرا كل عام وبشحال؟", "language": "darija-ar", "style": "owner-test", "expected": ["loi-67-12-ar-art-32", "loi-67-12-ar-art-33", "loi-67-12-ar-art-34", "loi-07-03-ar-art-2", "loi-07-03-ar-art-3", "loi-07-03-ar-art-4"]}
+{"id": "o04", "question": "wach mol dar y9der ykharjni bla 7okm?", "language": "darija-latn", "style": "owner-test", "expected": ["loi-67-12-ar-art-44", "loi-67-12-ar-art-45", "loi-67-12-ar-art-47"]}

@@ -53,3 +53,14 @@ donnees,nrfd|nerfod|nrfod|rf[ae]d|refus|oppos|ma ?bghitch|nmn3|nmne3,نرفض;ر
 donnees,n3ref chno 3ndhom|chno 3ndhom 3li|acc[eè]s|nchouf l?ma3loumat|consult,نعرف شنو عندهم,الحق في الولوج,droit d'accès
 donnees,charika|chrika|sharika|soci[eé]t[eé]|entreprise|boite\b,الشركة;شركة,المسؤول عن المعالجة;المقاولة,entreprise
 donnees,cndp|lajna l?wataniya,اللجنة الوطنية,اللجنة الوطنية لمراقبة حماية المعطيات ذات الطابع الشخصي,CNDP
+logement,kra\b|kera\b|kira\b|kraa?|loyer,كرا;الكرا;كراء;الكراء,الوجيبة الكرائية;الكراء,loyer
+logement,mo?u?l (?:d|l)?dar|mmo?ul (?:d|l)?dar|propri[eé]taire|bailleur,مول الدار;مالين الدار;صاحب الدار;مول الشقة,المكري,bailleur
+logement,(?:l)?kar(?:i|y)\b|locataire,الكاري;كاري;الكارية,المكتري,locataire
+logement,yzid|zyada|ziyada|zad\b|augment,يزيد;زيادة;الزيادة;زاد,الزيادة;الرفع من قيمة الوجيبة;مراجعة الوجيبة الكرائية,augmentation du loyer
+logement,y?kh?arr?jni|y?kh?(?:a)?wi\b|y?kh?(?:a)?wiw|expuls|[eé]vacu,يخرجني;خرجني;يخوي;يخويني;خواني,الإفراغ,expulsion
+route,tilifo?u?n|t[eé]l[eé]phone|portable|phone\b|gsm,تيليفون;التيليفون;البورطابل;التلفون;الهاتف,الهاتف ممسوكا باليد أثناء السياقة,téléphone au volant
+route,sou9t|sou9\b|kansou9|nsou9|sayq|sayeq|s(?:o|ou)g\b|conduire|conduis|conducteur,كنسوق;نسوق;السوقان;سايق,السياقة;السائق,conduite
+route,permis|lpermi|ro5sa|rokhsa|rokhssa,البيرمي;البرمي;البيرمي ديال;رخصة السياقة,رخصة السياقة,permis de conduire
+route,kh?tiya|5tiya|ghrama|gharama|amende|\bpv\b|mokhalafa|mu?5alafa,الخطية;خطية;غرامة;الغرامة;مخالفة,الغرامة;المخالفة,amende
+penal,sr9a|ser9a|sre9|sar9a|s9er|vol\b|voleur,سرقة;السرقة;سرق;شفر;الشفرة;شفار,السرقة;السارق,vol
+penal,l?7bs|habs|prison|sjn|sijn,الحبس;حبس;السجن;الحبسية,العقوبة الحبسية;الحبس;السجن,prison

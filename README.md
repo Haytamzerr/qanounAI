@@ -121,6 +121,13 @@ With the full corpus (34,106 articles), skip Qdrant on the PC: add `QANOUN_VECTO
 `.env` and the app searches the vectors file from Kaggle directly in memory (~4 ms per question,
 no index step; decision 66).
 
+Long articles (lists of offences, of conditions…) also get one vector per passage, so a detail deep
+inside them is found (decision 67). Compute them once, after the article vectors:
+
+```bash
+uv run python -m qanoun.retrieval.passages   # 2,872 passages of 857 long articles
+```
+
 Measured cost of the 8-bit model for questions: none on Arabic, French or Arabizi; one of the four
 Darija questions in Arabic script (decision 55).
 
