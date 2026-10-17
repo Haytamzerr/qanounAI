@@ -215,6 +215,11 @@ uv run python -m qanoun.api        # open http://127.0.0.1:8000 (API docs: /docs
 | --- | --- | --- |
 | ![Home](docs/screenshots/home.png) | ![Answer](docs/screenshots/answer.png) | ![Article](docs/screenshots/article-panel.png) |
 
+The home page shows five themes; "all themes" opens the fifteen (![all themes](docs/screenshots/home-all-themes.png)).
+Answers can also correct a wrong premise ("l'article 400 du Code pénal…" is looked up directly),
+ask a short question back when the question is too vague, and the article panel says how recent
+the text is.
+
 Ask in Darija (Arabic letters or Arabizi), Arabic or French; the steps show live; every [n] opens the
 official article; copy or share the answer with its sources; interface in Arabic, French or Darija;
 light and dark themes; history kept on the device. Design brief: [docs/design.md](docs/design.md).

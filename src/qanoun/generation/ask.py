@@ -62,6 +62,14 @@ def _with_sections(search, extra: int = 3) -> Retriever:
 RETRIEVERS = {"dense": dense_retriever, "bm25": bm25_retriever}
 
 
+@cache
+def reference_resolver():
+    """Looks up the articles a question names itself ("l'article 400 du Code pénal")."""
+    from qanoun.understanding.references import ReferenceResolver
+
+    return ReferenceResolver(list(_articles().values())).resolve
+
+
 def render(answer: Answer) -> str:
     lines = [answer.text, ""]
     if answer.cited:
@@ -99,7 +107,10 @@ def main(argv: list[str] | None = None) -> int:
     configure_logging()  # one line per model attempt, with its time
     llm = GeminiLLM(state_path=STATE_PATH)
     rewriter = None if args.no_rewrite else LLMRewriter(llm)
-    answerer = Answerer(RETRIEVERS[args.retriever](), llm, k=args.k, rewriter=rewriter)
+    answerer = Answerer(
+        RETRIEVERS[args.retriever](), llm, k=args.k, rewriter=rewriter,
+        references=reference_resolver(),
+    )  # fmt: skip
     print(render(answerer.answer(args.question)))
     return 0
 

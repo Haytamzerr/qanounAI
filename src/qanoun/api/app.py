@@ -49,6 +49,7 @@ class Citation(BaseModel):
     text: str
     source_url: str
     official: bool  # the Arabic text published in the Bulletin officiel
+    updated: str | None = None  # the date the text was last consolidated, when known
 
     @classmethod
     def of(cls, number: int, a: Article) -> "Citation":
@@ -57,13 +58,14 @@ class Citation(BaseModel):
             article_number=a.article_number, label=a.label, title=a.title,
             hierarchy=a.hierarchy, text=a.text,
             source_url=a.source_url, official=a.is_official_version,
+            updated=a.version,
         )  # fmt: skip
 
 
 class AnswerOut(BaseModel):
     question: str
     language: str
-    status: str  # "answered" or "not_covered"
+    status: str  # "answered", "not_covered" or "clarify"
     text: str
     citations: list[Citation]
     verified: bool
@@ -120,7 +122,9 @@ def create_app(
 
     @app.get("/health")
     def health() -> dict:
-        return {"status": "ok", "articles": len(get_articles())}
+        articles = get_articles()
+        laws = {a.law_number for a in articles.values()}
+        return {"status": "ok", "articles": len(articles), "laws": len(laws)}
 
     @app.get("/articles/{article_id}")
     def article(article_id: str) -> Article:
@@ -169,9 +173,11 @@ def create_app(
 
 def default_answerer() -> Answerer:
     """The real assistant: dense search (settings), Gemini, Arabizi rewrite."""
-    from qanoun.generation.ask import RETRIEVERS
+    from qanoun.generation.ask import RETRIEVERS, reference_resolver
     from qanoun.generation.llm import STATE_PATH, GeminiLLM
     from qanoun.understanding.llm_rewrite import LLMRewriter
 
     llm = GeminiLLM(state_path=STATE_PATH)
-    return Answerer(RETRIEVERS["dense"](), llm, rewriter=LLMRewriter(llm))
+    return Answerer(
+        RETRIEVERS["dense"](), llm, rewriter=LLMRewriter(llm), references=reference_resolver()
+    )

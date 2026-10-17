@@ -151,7 +151,7 @@ def report(label: str, results: list[AnswerResult]) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    from qanoun.generation.ask import RETRIEVERS
+    from qanoun.generation.ask import RETRIEVERS, reference_resolver
     from qanoun.generation.llm import STATE_PATH, GeminiLLM, configure_logging
     from qanoun.understanding.llm_rewrite import LLMRewriter
 
@@ -167,7 +167,9 @@ def main(argv: list[str] | None = None) -> int:
     questions = load_questions(args.questions)[: args.limit]
     llm = GeminiLLM(state_path=STATE_PATH)
     rewriter = None if args.no_rewrite else LLMRewriter(llm)
-    answerer = Answerer(RETRIEVERS[args.retriever](), llm, rewriter=rewriter)
+    answerer = Answerer(
+        RETRIEVERS[args.retriever](), llm, rewriter=rewriter, references=reference_resolver()
+    )
     results = run(answerer, questions, pause=args.pause)
 
     label = args.retriever + ("" if args.no_rewrite else "-rewrite")

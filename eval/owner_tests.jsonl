@@ -2,3 +2,7 @@
 {"id": "o02", "question": "chhal dyal lghrama ila sou9t b tilifoun f yddi?", "language": "darija-latn", "style": "owner-test", "expected": ["loi-52-05-ar-art-185"]}
 {"id": "o03", "question": "واش الكاري يقدر يزيد فالكرا كل عام وبشحال؟", "language": "darija-ar", "style": "owner-test", "expected": ["loi-67-12-ar-art-32", "loi-67-12-ar-art-33", "loi-67-12-ar-art-34", "loi-07-03-ar-art-2", "loi-07-03-ar-art-3", "loi-07-03-ar-art-4"]}
 {"id": "o04", "question": "wach mol dar y9der ykharjni bla 7okm?", "language": "darija-latn", "style": "owner-test", "expected": ["loi-67-12-ar-art-44", "loi-67-12-ar-art-45", "loi-67-12-ar-art-47"]}
+{"id": "o05", "question": "كريت شقة، مول الدار ما بغاش يصلح الما اللي كيقطر من السقف، واش نقدر ما نخلصش الكرا حتى يصلح؟", "language": "darija-ar", "style": "owner-test", "expected": ["loi-67-12-ar-art-10", "loi-adala-ec80d203f0-ar-art-638"]}
+{"id": "o06", "question": "شحال المدة باش يتقادم الشيك بلا رصيد؟", "language": "darija-ar", "style": "owner-test", "expected": ["loi-15-95-ar-art-295"]}
+{"id": "o07", "question": "D'après l'article 400 du Code pénal, le vol est puni de 10 ans, c'est vrai ?", "language": "fr", "style": "owner-test", "expected": ["loi-dahir-1-59-413-ar-art-400", "loi-dahir-1-59-413-ar-art-505"]}
+{"id": "o08", "question": "wach ila darbt chi wa7ed w howa bda bdarb, ghadi n7bes?", "language": "darija-latn", "style": "owner-test", "expected": ["loi-dahir-1-59-413-ar-art-124", "loi-dahir-1-59-413-ar-art-125"]}
