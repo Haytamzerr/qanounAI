@@ -120,3 +120,31 @@ def test_citations_carry_the_word_and_the_version_of_the_text():
     )
     citation = Citation.of(1, article)
     assert (citation.label, citation.updated) == ("الفصل", "2026-07-28")
+
+
+def test_ask_accepts_a_mode_and_the_conversation():
+    plan = {"situation": "s", "searches": ["الأجير"], "missing": []}
+    sections = {
+        "status": "answered", "situation": "s", "law": "Règle [1].", "application": "a",
+        "steps": "e", "missing": "", "used_sources": [1],
+    }  # fmt: skip
+    client = client_with("Question complète ?", plan, sections)
+    body = {
+        "question": "Et si ?",
+        "mode": "analysis",
+        "history": [{"question": "Q1 ?", "answer": "R1 [1].", "sources": [ARTICLES[0].id]}],
+    }
+    out = client.post("/ask", json=body).json()
+    assert out["mode"] == "analysis" and out["sections"]["law"] == "Règle [1]."
+    assert out["plan"] == ["الأجير"] and out["standalone"] == "Question complète ?"
+
+
+def test_stream_reports_the_plan():
+    plan = {"situation": "s", "searches": ["الأجير", "العطلة"], "missing": []}
+    sections = {
+        "status": "answered", "situation": "s", "law": "Règle [1].", "application": "a",
+        "steps": "e", "missing": "", "used_sources": [1],
+    }  # fmt: skip
+    client = client_with(plan, sections)
+    text = client.post("/ask/stream", json={"question": "Ma situation ?", "mode": "analysis"}).text
+    assert "event: planned" in text and "العطلة" in text

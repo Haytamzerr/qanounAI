@@ -70,8 +70,24 @@ def reference_resolver():
     return ReferenceResolver(list(_articles().values())).resolve
 
 
+SECTION_TITLES = {
+    "situation": "Situation",
+    "law": "What the law says",
+    "application": "What it means for you",
+    "steps": "What you can do",
+    "missing": "What is missing",
+}
+
+
 def render(answer: Answer) -> str:
-    lines = [answer.text, ""]
+    if answer.sections:
+        body = [
+            f"## {SECTION_TITLES[name]}\n{text}" for name, text in answer.sections.items() if text
+        ]
+        searches = [f"  · {q}" for q in answer.plan]
+        lines = (["Searched:", *searches, ""] if searches else []) + ["\n\n".join(body), ""]
+    else:
+        lines = [answer.text, ""]
     if answer.cited:
         lines.append("Sources:")
         for n in answer.cited:
@@ -101,6 +117,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--no-rewrite", action="store_true", help="don't restate Arabizi questions with the LLM"
     )
+    parser.add_argument(
+        "--analysis", action="store_true", help="plan the research and answer in sections"
+    )
     args = parser.parse_args(argv)
     if hasattr(sys.stdout, "reconfigure"):  # a terminal, not a notebook
         sys.stdout.reconfigure(encoding="utf-8")  # Arabic in the Windows terminal
@@ -111,7 +130,8 @@ def main(argv: list[str] | None = None) -> int:
         RETRIEVERS[args.retriever](), llm, k=args.k, rewriter=rewriter,
         references=reference_resolver(),
     )  # fmt: skip
-    print(render(answerer.answer(args.question)))
+    mode = "analysis" if args.analysis else "quick"
+    print(render(answerer.answer(args.question, mode=mode)))
     return 0
 
 

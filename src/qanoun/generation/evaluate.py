@@ -65,13 +65,13 @@ class AnswerResult:
 
 
 def run(
-    answerer: Answerer, questions: list[dict], pause: float = 0, log=print
+    answerer: Answerer, questions: list[dict], pause: float = 0, log=print, mode: str = "quick"
 ) -> list[AnswerResult]:
     results = []
     for n, q in enumerate(questions, start=1):
         start = time.perf_counter()
         try:
-            a = answerer.answer(q["question"])
+            a = answerer.answer(q["question"], mode=mode)
             result = AnswerResult(
                 q["id"], q["question"], q["language"], q["expected"], a.status, a.text,
                 [s.id for s in a.sources], [s.id for s in a.cited_articles], a.verified,
@@ -161,6 +161,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--limit", type=int, default=None, help="only the first N questions")
     parser.add_argument("--no-rewrite", action="store_true", help="no LLM rewrite of Darija")
     parser.add_argument("--pause", type=float, default=4.0, help="seconds between questions")
+    parser.add_argument("--mode", choices=["quick", "analysis"], default="quick")
     args = parser.parse_args(argv)
 
     configure_logging()
@@ -170,9 +171,10 @@ def main(argv: list[str] | None = None) -> int:
     answerer = Answerer(
         RETRIEVERS[args.retriever](), llm, rewriter=rewriter, references=reference_resolver()
     )
-    results = run(answerer, questions, pause=args.pause)
+    results = run(answerer, questions, pause=args.pause, mode=args.mode)
 
     label = args.retriever + ("" if args.no_rewrite else "-rewrite")
+    label += "" if args.mode == "quick" else f"-{args.mode}"
     label += "" if args.questions is None else f"-{args.questions.stem}"
     out = EVAL_DIR / "reports" / f"answers-{label}-{date.today().isoformat()}"
     out.parent.mkdir(parents=True, exist_ok=True)

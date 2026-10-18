@@ -3,6 +3,17 @@
     question → understand (language, Darija lexicon) → retrieve k articles
              → the model writes from them → citations checked → (one retry if needed) → answer
 
+Two modes (decision 75):
+- "quick": one search, a short answer;
+- "analysis": the model first plans the research (the facts that matter, 2–4 searches in the
+  law's own words, the facts that are missing), each search is run, and the answer is written
+  in sections: situation · what the law says · what it means for you · what you can do · what
+  is missing. Every section is checked like a quick answer.
+
+A follow-up ("and if I have children?") is first rewritten into a standalone question using the
+conversation, which is also shown to the model; the articles cited in the previous answer stay
+available (decision 76).
+
 If the check fails, the model gets one second chance: its previous answer and the problems are
 shown, so it corrects rather than rewrites. If the second answer still fails, or refuses although
 the first one answered, the best answer is returned marked as unverified, so the interface warns
@@ -12,13 +23,25 @@ instead of hiding the problem. Each attempt is logged ("qanoun.answer") for erro
 import json
 import logging
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 
 from qanoun.generation.citations import ARTICLE_MENTION, check
 from qanoun.generation.llm import LLM
-from qanoun.generation.prompts import ANSWER_SCHEMA, system_prompt, user_prompt
+from qanoun.generation.prompts import (
+    ANALYSIS_SCHEMA,
+    ANSWER_SCHEMA,
+    CONDENSE_SYSTEM,
+    PLAN_SCHEMA,
+    SECTIONS,
+    analysis_system,
+    conversation_block,
+    plan_system,
+    system_prompt,
+    user_prompt,
+)
 from qanoun.ingestion.models import Article
+from qanoun.understanding.language import detect_language
 from qanoun.understanding.references import Reference, note
 from qanoun.understanding.rewrite import understand
 
@@ -27,6 +50,17 @@ log = logging.getLogger("qanoun.answer")
 Retriever = Callable[[str, int], list[Article]]  # (search query, k) -> articles, best first
 Resolver = Callable[[str, str], list[Reference]]  # (question, language) -> articles it names
 StepCallback = Callable[[str, dict], None]  # (step name, details)
+Lookup = Callable[[str], Article | None]  # article id -> article
+
+
+@dataclass(frozen=True)
+class Turn:
+    """One earlier exchange of the conversation, as the interface sends it back."""
+
+    question: str
+    answer: str
+    sources: tuple[str, ...] = ()  # ids of the articles that answer cited
+
 
 NOT_COVERED = {
     "ar": "لم أجد في النصوص المتوفرة لدي ما يجيب عن هذا السؤال. "
@@ -52,6 +86,10 @@ class Answer:
     seconds: dict[str, float] = field(default_factory=dict)
     model: str = ""
     history: list[str] = field(default_factory=list)  # one line per attempt
+    mode: str = "quick"  # "quick" or "analysis"
+    sections: dict[str, str] | None = None  # analysis mode: situation, law, application…
+    plan: list[str] = field(default_factory=list)  # analysis mode: the searches that were run
+    standalone: str | None = None  # a follow-up rewritten with the conversation
 
     @property
     def verified(self) -> bool:
@@ -88,60 +126,137 @@ class Answerer:
         retries: int = 1,
         rewriter: Callable[[str], str | None] | None = None,
         references: Resolver | None = None,
+        lookup: Lookup | None = None,
+        per_search: int = 4,
+        max_sources: int = 14,
     ):
         self.retriever = retriever
-        self.references = references
         self.llm = llm
         self.rewriter = rewriter
+        self.references = references
+        self.lookup = lookup
         self.k = k
         self.retries = retries
+        self.per_search = per_search
+        self.max_sources = max_sources
 
-    def answer(self, question: str, on_step: StepCallback | None = None) -> Answer:
+    # ---------- entry point ----------
+
+    def answer(
+        self,
+        question: str,
+        on_step: StepCallback | None = None,
+        *,
+        mode: str = "quick",
+        history: Sequence[Turn] = (),
+    ) -> Answer:
         """`on_step(name, details)` is called as the work progresses, so an interface can show
         "searching…", "writing…" while the user waits (see the API's streaming endpoint)."""
         step = on_step or (lambda name, details: None)
         clock = time.perf_counter()
-        understood = understand(question, rewriter=self.rewriter)
-        language = understood.language
+        history = list(history)[-4:]
+        language = detect_language(question)
+        standalone = self._standalone(question, history) if history else None
+        if standalone:
+            step("condensed", {"question": standalone})
+        understood = understand(standalone or question, rewriter=self.rewriter)
         step("understood", {"language": language, "rewritten": understood.rewritten})
-        # Articles named in the question come first, then what the search finds (decision 71)
-        refs = self.references(question, language) if self.references else []
+
+        # Articles named in the question come first (decision 71), then the articles the
+        # previous answer cited (a follow-up is often about them), then what the search finds
+        refs = self.references(standalone or question, language) if self.references else []
         named = [r.article for r in refs if r.article is not None]
-        found = self.retriever(understood.query, self.k)
-        sources = list({a.id: a for a in [*named, *found]}.values())
         notes = [n for r in refs if (n := note(r))]
+        carried = self._carried(history)
+        talk = [(t.question, t.answer) for t in history]
+
+        if mode == "analysis":
+            planned = self._plan(standalone or question, language, talk)
+            if planned is not None:
+                situation, searches, missing = planned
+                step("planned", {"situation": situation, "searches": searches})
+                found = [a for q in searches for a in self._search(q, self.per_search)]
+                found += self._search(understood.query, self.per_search, done=True)
+                sources = _unique([*named, *found, *carried])[: self.max_sources]
+                seconds = {"retrieval": time.perf_counter() - clock}
+                step("sources", {"articles": [a.id for a in sources]})
+                answer = self._write_analysis(
+                    question, language, sources, notes, talk, missing, step, seconds
+                )
+                answer.plan, answer.standalone = searches, standalone
+                return answer
+            log.info("planning failed: quick answer instead")
+
+        found = self.retriever(understood.query, self.k)
+        sources = _unique([*named, *found, *carried])
         seconds = {"retrieval": time.perf_counter() - clock}
         step("sources", {"articles": [a.id for a in sources]})
-        if not sources and not notes:
-            return Answer(
-                question, language, "not_covered", NOT_COVERED[language], [], seconds=seconds
-            )
+        answer = self._write_quick(question, language, sources, notes, talk, step, seconds)
+        answer.standalone = standalone
+        return answer
 
-        log.info("sources: %s", ", ".join(a.id for a in sources))
-        system = system_prompt(language)
-        prompt = user_prompt(question, sources, notes)
-        # The person may name articles themselves (even ones that don't exist): mentioning
-        # them back to correct the premise is not citing from memory
-        own = set(ARTICLE_MENTION.findall(question))
-        clock = time.perf_counter()
-        history, best = [], None
+    # ---------- steps ----------
+
+    def _standalone(self, question: str, talk: Sequence[Turn]) -> str | None:
+        """ "w ila 3ndi drari?" + the conversation → a question search can use on its own."""
+        prompt = (
+            f"CONVERSATION\n{conversation_block([(t.question, t.answer) for t in talk])}"
+            f"\n\nLAST MESSAGE\n{question}"
+        )
+        try:
+            rewritten = self.llm.generate(CONDENSE_SYSTEM, prompt).strip().strip('"«»')
+        except Exception as error:  # the follow-up is still answered, with the conversation
+            log.info("follow-up rewrite failed: %s", error)
+            return None
+        return rewritten if 2 <= len(rewritten) <= 600 else None
+
+    def _carried(self, talk: Sequence[Turn]) -> list[Article]:
+        if not talk or self.lookup is None:
+            return []
+        return [a for i in talk[-1].sources[:3] if (a := self.lookup(i)) is not None]
+
+    def _plan(self, question, language, talk) -> tuple[str, list[str], list[str]] | None:
+        prompt = (f"CONVERSATION SO FAR\n{conversation_block(talk)}\n\n" if talk else "") + (
+            f"SITUATION\n{question}"
+        )
+        try:
+            data = json.loads(
+                self.llm.generate(plan_system(language), prompt, json_schema=PLAN_SCHEMA)
+            )
+            searches = [str(q).strip() for q in data.get("searches", []) if str(q).strip()][:4]
+            missing = [str(m).strip() for m in data.get("missing", []) if str(m).strip()][:3]
+            return str(data.get("situation", "")), searches, missing
+        except Exception as error:  # a broken plan must not cost the person an answer
+            log.info("plan rejected: %s", error)
+            return None
+
+    def _search(self, query: str, k: int, done: bool = False) -> list[Article]:
+        """One search of the plan; plan queries go through the Darija lexicon too."""
+        return self.retriever(query if done else understand(query).query, k)
+
+    # ---------- writing and checking ----------
+
+    def _attempts(self, question, sources, system, schema, prompt_of, parse, step):
+        """Write, check, and retry once with the problems shown (shared by both modes)."""
+        own = set(ARTICLE_MENTION.findall(question))  # numbers the person wrote may come back
+        prompt = prompt_of()
+        lines, best = [], None
         for attempt in range(1, self.retries + 2):
             step("writing", {"attempt": attempt})
-            raw = self.llm.generate(system, prompt, json_schema=ANSWER_SCHEMA)
-            status, text, used = _parse(raw)
+            status, text, used, extra = parse(self.llm.generate(system, prompt, json_schema=schema))
             answered = status == "answered"
             checked = check(text, sources, used, answered=answered, allowed=own)
             line = f"attempt {attempt}: {status}" + (
                 f" — rejected: {'; '.join(checked.problems)}" if checked.problems else ""
             )
-            history.append(line)
+            lines.append(line)
             log.info(line)
             if best is None or (answered and not best[0]) or (answered and checked.ok):
-                best = (answered, checked, status)  # a refusal never replaces an answer
+                best = (answered, checked, status, extra)  # a refusal never replaces an answer
             if checked.ok or attempt > self.retries:
                 break
             prompt = (
-                user_prompt(question, sources, notes)
+                prompt_of()
                 + "\n\nYOUR PREVIOUS ANSWER:\n"
                 + text
                 + "\n\nIT BROKE THE RULES:\n- "
@@ -149,7 +264,29 @@ class Answerer:
                 + "\nCorrect only these problems and keep what was right. Cite only the numbered "
                 "sources; if the sources answer the question, do not refuse."
             )
-        answered, checked, status = best
+        return best, attempt, lines
+
+    def _write_quick(self, question, language, sources, notes, talk, step, seconds) -> Answer:
+        if not sources and not notes:
+            return Answer(
+                question, language, "not_covered", NOT_COVERED[language], [], seconds=seconds
+            )
+        log.info("sources: %s", ", ".join(a.id for a in sources))
+        clock = time.perf_counter()
+
+        def parse(raw):
+            status, text, used = _parse(raw)
+            return status, text, used, None
+
+        (answered, checked, status, _), attempt, lines = self._attempts(
+            question,
+            sources,
+            system_prompt(language),
+            ANSWER_SCHEMA,
+            lambda: user_prompt(question, sources, notes, talk),
+            parse,
+            step,
+        )
         seconds["generation"] = time.perf_counter() - clock
         return Answer(
             question,
@@ -162,5 +299,65 @@ class Answerer:
             attempt,
             seconds,
             self.llm.name,
-            history,
+            lines,
         )
+
+    def _write_analysis(
+        self, question, language, sources, notes, talk, missing, step, seconds
+    ) -> Answer:
+        log.info("sources: %s", ", ".join(a.id for a in sources))
+        clock = time.perf_counter()
+        hints = notes + (
+            [f"Facts not given (ask about them in 'missing'): {'; '.join(missing)}"]
+            if missing
+            else []
+        )
+
+        def parse(raw):
+            try:
+                data = json.loads(raw)
+                sections = {name: str(data.get(name, "")).strip() for name in SECTIONS}
+                used = [int(n) for n in data.get("used_sources", []) if str(n).isdigit()]
+                status = data.get("status", "answered")
+            except (json.JSONDecodeError, AttributeError, TypeError):
+                sections, used, status = (
+                    {"situation": raw, **dict.fromkeys(SECTIONS[1:], "")},
+                    [],
+                    "answered",
+                )
+            text = "\n\n".join(v for v in sections.values() if v)
+            return (status if status in STATUSES else "answered"), text, used, sections
+
+        (answered, checked, status, sections), attempt, lines = self._attempts(
+            question,
+            sources,
+            analysis_system(language),
+            ANALYSIS_SCHEMA,
+            lambda: user_prompt(question, sources, hints, talk),
+            parse,
+            step,
+        )
+        seconds["generation"] = time.perf_counter() - clock
+        if sections is not None:  # unknown [n] markers removed in every section, as in the text
+            sections = {
+                name: check(value, sources, answered=False).text for name, value in sections.items()
+            }
+        return Answer(
+            question,
+            language,
+            status,
+            checked.text if answered else (checked.text or NOT_COVERED[language]),
+            list(sources),
+            checked.cited if answered else [],
+            checked.problems,
+            attempt,
+            seconds,
+            self.llm.name,
+            lines,
+            mode="analysis",
+            sections=sections if answered else None,
+        )
+
+
+def _unique(articles: Sequence[Article]) -> list[Article]:
+    return list({a.id: a for a in articles}.values())

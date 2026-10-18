@@ -12,6 +12,13 @@ const STRINGS = {
     stepUnderstand: "فهم السؤال", stepSearch: "البحث في النصوص", stepWrite: "صياغة الجواب", stepCheck: "التحقق من المراجع",
     copy: "نسخ", share: "مشاركة", copied: "تم النسخ مع المراجع",
     topicsTitle: "مواضيع", topicsSub: "أمثلة لأسئلة شائعة، اضغط لطرحها.",
+    modeLabel: "نوع الجواب", modeQuick: "جواب سريع", modeAnalysis: "تحليل وضعيتي",
+    hintQuick: "جواب قصير من المواد الأقرب إلى سؤالك.",
+    hintAnalysis: "يفهم وضعيتك، يبحث في عدة قوانين، ثم يشرح ما ينطبق عليك والخطوات الممكنة.",
+    stepPlan: "تخطيط البحث", searched: "بحثنا في:", newChat: "محادثة جديدة", understoodAs: "فهمنا سؤالك هكذا:",
+    followupPlaceholder: "سؤال متابعة… مثلاً: وإذا كان عندي أطفال؟", earlier: "عرض المزيد",
+    secSituation: "وضعيتك", secLaw: "ماذا يقول القانون", secApplication: "ماذا يعني ذلك بالنسبة لك",
+    secSteps: "ما يمكنك فعله", secMissing: "معلومات تنقصنا",
     allTopics: (n) => `كل المواضيع (${n})`, fewerTopics: "أهم المواضيع فقط", updated: "النص محين بتاريخ", published: "نسخة منشورة على موقع عدالة بتاريخ",
     disclaimer: "قانون AI يقدم معلومات قانونية عامة وليس استشارة قانونية. النص العربي المنشور في الجريدة الرسمية هو النص الرسمي.",
     history: "الأسئلة السابقة", clearHistory: "مسح السجل", emptyHistory: "لا توجد أسئلة بعد.",
@@ -31,6 +38,13 @@ const STRINGS = {
     stepUnderstand: "Comprendre la question", stepSearch: "Chercher dans les textes", stepWrite: "Rédiger la réponse", stepCheck: "Vérifier les citations",
     copy: "Copier", share: "Partager", copied: "Copié avec les sources",
     topicsTitle: "Thèmes", topicsSub: "Des questions fréquentes, à poser en un clic.",
+    modeLabel: "Type de réponse", modeQuick: "Réponse rapide", modeAnalysis: "Analyser ma situation",
+    hintQuick: "Une réponse courte, tirée des articles les plus proches.",
+    hintAnalysis: "Comprend votre situation, cherche dans plusieurs lois, puis explique ce qui s'applique à vous et les démarches.",
+    stepPlan: "Planifier la recherche", searched: "Recherches effectuées :", newChat: "Nouvelle conversation", understoodAs: "Question comprise ainsi :",
+    followupPlaceholder: "Question de suivi… ex. : et si j'ai des enfants ?", earlier: "Voir plus",
+    secSituation: "Votre situation", secLaw: "Ce que dit la loi", secApplication: "Ce que cela signifie pour vous",
+    secSteps: "Ce que vous pouvez faire", secMissing: "Ce qu'il faudrait savoir",
     allTopics: (n) => `Tous les thèmes (${n})`, fewerTopics: "Les principaux thèmes", updated: "Texte mis à jour au", published: "Version publiée sur Adala le",
     disclaimer: "Qanoun AI donne une information juridique générale, pas un conseil juridique. Le texte arabe publié au Bulletin officiel fait foi.",
     history: "Questions précédentes", clearHistory: "Effacer l'historique", emptyHistory: "Aucune question pour l'instant.",
@@ -50,6 +64,13 @@ const STRINGS = {
     stepUnderstand: "فهمنا السؤال", stepSearch: "كنقلبو فالنصوص", stepWrite: "كنكتبو الجواب", stepCheck: "كنتأكدو من المواد",
     copy: "نسخ", share: "بارطاجي", copied: "تنسخ مع المواد",
     topicsTitle: "مواضيع", topicsSub: "أسئلة كيتسولو بزاف، ضغط باش تسولها.",
+    modeLabel: "نوع الجواب", modeQuick: "جواب دغيا", modeAnalysis: "حلل ليا الوضعية",
+    hintQuick: "جواب قصير من المواد اللي قراب لسؤالك.",
+    hintAnalysis: "كيفهم الوضعية ديالك، كيقلب فبزاف ديال القوانين، ومن بعد كيشرح ليك شنو كيتطبق عليك وشنو تقدر دير.",
+    stepPlan: "كنخططو للبحث", searched: "قلبنا على:", newChat: "محادثة جديدة", understoodAs: "فهمنا السؤال هكا:",
+    followupPlaceholder: "سول على نفس الموضوع… بحال: وإلا عندي الدراري؟", earlier: "شوف كثر",
+    secSituation: "الوضعية ديالك", secLaw: "شنو كيقول القانون", secApplication: "شنو كيعني هادشي ليك",
+    secSteps: "شنو تقدر دير", secMissing: "شنو خاصنا نعرفو",
     allTopics: (n) => `كاع المواضيع (${n})`, fewerTopics: "غير المواضيع المهمين", updated: "النص محين ف", published: "النسخة تنشرات فعدالة نهار",
     disclaimer: "قانون AI كيعطي معلومات قانونية عامة، ماشي استشارة ديال محامي. النص العربي ديال الجريدة الرسمية هو اللي كيتعتامد.",
     history: "الأسئلة اللي فاتو", clearHistory: "مسح كلشي", emptyHistory: "مازال ما سولتي والو.",
@@ -125,6 +146,9 @@ let lang = store.get("qanoun.lang", navigator.language?.startsWith("fr") ? "fr" 
 let current = null;   // the answer on screen
 let openTopic = null;
 let allTopics = false;
+let mode = store.get("qanoun.mode", "quick");   // "quick" or "analysis" (decision 75)
+let conversation = [];                          // earlier answers of this conversation (decision 76)
+const SECTIONS = [["situation", "secSituation"], ["law", "secLaw"], ["application", "secApplication"], ["steps", "secSteps"], ["missing", "secMissing"]];
 const t = (key, ...args) => { const v = STRINGS[lang][key]; return typeof v === "function" ? v(...args) : v; };
 
 // ---------- interface language ----------
@@ -138,9 +162,43 @@ function applyLanguage() {
   document.querySelectorAll("[data-i18n-label]").forEach((el) => el.setAttribute("aria-label", t(el.dataset.i18nLabel)));
   document.querySelectorAll(".lang button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.lang === lang)));
   renderTopics();
+  renderMode();
+  renderThread();
   loadCorpus();
   if (current) renderAnswer(current, false);
 }
+
+// ---------- quick answer or analysis ----------
+function renderMode() {
+  document.querySelectorAll(".mode button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.mode === mode)));
+  $("mode-hint").textContent = t(mode === "analysis" ? "hintAnalysis" : "hintQuick");
+}
+document.querySelectorAll(".mode button").forEach((b) => b.addEventListener("click", () => {
+  mode = b.dataset.mode; store.set("qanoun.mode", mode); renderMode();
+}));
+
+// ---------- the conversation: earlier answers stay above the current one ----------
+function renderThread() {
+  const box = $("thread");
+  box.innerHTML = "";
+  conversation.forEach((turn) => {
+    const el = document.createElement("div");
+    el.className = "turn";
+    el.innerHTML = `<p class="turn-q" dir="auto"></p><p class="turn-a" dir="auto"></p><button type="button">${t("earlier")}</button>`;
+    el.querySelector(".turn-q").textContent = turn.question;
+    el.querySelector(".turn-a").textContent = turn.text.replace(/\[(\d+)\]/g, "");
+    el.querySelector("button").addEventListener("click", () => el.classList.toggle("open"));
+    box.append(el);
+  });
+}
+function newConversation() {
+  conversation = []; current = null;
+  renderThread();
+  $("result").hidden = true; $("followup").hidden = true;
+  $("workspace").classList.add("idle");
+  $("question").value = ""; $("question").focus();
+}
+$("new-chat").addEventListener("click", newConversation);
 document.querySelectorAll(".lang button").forEach((b) => b.addEventListener("click", () => {
   lang = b.dataset.lang; store.set("qanoun.lang", lang); applyLanguage();
 }));
@@ -204,7 +262,7 @@ function renderTopics() {
 }
 
 // ---------- asking (streamed progress, then the checked answer) ----------
-const STEP_ORDER = ["understood", "sources", "writing", "answer"];
+const STEP_ORDER = ["understood", "planned", "sources", "writing", "answer"];
 function markStep(name) {
   const reached = STEP_ORDER.indexOf(name);
   document.querySelectorAll("#steps li").forEach((li) => {
@@ -214,12 +272,23 @@ function markStep(name) {
   });
 }
 
-async function ask(question) {
+async function ask(question, followUp = false) {
   question = question.trim();
   if (question.length < 2) return;
-  const button = document.querySelector(".ask-btn");
-  button.disabled = true;
+  const buttons = document.querySelectorAll(".ask-btn");
+  buttons.forEach((b) => { b.disabled = true; });
+  if (followUp && current) conversation.push(current);   // the last answer joins the thread
+  else conversation = [];                                  // a question from the top starts afresh
+  conversation = conversation.slice(-6);
+  renderThread();
+  const history = conversation.slice(-4).map((c) => ({
+    question: c.question, answer: c.text.slice(0, 3500), sources: c.citations.map((x) => x.id).slice(0, 12),
+  }));
   current = null;
+  $("followup").hidden = true;
+  $("understood-as").hidden = true;
+  $("mode-badge").textContent = t(mode === "analysis" ? "modeAnalysis" : "modeQuick");
+  document.querySelector('#steps li[data-step="planned"]').hidden = mode !== "analysis";
   $("workspace").classList.remove("idle");
   $("result").hidden = false;
   $("asked").textContent = question;
@@ -231,7 +300,7 @@ async function ask(question) {
 
   try {
     const response = await fetch("/ask/stream", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question }),
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question, mode, history }),
     });
     if (!response.ok) throw new Error((await response.json()).detail || response.statusText);
     const reader = response.body.getReader();
@@ -246,7 +315,8 @@ async function ask(question) {
         const block = buffer.slice(0, cut); buffer = buffer.slice(cut + 2);
         const event = /event: (.*)/.exec(block)?.[1];
         const data = JSON.parse(/data: (.*)/s.exec(block)?.[1] ?? "null");
-        if (event === "understood") markStep("sources");
+        if (event === "understood") markStep(mode === "analysis" ? "planned" : "sources");
+        else if (event === "planned") markStep("sources");
         else if (event === "sources") markStep("writing");
         else if (event === "writing") markStep(data.attempt > 1 ? "answer" : "writing");
         else if (event === "answer") { markStep("done"); current = data; renderAnswer(data, true); remember(data); }
@@ -258,7 +328,7 @@ async function ask(question) {
     $("error").textContent = t("error") + error.message;
     $("error").hidden = false;
   } finally {
-    button.disabled = false;
+    buttons.forEach((b) => { b.disabled = false; });
   }
 }
 
@@ -270,6 +340,13 @@ $("question").addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask($("question").value); }
 });
 $("question").addEventListener("input", (e) => { e.target.style.height = "auto"; e.target.style.height = `${e.target.scrollHeight}px`; });
+$("followup").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const q = $("followup-q").value; $("followup-q").value = ""; ask(q, true);
+});
+$("followup-q").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("followup").requestSubmit(); }
+});
 
 // ---------- the answer ----------
 function escapeHtml(s) { return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
@@ -282,10 +359,28 @@ function renderAnswer(data, animate) {
   const text = $("answer-text");
   text.dir = RTL_LANGUAGES.has(data.language) ? "rtl" : "ltr";
   const cited = new Set(data.citations.map((c) => c.number));
-  text.innerHTML = escapeHtml(data.text)
-    .split(/\n{2,}/).map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("")
-    .replace(/\[(\d+)\]/g, (m, n) => cited.has(+n)
-      ? `<button class="cite" data-n="${n}" aria-expanded="false" aria-label="${t("article")} ${n}">${n}</button>` : "");
+  const paragraphs = (s) => escapeHtml(s).split(/\n{2,}/).map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("");
+  let html = "";
+  if (data.plan?.length) {
+    html += `<div class="plan"><span>${t("searched")}</span><ol>${data.plan.map((q) => `<li dir="rtl">${escapeHtml(q)}</li>`).join("")}</ol></div>`;
+  }
+  if (data.sections) {
+    SECTIONS.forEach(([key, label], i) => {
+      const value = data.sections[key];
+      if (value) html += `<section class="section sec-${key}"><h3><i>${i + 1}</i>${t(label)}</h3>${paragraphs(value)}</section>`;
+    });
+  } else {
+    html += paragraphs(data.text);
+  }
+  text.innerHTML = html.replace(/\[(\d+)\]/g, (m, n) => cited.has(+n)
+    ? `<button class="cite" data-n="${n}" aria-expanded="false" aria-label="${t("article")} ${n}">${n}</button>` : "");
+  if (data.standalone) {
+    $("understood-as").innerHTML = `${t("understoodAs")} <b dir="auto"></b>`;
+    $("understood-as").querySelector("b").textContent = data.standalone;
+    $("understood-as").hidden = false;
+  }
+  $("mode-badge").textContent = t(data.mode === "analysis" ? "modeAnalysis" : "modeQuick");
+  $("followup").hidden = false;
   text.querySelectorAll(".cite").forEach((b) => b.addEventListener("click", () => openArticle(+b.dataset.n, b)));
 
   $("flag").hidden = data.verified && data.status !== "not_covered";
@@ -306,7 +401,10 @@ function renderAnswer(data, animate) {
 
 function citationText(data) {
   const sources = data.citations.map((c) => `[${c.number}] ${c.law_title}, ${c.label || t("article")} ${c.article_number}`);
-  return `${data.question}\n\n${data.text}\n\n${sources.join("\n")}\n\n— Qanoun AI`;
+  const body = data.sections
+    ? SECTIONS.filter(([key]) => data.sections[key]).map(([key, label]) => `${t(label)}\n${data.sections[key]}`).join("\n\n")
+    : data.text;
+  return `${data.question}\n\n${body}\n\n${sources.join("\n")}\n\n— Qanoun AI`;
 }
 function toast(message) {
   const el = $("toast"); el.textContent = message; el.hidden = false;
@@ -378,6 +476,7 @@ function renderHistory() {
     b.innerHTML = `${escapeHtml(h.question)}<small dir="${lang === "fr" ? "ltr" : "rtl"}">${when}</small>`;
     b.addEventListener("click", () => {
       closePanels();
+      conversation = []; renderThread();
       current = h.answer;
       $("workspace").classList.remove("idle");
       $("result").hidden = false; $("error").hidden = true;
