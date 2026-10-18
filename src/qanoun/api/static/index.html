@@ -72,6 +72,15 @@
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </button>
         </form>
+        <div class="mode" role="radiogroup" data-i18n-label="modeLabel">
+          <button type="button" role="radio" data-mode="quick">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg><span data-i18n="modeQuick"></span>
+          </button>
+          <button type="button" role="radio" data-mode="analysis">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M8 10.5h5M10.5 8v5"/></svg><span data-i18n="modeAnalysis"></span>
+          </button>
+        </div>
+        <p class="mode-hint" id="mode-hint"></p>
         <div class="scripts">
           <button type="button" dir="ltr">chhal dyal lconji?</button><button type="button" dir="rtl">شحال ديال الكونجي؟</button>
           <button type="button" dir="rtl">ما مدة العطلة السنوية؟</button><button type="button" dir="ltr">Combien de jours de congé ?</button>
@@ -83,9 +92,18 @@
 
     <div class="workspace idle" id="workspace">
       <section class="result" id="result" aria-live="polite" hidden>
+        <div class="result-head">
+          <span class="badge mode-badge" id="mode-badge"></span>
+          <button type="button" class="ghost" id="new-chat">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="newChat"></span>
+          </button>
+        </div>
+        <div class="thread" id="thread"></div>
         <p class="asked" id="asked" dir="auto"></p>
+        <p class="understood-as" id="understood-as" hidden></p>
         <ol class="steps" id="steps">
           <li data-step="understood"><span class="dot"></span><span data-i18n="stepUnderstand"></span></li>
+          <li data-step="planned" hidden><span class="dot"></span><span data-i18n="stepPlan"></span></li>
           <li data-step="sources"><span class="dot"></span><span data-i18n="stepSearch"></span></li>
           <li data-step="writing"><span class="dot"></span><span data-i18n="stepWrite"></span></li>
           <li data-step="answer"><span class="dot"></span><span data-i18n="stepCheck"></span></li>
@@ -102,6 +120,12 @@
           </div>
         </article>
         <p class="error" id="error" role="alert" hidden></p>
+        <form class="followup" id="followup" autocomplete="off" hidden>
+          <textarea id="followup-q" rows="1" maxlength="1000" dir="auto" data-i18n-placeholder="followupPlaceholder"></textarea>
+          <button type="submit" class="ask-btn small"><span data-i18n="ask"></span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </form>
       </section>
 
       <aside class="topics" aria-labelledby="topics-title">

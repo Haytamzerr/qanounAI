@@ -63,4 +63,17 @@ route,sou9t|sou9\b|kansou9|nsou9|sayq|sayeq|s(?:o|ou)g\b|conduire|conduis|conduc
 route,permis|lpermi|ro5sa|rokhsa|rokhssa,البيرمي;البرمي;البيرمي ديال;رخصة السياقة,رخصة السياقة,permis de conduire
 route,kh?tiya|5tiya|ghrama|gharama|amende|\bpv\b|mokhalafa|mu?5alafa,الخطية;خطية;غرامة;الغرامة;مخالفة,الغرامة;المخالفة,amende
 penal,sr9a|ser9a|sre9|sar9a|s9er|vol\b|voleur,سرقة;السرقة;سرق;شفر;الشفرة;شفار,السرقة;السارق,vol
-penal,l?7bs|habs|prison|sjn|sijn,الحبس;حبس;السجن;الحبسية,العقوبة الحبسية;الحبس;السجن,prison
+penal,l?7bs|[nyt]?7b[ae]s|habs|prison|sjn|sijn,الحبس;حبس;السجن;الحبسية,العقوبة الحبسية;الحبس;السجن,prison
+logement,y?s(?:a|e)ll?e?7|islah|r[eé]par|fuite|kay9tar|ki9tar,يصلح;صلح;تصليح;الإصلاح;كيقطر;تيقطر,الإصلاحات;صيانة المحل,réparations
+logement,nkhl(?:a|e)?s|nkhless|ma nkhlsch|tkhlles|payer le loyer|paiement du loyer,نخلص;ما نخلصش;تخلص الكرا,أداء الوجيبة الكرائية,paiement du loyer
+penal,darbt|dreb|drab|darb|dorb|ydrab|tdarb|frapp|coups?\b|violence|3onf,ضربت;ضرب;الضرب;العنف;جرحت;ضربني,الضرب والجرح;العنف;الإيذاء,coups et blessures
+penal,bda (?:howa|b)|howa li bda|hjem 3liya|hajm 3lia|dfa3|dife3|d[eé]fense|l[eé]gitime,هو اللي بدا;دافعت;الدفاع;هجم عليا;تهجم,الدفاع الشرعي;الضرورة الحالة للدفاع الشرعي,légitime défense
+donnees,whats?app|watsap|messages?\b|\bmsg\b|rasa2il|e-?mails?\b|surveill|cam[eé]ra|kamira|t?tjasso?s|yt?jesses,الرسائل;المراسلات;كاميرا;مراقبة;تجسس;الواتساب,سرية المراسلات;الحياة الخاصة;المعطيات ذات الطابع الشخصي;المراقبة بالكاميرا,vie privée et correspondances
+commerce,ch[eè]que|\bchek|\bchik\b,شيك;الشيك;الشيكات;شيكات,الشيك,chèque
+commerce,bla ras?s?id|sans provision|ma fih(?:ch)? l?flous|\bprovision,بلا رصيد;بدون رصيد;ما فيهش الفلوس,عدم توفر مؤونة الشيك;مؤونة الشيك;إصدار شيك بدون مؤونة,chèque sans provision
+commerce,t9adom|y?t[9q]add?[ae]m|prescri,يتقادم;تقادم;التقادم,التقادم;تتقادم الدعوى,prescription
+urbanisme,construction|\bbni\b|\bbna\b|yebni|rokhsat l?bni|autorisation de construire|permis de construire,بنى;البني;يبني;بناء;رخصة البني,رخصة البناء;البناء;مخالفات التعمير,construction
+urbanisme,\bjari\b|\bjar\b|jiran|voisin,جاري;الجار;الجيران,الجار;الجوار;مضار الجوار,voisinage
+travail,anciennet[eé]|a9damiya|9damiya|snin d l?khdma,الأقدمية;سنين ديال الخدمة,الأقدمية;سنة من الأقدمية,ancienneté
+famille,absent|\bghab\b|ghayb|disparu|sans (?:\w+ )?(?:\w+ )?(?:\w+ )?nouvelles|mcha l?barra|parti (?:en|à|a) ,غاب;غايب;الغيبة;غبر,غيبة الزوج;التطليق للغيبة,absence du mari
+famille,pension\b|ma kay(?:3|a)tich l?masrouf|ne paie pas,ما كيعطيش المصروف,النفقة;التطليق لعدم الإنفاق,pension non payée

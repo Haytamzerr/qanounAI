@@ -115,6 +115,7 @@ QANOUN_QDRANT_URL=data/qdrant      # Qdrant as a folder, no Docker needed
 ```bash
 uv run python -m qanoun.retrieval.index --backend sentence-transformers   # loads the saved vectors, no model
 uv run python -m qanoun.generation.ask "chhal dyal lconji 3ndi f l3am?"
+uv run python -m qanoun.generation.ask "mol dar ma bghach ysle7 lma li kay9tar" --analysis
 ```
 
 With the full corpus (34,106 articles), skip Qdrant on the PC: add `QANOUN_VECTOR_STORE=numpy` to
@@ -214,6 +215,20 @@ uv run python -m qanoun.api        # open http://127.0.0.1:8000 (API docs: /docs
 | Home | Answer with citations | Official article |
 | --- | --- | --- |
 | ![Home](docs/screenshots/home.png) | ![Answer](docs/screenshots/answer.png) | ![Article](docs/screenshots/article-panel.png) |
+
+Two ways to ask (decision 75): **quick answer**, or **analyse my situation**: the assistant plans
+the research (2–4 searches in the law's own words), then answers in sections — your situation ·
+what the law says · what it means for you · what you can do · what is missing. Follow-up questions
+keep the conversation (decision 76).
+
+| Analysis | Follow-up |
+| --- | --- |
+| ![Analysis](docs/screenshots/analysis.png) | ![Follow-up](docs/screenshots/follow-up.png) |
+
+The home page shows five themes; "all themes" opens the fifteen (![all themes](docs/screenshots/home-all-themes.png)).
+Answers can also correct a wrong premise ("l'article 400 du Code pénal…" is looked up directly),
+ask a short question back when the question is too vague, and the article panel says how recent
+the text is.
 
 Ask in Darija (Arabic letters or Arabizi), Arabic or French; the steps show live; every [n] opens the
 official article; copy or share the answer with its sources; interface in Arabic, French or Darija;

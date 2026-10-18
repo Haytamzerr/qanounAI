@@ -18,7 +18,7 @@ import json
 import threading
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.concurrency import run_in_threadpool
@@ -26,15 +26,29 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from qanoun.generation.answer import Answer, Answerer
+from qanoun.generation.answer import Answer, Answerer, Turn
 from qanoun.generation.llm import LLMError
 from qanoun.ingestion.models import Article
 
 STATIC = Path(__file__).parent / "static"
 
 
+class TurnIn(BaseModel):
+    """An earlier exchange of the same conversation, sent back by the interface."""
+
+    question: str = Field(max_length=1000)
+    answer: str = Field(max_length=4000)
+    sources: list[str] = Field(default_factory=list, max_length=12)  # cited article ids
+
+
 class AskRequest(BaseModel):
     question: str = Field(min_length=2, max_length=1000)
+    mode: Literal["quick", "analysis"] = "quick"
+    history: list[TurnIn] = Field(default_factory=list, max_length=8)
+
+    def run(self, answerer: Answerer, on_step=None) -> Answer:
+        turns = [Turn(t.question, t.answer, tuple(t.sources)) for t in self.history]
+        return answerer.answer(self.question, on_step, mode=self.mode, history=turns)
 
 
 class Citation(BaseModel):
@@ -49,6 +63,7 @@ class Citation(BaseModel):
     text: str
     source_url: str
     official: bool  # the Arabic text published in the Bulletin officiel
+    updated: str | None = None  # the date the text was last consolidated, when known
 
     @classmethod
     def of(cls, number: int, a: Article) -> "Citation":
@@ -57,14 +72,19 @@ class Citation(BaseModel):
             article_number=a.article_number, label=a.label, title=a.title,
             hierarchy=a.hierarchy, text=a.text,
             source_url=a.source_url, official=a.is_official_version,
+            updated=a.version,
         )  # fmt: skip
 
 
 class AnswerOut(BaseModel):
     question: str
     language: str
-    status: str  # "answered" or "not_covered"
+    status: str  # "answered", "not_covered" or "clarify"
+    mode: str  # "quick" or "analysis"
     text: str
+    sections: dict[str, str] | None  # analysis: situation, law, application, steps, missing
+    plan: list[str]  # analysis: the searches that were run
+    standalone: str | None  # a follow-up as rewritten with the conversation
     citations: list[Citation]
     verified: bool
     problems: list[str]
@@ -76,7 +96,8 @@ class AnswerOut(BaseModel):
     @classmethod
     def of(cls, a: Answer) -> "AnswerOut":
         return cls(
-            question=a.question, language=a.language, status=a.status, text=a.text,
+            question=a.question, language=a.language, status=a.status, mode=a.mode, text=a.text,
+            sections=a.sections, plan=a.plan, standalone=a.standalone,
             citations=[Citation.of(n, a.sources[n - 1]) for n in a.cited],
             verified=a.verified, problems=a.problems, sources=[s.id for s in a.sources],
             model=a.model, attempts=a.attempts, seconds=a.seconds,
@@ -120,7 +141,9 @@ def create_app(
 
     @app.get("/health")
     def health() -> dict:
-        return {"status": "ok", "articles": len(get_articles())}
+        articles = get_articles()
+        laws = {a.law_number for a in articles.values()}
+        return {"status": "ok", "articles": len(articles), "laws": len(laws)}
 
     @app.get("/articles/{article_id}")
     def article(article_id: str) -> Article:
@@ -132,7 +155,7 @@ def create_app(
     @app.post("/ask")
     async def ask(request: AskRequest) -> AnswerOut:
         try:
-            answer = await run_in_threadpool(lambda: get_answerer().answer(request.question))
+            answer = await run_in_threadpool(lambda: request.run(get_answerer()))
         except LLMError as error:
             raise HTTPException(503, f"The language model is unavailable: {error}") from error
         return AnswerOut.of(answer)
@@ -147,7 +170,7 @@ def create_app(
 
         def work() -> None:
             try:
-                answer = get_answerer().answer(request.question, on_step=push)
+                answer = request.run(get_answerer(), on_step=push)
                 push("answer", AnswerOut.of(answer).model_dump())
             except Exception as error:  # reported to the client instead of a broken stream
                 push("error", {"message": f"{type(error).__name__}: {error}"})
@@ -169,9 +192,15 @@ def create_app(
 
 def default_answerer() -> Answerer:
     """The real assistant: dense search (settings), Gemini, Arabizi rewrite."""
-    from qanoun.generation.ask import RETRIEVERS
+    from qanoun.generation.ask import RETRIEVERS, _articles, reference_resolver
     from qanoun.generation.llm import STATE_PATH, GeminiLLM
     from qanoun.understanding.llm_rewrite import LLMRewriter
 
     llm = GeminiLLM(state_path=STATE_PATH)
-    return Answerer(RETRIEVERS["dense"](), llm, rewriter=LLMRewriter(llm))
+    return Answerer(
+        RETRIEVERS["dense"](),
+        llm,
+        rewriter=LLMRewriter(llm),
+        references=reference_resolver(),
+        lookup=_articles().get,
+    )

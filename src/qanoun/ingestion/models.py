@@ -4,6 +4,7 @@
 `Article` is the unit of everything downstream: we search, cite and verify articles.
 """
 
+import re
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -54,6 +55,15 @@ class Article(BaseModel):
     # The word the law itself uses: old dahirs and the codes of 1913–1962 number "الفصل 230",
     # newer laws "المادة 5". None means the usual word for the language.
     article_word: str | None = None
+
+    @property
+    def version(self) -> str | None:
+        """When this text was last updated, as precisely as known: the consolidation date the
+        PDF states ("15 أكتوبر 1954"), else the day Adala published this version of the PDF."""
+        if self.consolidated_as_of:
+            return self.consolidated_as_of
+        found = re.search(r"/uploads/(\d{4})/(\d{2})/(\d{2})/", self.source_url)
+        return "-".join(found.groups()) if found else None
 
     @property
     def label(self) -> str:

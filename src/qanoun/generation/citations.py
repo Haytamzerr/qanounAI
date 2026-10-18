@@ -36,8 +36,14 @@ class CheckedAnswer:
 
 
 def check(
-    text: str, sources: Sequence[Article], used: Sequence[int] = (), answered: bool = True
+    text: str,
+    sources: Sequence[Article],
+    used: Sequence[int] = (),
+    answered: bool = True,
+    allowed: set[str] | frozenset[str] = frozenset(),
 ) -> CheckedAnswer:
+    """`allowed`: article numbers the question itself mentions, which the answer may repeat
+    (to say "article 1500 does not exist")."""
     problems = []
     valid = range(1, len(sources) + 1)
 
@@ -54,7 +60,7 @@ def check(
     if answered and not cited:
         problems.append("the answer cites no source")
 
-    allowed = {sources[n - 1].article_number.split()[0] for n in cited}
+    allowed = set(allowed) | {sources[n - 1].article_number.split()[0] for n in cited}
     for n in cited:
         allowed.update(ARTICLE_MENTION.findall(sources[n - 1].text))
     for number in dict.fromkeys(ARTICLE_MENTION.findall(cleaned)):

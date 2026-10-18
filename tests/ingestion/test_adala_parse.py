@@ -243,3 +243,24 @@ def test_domestic_charters_are_not_treaties():
     arbitration = entry("بتنفيذ القانون رقم 95.17 المتعلق بالتحكيم والوساطة الاتفاقية", path="b")
     chosen = select([charter, arbitration], types={"ظهير"}, skip_keys=set())
     assert chosen == [charter, arbitration]
+
+
+def test_the_consolidation_date_is_read_from_the_first_pages():
+    from qanoun.ingestion.adala_parse import consolidation_date
+
+    lines = [
+        line("إعادة تنظيم المراقبة الصحية البحرية", 24.0, True),
+        line("(صيغة محينة بتاريخ 15 أكتوبر 1954)"),
+    ]
+    assert consolidation_date(lines) == "15 أكتوبر 1954"
+    assert consolidation_date([line("صيغة محينة بتاريخ 1 يناير 2020", page=5)]) is None  # too far
+    assert consolidation_date([line(BODY)]) is None
+
+
+def test_the_version_falls_back_to_the_adala_publication_day():
+    a = _article("نص")
+    dated = a.model_copy(update={"consolidated_as_of": "15 أكتوبر 1954"})
+    published = a.model_copy(
+        update={"source_url": "https://adala.justice.gov.ma/api/uploads/2026/07/28/x.pdf"}
+    )
+    assert (dated.version, published.version, a.version) == ("15 أكتوبر 1954", "2026-07-28", None)

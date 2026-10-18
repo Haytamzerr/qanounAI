@@ -22,7 +22,9 @@ def client_with(*replies) -> TestClient:
 
 def test_health_and_articles():
     client = client_with()
-    assert client.get("/health").json() == {"status": "ok", "articles": 4}
+    health = client.get("/health").json()
+    assert (health["status"], health["articles"]) == ("ok", 4)
+    assert health["laws"] >= 1
     article = client.get("/articles/loi-65-99-ar-art-231").json()
     assert article["article_number"] == "231"
     assert client.get("/articles/nope").status_code == 404
@@ -105,3 +107,44 @@ def test_the_interface_is_served():
     assert page.status_code == 200 and "Qanoun AI" in page.text
     assert client.get("/static/app.js").status_code == 200
     assert client.get("/static/app.css").status_code == 200
+
+
+def test_citations_carry_the_word_and_the_version_of_the_text():
+    from qanoun.api.app import Citation
+
+    article = ARTICLES[0].model_copy(
+        update={
+            "article_word": "الفصل",
+            "source_url": "https://adala.justice.gov.ma/api/uploads/2026/07/28/x.pdf",
+        }
+    )
+    citation = Citation.of(1, article)
+    assert (citation.label, citation.updated) == ("الفصل", "2026-07-28")
+
+
+def test_ask_accepts_a_mode_and_the_conversation():
+    plan = {"situation": "s", "searches": ["الأجير"], "missing": []}
+    sections = {
+        "status": "answered", "situation": "s", "law": "Règle [1].", "application": "a",
+        "steps": "e", "missing": "", "used_sources": [1],
+    }  # fmt: skip
+    client = client_with("Question complète ?", plan, sections)
+    body = {
+        "question": "Et si ?",
+        "mode": "analysis",
+        "history": [{"question": "Q1 ?", "answer": "R1 [1].", "sources": [ARTICLES[0].id]}],
+    }
+    out = client.post("/ask", json=body).json()
+    assert out["mode"] == "analysis" and out["sections"]["law"] == "Règle [1]."
+    assert out["plan"] == ["الأجير"] and out["standalone"] == "Question complète ?"
+
+
+def test_stream_reports_the_plan():
+    plan = {"situation": "s", "searches": ["الأجير", "العطلة"], "missing": []}
+    sections = {
+        "status": "answered", "situation": "s", "law": "Règle [1].", "application": "a",
+        "steps": "e", "missing": "", "used_sources": [1],
+    }  # fmt: skip
+    client = client_with(plan, sections)
+    text = client.post("/ask/stream", json={"question": "Ma situation ?", "mode": "analysis"}).text
+    assert "event: planned" in text and "العطلة" in text

@@ -8,10 +8,18 @@ const STRINGS = {
     placeholder: "مثلاً: شحال ديال الكونجي عندي فالعام؟",
     ask: "اسأل",
     scriptsNote: "كل هذه الصيغ مفهومة.",
-    corpus: (n) => `${n} مادة من 4 نصوص: مدونة الشغل، مدونة الأسرة، حماية المستهلك، حماية المعطيات الشخصية`,
+    corpus: (n, laws) => `${n} مادة من ${laws} نصا قانونيا مغربيا، من الدستور إلى مدونة السير`,
     stepUnderstand: "فهم السؤال", stepSearch: "البحث في النصوص", stepWrite: "صياغة الجواب", stepCheck: "التحقق من المراجع",
     copy: "نسخ", share: "مشاركة", copied: "تم النسخ مع المراجع",
     topicsTitle: "مواضيع", topicsSub: "أمثلة لأسئلة شائعة، اضغط لطرحها.",
+    modeLabel: "نوع الجواب", modeQuick: "جواب سريع", modeAnalysis: "تحليل وضعيتي",
+    hintQuick: "جواب قصير من المواد الأقرب إلى سؤالك.",
+    hintAnalysis: "يفهم وضعيتك، يبحث في عدة قوانين، ثم يشرح ما ينطبق عليك والخطوات الممكنة.",
+    stepPlan: "تخطيط البحث", searched: "بحثنا في:", newChat: "محادثة جديدة", understoodAs: "فهمنا سؤالك هكذا:",
+    followupPlaceholder: "سؤال متابعة… مثلاً: وإذا كان عندي أطفال؟", earlier: "عرض المزيد",
+    secSituation: "وضعيتك", secLaw: "ماذا يقول القانون", secApplication: "ماذا يعني ذلك بالنسبة لك",
+    secSteps: "ما يمكنك فعله", secMissing: "معلومات تنقصنا",
+    allTopics: (n) => `كل المواضيع (${n})`, fewerTopics: "أهم المواضيع فقط", updated: "النص محين بتاريخ", published: "نسخة منشورة على موقع عدالة بتاريخ",
     disclaimer: "قانون AI يقدم معلومات قانونية عامة وليس استشارة قانونية. النص العربي المنشور في الجريدة الرسمية هو النص الرسمي.",
     history: "الأسئلة السابقة", clearHistory: "مسح السجل", emptyHistory: "لا توجد أسئلة بعد.",
     close: "إغلاق", theme: "الوضع الليلي", interfaceLanguage: "لغة الواجهة",
@@ -26,10 +34,18 @@ const STRINGS = {
     placeholder: "Par exemple : combien de jours de congé par an ?",
     ask: "Demander",
     scriptsNote: "Toutes ces façons d'écrire sont comprises.",
-    corpus: (n) => `${n} articles de 4 textes : Code du travail, Code de la famille, protection du consommateur, données personnelles`,
+    corpus: (n, laws) => `${n} articles de ${laws} textes marocains, de la Constitution au Code de la route`,
     stepUnderstand: "Comprendre la question", stepSearch: "Chercher dans les textes", stepWrite: "Rédiger la réponse", stepCheck: "Vérifier les citations",
     copy: "Copier", share: "Partager", copied: "Copié avec les sources",
     topicsTitle: "Thèmes", topicsSub: "Des questions fréquentes, à poser en un clic.",
+    modeLabel: "Type de réponse", modeQuick: "Réponse rapide", modeAnalysis: "Analyser ma situation",
+    hintQuick: "Une réponse courte, tirée des articles les plus proches.",
+    hintAnalysis: "Comprend votre situation, cherche dans plusieurs lois, puis explique ce qui s'applique à vous et les démarches.",
+    stepPlan: "Planifier la recherche", searched: "Recherches effectuées :", newChat: "Nouvelle conversation", understoodAs: "Question comprise ainsi :",
+    followupPlaceholder: "Question de suivi… ex. : et si j'ai des enfants ?", earlier: "Voir plus",
+    secSituation: "Votre situation", secLaw: "Ce que dit la loi", secApplication: "Ce que cela signifie pour vous",
+    secSteps: "Ce que vous pouvez faire", secMissing: "Ce qu'il faudrait savoir",
+    allTopics: (n) => `Tous les thèmes (${n})`, fewerTopics: "Les principaux thèmes", updated: "Texte mis à jour au", published: "Version publiée sur Adala le",
     disclaimer: "Qanoun AI donne une information juridique générale, pas un conseil juridique. Le texte arabe publié au Bulletin officiel fait foi.",
     history: "Questions précédentes", clearHistory: "Effacer l'historique", emptyHistory: "Aucune question pour l'instant.",
     close: "Fermer", theme: "Mode sombre", interfaceLanguage: "Langue de l'interface",
@@ -44,10 +60,18 @@ const STRINGS = {
     placeholder: "بحال: واش الباطرون يقدر يجري عليا بلا سبب؟",
     ask: "سول",
     scriptsNote: "كاع هاد الطرق ديال الكتابة مفهومة.",
-    corpus: (n) => `${n} مادة من 4 ديال النصوص: الخدمة، العائلة، المستهلك، المعطيات الشخصية`,
+    corpus: (n, laws) => `${n} مادة من ${laws} ديال القوانين المغربية، من الدستور حتى لمدونة السير`,
     stepUnderstand: "فهمنا السؤال", stepSearch: "كنقلبو فالنصوص", stepWrite: "كنكتبو الجواب", stepCheck: "كنتأكدو من المواد",
     copy: "نسخ", share: "بارطاجي", copied: "تنسخ مع المواد",
     topicsTitle: "مواضيع", topicsSub: "أسئلة كيتسولو بزاف، ضغط باش تسولها.",
+    modeLabel: "نوع الجواب", modeQuick: "جواب دغيا", modeAnalysis: "حلل ليا الوضعية",
+    hintQuick: "جواب قصير من المواد اللي قراب لسؤالك.",
+    hintAnalysis: "كيفهم الوضعية ديالك، كيقلب فبزاف ديال القوانين، ومن بعد كيشرح ليك شنو كيتطبق عليك وشنو تقدر دير.",
+    stepPlan: "كنخططو للبحث", searched: "قلبنا على:", newChat: "محادثة جديدة", understoodAs: "فهمنا السؤال هكا:",
+    followupPlaceholder: "سول على نفس الموضوع… بحال: وإلا عندي الدراري؟", earlier: "شوف كثر",
+    secSituation: "الوضعية ديالك", secLaw: "شنو كيقول القانون", secApplication: "شنو كيعني هادشي ليك",
+    secSteps: "شنو تقدر دير", secMissing: "شنو خاصنا نعرفو",
+    allTopics: (n) => `كاع المواضيع (${n})`, fewerTopics: "غير المواضيع المهمين", updated: "النص محين ف", published: "النسخة تنشرات فعدالة نهار",
     disclaimer: "قانون AI كيعطي معلومات قانونية عامة، ماشي استشارة ديال محامي. النص العربي ديال الجريدة الرسمية هو اللي كيتعتامد.",
     history: "الأسئلة اللي فاتو", clearHistory: "مسح كلشي", emptyHistory: "مازال ما سولتي والو.",
     close: "سد", theme: "الوضع ديال الليل", interfaceLanguage: "لغة الواجهة",
@@ -63,17 +87,52 @@ const ICONS = {
   family: '<circle cx="8" cy="7" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3 2.3-5.5 5-5.5s5 2.5 5 5.5M13.5 20c0-2.4 1.6-4.3 3.5-4.3S20.5 17.6 20.5 20"/>',
   consumer: '<path d="M5 7h14l-1.5 12h-11zM9 7a3 3 0 0 1 6 0"/>',
   data: '<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v2"/>',
+  home: '<path d="M4 11l8-7 8 7M6 9.5V20h12V9.5M10 20v-5h4v5"/>',
+  penal: '<path d="M12 4v16M7 20h10M5 8h14M5 8l-2.5 6a2.5 2.5 0 0 0 5 0zM19 8l-2.5 6a2.5 2.5 0 0 0 5 0z"/>',
+  road: '<path d="M5 16l1.5-5a2 2 0 0 1 1.9-1.4h7.2a2 2 0 0 1 1.9 1.4L19 16M4 16h16v3H4zM7 19v1.5M17 19v1.5"/><circle cx="8" cy="17.5" r=".6"/><circle cx="16" cy="17.5" r=".6"/>',
+  property: '<path d="M3 20h18M5 20V10l7-5 7 5v10M9 20v-6h6v6"/>',
+  contract: '<path d="M7 3h7l4 4v14H7zM14 3v4h4M10 12h5M10 16h5"/>',
+  business: '<path d="M4 20V8h6v12M10 20V4h10v16M7 11h0M7 14h0M13 8h4M13 12h4M13 16h4"/>',
+  court: '<path d="M4 10h16M6 10v8M10 10v8M14 10v8M18 10v8M3 20h18M12 3l9 5H3z"/>',
+  id: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.2"/><path d="M5.5 16c.6-1.6 2-2.4 3.5-2.4s2.9.8 3.5 2.4M15 10h3M15 13h3"/>',
+  shield: '<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',
+  city: '<path d="M3 20h18M5 20V9h5v11M10 20V5h9v15M7 12h1M7 15h1M13 8h3M13 11h3M13 14h3"/>',
+  care: '<path d="M12 20s-7-4.4-7-9.5A3.8 3.8 0 0 1 12 8a3.8 3.8 0 0 1 7 2.5C19 15.6 12 20 12 20z"/>',
 };
 
+// The first FEATURED themes are shown; the others open with "all themes".
+const FEATURED = 5;
 const TOPICS = [
   { icon: "work", name: { ar: "الشغل", fr: "Travail", darija: "الخدمة" }, law: "مدونة الشغل · 65.99",
     examples: ["chhal dyal lconji 3ndi f l3am?", "ما هي مدة فترة الاختبار في عقد الشغل غير محدد المدة؟", "Mon employeur peut-il me licencier sans motif ?"] },
   { icon: "family", name: { ar: "الأسرة", fr: "Famille", darija: "العائلة" }, law: "مدونة الأسرة · 70.03",
     examples: ["ila chi mra mtel9a tzewjat, wach kaymchiwlha lwlad?", "شحال خاص يكون عمر البنت باش تزوج؟", "Que doit le mari à son épouse après un divorce ?"] },
+  { icon: "home", name: { ar: "الكراء والسكن", fr: "Logement et loyer", darija: "الكرا والدار" }, law: "67.12 · 49.16 · 07.03",
+    examples: ["mol dar bgha ykharjni, wach y9der bla 7okm?", "واش مول الدار يقدر يزيد فالكرا كل عام؟", "Le propriétaire refuse de réparer une fuite : que faire ?"] },
+  { icon: "penal", name: { ar: "الجرائم والعقوبات", fr: "Pénal", darija: "الجرائم والحبس" }, law: "مجموعة القانون الجنائي",
+    examples: ["chno l3o9oba dyal sser9a?", "واش الدفاع الشرعي كيعفي من العقوبة؟", "Quelle est la peine pour coups et blessures ?"] },
+  { icon: "road", name: { ar: "السير والسياقة", fr: "Route et permis", darija: "السوقان والبيرمي" }, law: "مدونة السير · 52.05",
+    examples: ["chhal dyal lghrama ila sou9t b tilifoun f yddi?", "شنو كيوقع إلا سقت بلا رخصة السياقة؟", "Que risque-t-on en cas d'excès de vitesse ?"] },
   { icon: "consumer", name: { ar: "المستهلك", fr: "Consommation", darija: "المستهلك" }, law: "حماية المستهلك · 31.08",
     examples: ["chrit chi haja mn internet, chhal 3ndi bach nraj3ha?", "ما هي حقوقي إذا كان المنتوج الذي اشتريته معيبا؟", "En combien de temps le vendeur doit-il me rembourser ?"] },
   { icon: "data", name: { ar: "المعطيات الشخصية", fr: "Données personnelles", darija: "المعطيات الشخصية" }, law: "القانون 09.08",
     examples: ["wach chi charika t9der tsifti liya messages publicitaires bla idn dyali?", "هل يحق لي أن أطلب تصحيح معطياتي الشخصية؟", "Puis-je m'opposer à l'utilisation de mes données ?"] },
+  { icon: "property", name: { ar: "العقار والملكية", fr: "Immobilier", darija: "العقار والأرض" }, law: "39.08 · 18.00 · التحفيظ العقاري",
+    examples: ["chrina terrain b jouj w bgha ybi3 bou7do, wach y9der?", "ما هي شروط اكتساب الملكية بالحيازة؟", "Qui paie les charges communes d'un immeuble en copropriété ?"] },
+  { icon: "contract", name: { ar: "العقود والديون", fr: "Contrats et dettes", darija: "العقود والديون" }, law: "قانون الالتزامات والعقود",
+    examples: ["sellft chi flous l wa7ed w ma bghach yrdhom, chno ndir?", "متى يكون العقد باطلا؟", "Combien de temps ai-je pour réclamer une dette ?"] },
+  { icon: "business", name: { ar: "التجارة والشركات", fr: "Commerce et sociétés", darija: "التجارة والشركات" }, law: "مدونة التجارة · 15.95 · 17.95",
+    examples: ["chhal mn wa9t bach yt9adem chek bla rassid?", "ما هي شروط تأسيس شركة المساهمة؟", "Qu'est-ce qu'un fonds de commerce ?"] },
+  { icon: "court", name: { ar: "المحاكم والمساطر", fr: "Tribunaux et procédures", darija: "المحاكم والمساطر" }, law: "المسطرة المدنية 58.25 · المسطرة الجنائية 22.01",
+    examples: ["ila tchedit, chhal y9der yb9ani lbolis 9bel ma nchouf l2avocat?", "ما هو أجل استئناف حكم مدني؟", "Quels sont mes droits pendant la garde à vue ?"] },
+  { icon: "id", name: { ar: "الحالة المدنية والجنسية", fr: "État civil et nationalité", darija: "الوثائق والجنسية" }, law: "36.21 · قانون الجنسية",
+    examples: ["wlidi tzad f lkharij, wach kayakhod ljinsiya lmaghribiya?", "كيف أصرح بولادة في الحالة المدنية؟", "Peut-on acquérir la nationalité marocaine par mariage ?"] },
+  { icon: "shield", name: { ar: "حوادث الشغل والضمان الاجتماعي", fr: "Accidents du travail et CNSS", darija: "حوادث الخدمة ولاكنوب" }, law: "18.12 · الضمان الاجتماعي",
+    examples: ["tjre7t f lkhdma, chkoun li khaso y3wedni?", "ما هي التعويضات المستحقة عن حادثة شغل؟", "Quelles prestations verse la CNSS ?"] },
+  { icon: "city", name: { ar: "التعمير والبناء", fr: "Urbanisme et construction", darija: "البني والرخص" }, law: "12.90 · 66.12",
+    examples: ["jari bna bla rokhsa w sedd 3liya dow, fin nchki?", "ما هي العقوبة على البناء بدون رخصة؟", "Faut-il une autorisation pour agrandir sa maison ?"] },
+  { icon: "care", name: { ar: "المرأة والطفل", fr: "Femmes et enfants", darija: "المرا والدراري" }, law: "103.13 · كفالة الأطفال 15.01",
+    examples: ["rajli kaydrebni, chno kay9oul l9anoun?", "ما هي شروط كفالة طفل مهمل؟", "Que prévoit la loi contre le harcèlement sexuel ?"] },
 ];
 
 const RTL_LANGUAGES = new Set(["ar", "darija-ar"]);
@@ -86,6 +145,10 @@ const store = {  // browser storage can be unavailable (private mode): never bre
 let lang = store.get("qanoun.lang", navigator.language?.startsWith("fr") ? "fr" : "ar");
 let current = null;   // the answer on screen
 let openTopic = null;
+let allTopics = false;
+let mode = store.get("qanoun.mode", "quick");   // "quick" or "analysis" (decision 75)
+let conversation = [];                          // earlier answers of this conversation (decision 76)
+const SECTIONS = [["situation", "secSituation"], ["law", "secLaw"], ["application", "secApplication"], ["steps", "secSteps"], ["missing", "secMissing"]];
 const t = (key, ...args) => { const v = STRINGS[lang][key]; return typeof v === "function" ? v(...args) : v; };
 
 // ---------- interface language ----------
@@ -99,9 +162,43 @@ function applyLanguage() {
   document.querySelectorAll("[data-i18n-label]").forEach((el) => el.setAttribute("aria-label", t(el.dataset.i18nLabel)));
   document.querySelectorAll(".lang button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.lang === lang)));
   renderTopics();
+  renderMode();
+  renderThread();
   loadCorpus();
   if (current) renderAnswer(current, false);
 }
+
+// ---------- quick answer or analysis ----------
+function renderMode() {
+  document.querySelectorAll(".mode button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.mode === mode)));
+  $("mode-hint").textContent = t(mode === "analysis" ? "hintAnalysis" : "hintQuick");
+}
+document.querySelectorAll(".mode button").forEach((b) => b.addEventListener("click", () => {
+  mode = b.dataset.mode; store.set("qanoun.mode", mode); renderMode();
+}));
+
+// ---------- the conversation: earlier answers stay above the current one ----------
+function renderThread() {
+  const box = $("thread");
+  box.innerHTML = "";
+  conversation.forEach((turn) => {
+    const el = document.createElement("div");
+    el.className = "turn";
+    el.innerHTML = `<p class="turn-q" dir="auto"></p><p class="turn-a" dir="auto"></p><button type="button">${t("earlier")}</button>`;
+    el.querySelector(".turn-q").textContent = turn.question;
+    el.querySelector(".turn-a").textContent = turn.text.replace(/\[(\d+)\]/g, "");
+    el.querySelector("button").addEventListener("click", () => el.classList.toggle("open"));
+    box.append(el);
+  });
+}
+function newConversation() {
+  conversation = []; current = null;
+  renderThread();
+  $("result").hidden = true; $("followup").hidden = true;
+  $("workspace").classList.add("idle");
+  $("question").value = ""; $("question").focus();
+}
+$("new-chat").addEventListener("click", newConversation);
 document.querySelectorAll(".lang button").forEach((b) => b.addEventListener("click", () => {
   lang = b.dataset.lang; store.set("qanoun.lang", lang); applyLanguage();
 }));
@@ -121,8 +218,9 @@ $("theme").addEventListener("click", () => {
 let articleCount = null;
 async function loadCorpus() {
   try {
-    if (articleCount === null) articleCount = (await (await fetch("/health")).json()).articles;
-    $("corpus").textContent = t("corpus", articleCount.toLocaleString(lang === "fr" ? "fr-FR" : "ar-MA"));
+    if (articleCount === null) articleCount = await (await fetch("/health")).json();
+    const fmt = (n) => n.toLocaleString(lang === "fr" ? "fr-FR" : "ar-MA");
+    $("corpus").textContent = t("corpus", fmt(articleCount.articles), fmt(articleCount.laws ?? 0));
   } catch { $("corpus").textContent = ""; }
 }
 
@@ -131,6 +229,7 @@ function renderTopics() {
   const list = $("topics");
   list.innerHTML = "";
   TOPICS.forEach((topic, i) => {
+    if (!allTopics && i >= FEATURED && openTopic !== i) return;
     const item = document.createElement("div");
     item.className = "topic";
     item.setAttribute("open-state", String(openTopic === i));
@@ -154,10 +253,16 @@ function renderTopics() {
     });
     list.append(item);
   });
+  const more = document.createElement("button");
+  more.className = "topics-more";
+  more.setAttribute("aria-expanded", String(allTopics));
+  more.innerHTML = `<span>${allTopics ? t("fewerTopics") : t("allTopics", TOPICS.length)}</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>`;
+  more.addEventListener("click", () => { allTopics = !allTopics; renderTopics(); });
+  list.append(more);
 }
 
 // ---------- asking (streamed progress, then the checked answer) ----------
-const STEP_ORDER = ["understood", "sources", "writing", "answer"];
+const STEP_ORDER = ["understood", "planned", "sources", "writing", "answer"];
 function markStep(name) {
   const reached = STEP_ORDER.indexOf(name);
   document.querySelectorAll("#steps li").forEach((li) => {
@@ -167,12 +272,23 @@ function markStep(name) {
   });
 }
 
-async function ask(question) {
+async function ask(question, followUp = false) {
   question = question.trim();
   if (question.length < 2) return;
-  const button = document.querySelector(".ask-btn");
-  button.disabled = true;
+  const buttons = document.querySelectorAll(".ask-btn");
+  buttons.forEach((b) => { b.disabled = true; });
+  if (followUp && current) conversation.push(current);   // the last answer joins the thread
+  else conversation = [];                                  // a question from the top starts afresh
+  conversation = conversation.slice(-6);
+  renderThread();
+  const history = conversation.slice(-4).map((c) => ({
+    question: c.question, answer: c.text.slice(0, 3500), sources: c.citations.map((x) => x.id).slice(0, 12),
+  }));
   current = null;
+  $("followup").hidden = true;
+  $("understood-as").hidden = true;
+  $("mode-badge").textContent = t(mode === "analysis" ? "modeAnalysis" : "modeQuick");
+  document.querySelector('#steps li[data-step="planned"]').hidden = mode !== "analysis";
   $("workspace").classList.remove("idle");
   $("result").hidden = false;
   $("asked").textContent = question;
@@ -184,7 +300,7 @@ async function ask(question) {
 
   try {
     const response = await fetch("/ask/stream", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question }),
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question, mode, history }),
     });
     if (!response.ok) throw new Error((await response.json()).detail || response.statusText);
     const reader = response.body.getReader();
@@ -199,7 +315,8 @@ async function ask(question) {
         const block = buffer.slice(0, cut); buffer = buffer.slice(cut + 2);
         const event = /event: (.*)/.exec(block)?.[1];
         const data = JSON.parse(/data: (.*)/s.exec(block)?.[1] ?? "null");
-        if (event === "understood") markStep("sources");
+        if (event === "understood") markStep(mode === "analysis" ? "planned" : "sources");
+        else if (event === "planned") markStep("sources");
         else if (event === "sources") markStep("writing");
         else if (event === "writing") markStep(data.attempt > 1 ? "answer" : "writing");
         else if (event === "answer") { markStep("done"); current = data; renderAnswer(data, true); remember(data); }
@@ -211,7 +328,7 @@ async function ask(question) {
     $("error").textContent = t("error") + error.message;
     $("error").hidden = false;
   } finally {
-    button.disabled = false;
+    buttons.forEach((b) => { b.disabled = false; });
   }
 }
 
@@ -223,6 +340,13 @@ $("question").addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ask($("question").value); }
 });
 $("question").addEventListener("input", (e) => { e.target.style.height = "auto"; e.target.style.height = `${e.target.scrollHeight}px`; });
+$("followup").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const q = $("followup-q").value; $("followup-q").value = ""; ask(q, true);
+});
+$("followup-q").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("followup").requestSubmit(); }
+});
 
 // ---------- the answer ----------
 function escapeHtml(s) { return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
@@ -235,13 +359,31 @@ function renderAnswer(data, animate) {
   const text = $("answer-text");
   text.dir = RTL_LANGUAGES.has(data.language) ? "rtl" : "ltr";
   const cited = new Set(data.citations.map((c) => c.number));
-  text.innerHTML = escapeHtml(data.text)
-    .split(/\n{2,}/).map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("")
-    .replace(/\[(\d+)\]/g, (m, n) => cited.has(+n)
-      ? `<button class="cite" data-n="${n}" aria-expanded="false" aria-label="${t("article")} ${n}">${n}</button>` : "");
+  const paragraphs = (s) => escapeHtml(s).split(/\n{2,}/).map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`).join("");
+  let html = "";
+  if (data.plan?.length) {
+    html += `<div class="plan"><span>${t("searched")}</span><ol>${data.plan.map((q) => `<li dir="rtl">${escapeHtml(q)}</li>`).join("")}</ol></div>`;
+  }
+  if (data.sections) {
+    SECTIONS.forEach(([key, label], i) => {
+      const value = data.sections[key];
+      if (value) html += `<section class="section sec-${key}"><h3><i>${i + 1}</i>${t(label)}</h3>${paragraphs(value)}</section>`;
+    });
+  } else {
+    html += paragraphs(data.text);
+  }
+  text.innerHTML = html.replace(/\[(\d+)\]/g, (m, n) => cited.has(+n)
+    ? `<button class="cite" data-n="${n}" aria-expanded="false" aria-label="${t("article")} ${n}">${n}</button>` : "");
+  if (data.standalone) {
+    $("understood-as").innerHTML = `${t("understoodAs")} <b dir="auto"></b>`;
+    $("understood-as").querySelector("b").textContent = data.standalone;
+    $("understood-as").hidden = false;
+  }
+  $("mode-badge").textContent = t(data.mode === "analysis" ? "modeAnalysis" : "modeQuick");
+  $("followup").hidden = false;
   text.querySelectorAll(".cite").forEach((b) => b.addEventListener("click", () => openArticle(+b.dataset.n, b)));
 
-  $("flag").hidden = data.verified && data.status === "answered";
+  $("flag").hidden = data.verified && data.status !== "not_covered";
   $("flag").textContent = data.status === "not_covered" ? t("notCovered") : t("unverified");
 
   const list = $("cited");
@@ -249,7 +391,7 @@ function renderAnswer(data, animate) {
   data.citations.forEach((c, i) => {
     const b = document.createElement("button");
     if (animate) { b.className = "reveal"; b.style.setProperty("--i", i); }
-    b.innerHTML = `<b>${c.number}</b><span>${escapeHtml(c.law_title)} — ${t("article")} ${escapeHtml(c.article_number)}</span>`;
+    b.innerHTML = `<b>${c.number}</b><span>${escapeHtml(c.law_title)} — ${escapeHtml(c.label || t("article"))} ${escapeHtml(c.article_number)}</span>`;
     b.addEventListener("click", () => openArticle(c.number, b));
     list.append(b);
   });
@@ -258,8 +400,11 @@ function renderAnswer(data, animate) {
 }
 
 function citationText(data) {
-  const sources = data.citations.map((c) => `[${c.number}] ${c.law_title}, ${t("article")} ${c.article_number}`);
-  return `${data.question}\n\n${data.text}\n\n${sources.join("\n")}\n\n— Qanoun AI`;
+  const sources = data.citations.map((c) => `[${c.number}] ${c.law_title}, ${c.label || t("article")} ${c.article_number}`);
+  const body = data.sections
+    ? SECTIONS.filter(([key]) => data.sections[key]).map(([key, label]) => `${t(label)}\n${data.sections[key]}`).join("\n\n")
+    : data.text;
+  return `${data.question}\n\n${body}\n\n${sources.join("\n")}\n\n— Qanoun AI`;
 }
 function toast(message) {
   const el = $("toast"); el.textContent = message; el.hidden = false;
@@ -305,6 +450,7 @@ function openArticle(number, from) {
       <span class="badge">${c.official ? t("official") : t("translation")}</span>
       <h2>${escapeHtml(c.label)} ${escapeHtml(c.article_number)}${c.title ? ` — ${escapeHtml(c.title)}` : ""}</h2>
       <p class="law">${escapeHtml(c.law_title)}</p>
+      ${c.updated ? `<p class="version">${t(/^\d{4}-\d{2}-\d{2}$/.test(c.updated) ? "published" : "updated")} ${escapeHtml(c.updated)}</p>` : ""}
       <ul class="path">${c.hierarchy.map((h) => `<li>${escapeHtml(h)}</li>`).join("")}</ul>
       <p class="article-text">${escapeHtml(c.text)}</p>
       <a class="pdf" href="${escapeHtml(c.source_url)}" target="_blank" rel="noopener">${t("openPdf")}</a>
@@ -330,6 +476,7 @@ function renderHistory() {
     b.innerHTML = `${escapeHtml(h.question)}<small dir="${lang === "fr" ? "ltr" : "rtl"}">${when}</small>`;
     b.addEventListener("click", () => {
       closePanels();
+      conversation = []; renderThread();
       current = h.answer;
       $("workspace").classList.remove("idle");
       $("result").hidden = false; $("error").hidden = true;

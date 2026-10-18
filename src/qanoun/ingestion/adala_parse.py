@@ -302,6 +302,20 @@ def _drop_closing(article: Article) -> Article:
     return article
 
 
+CONSOLIDATED = re.compile(
+    r"صيغة\s*محينة\s*(?:بتاريخ|إلى غاية|في)?\s*:?\s*"
+    r"(\d{1,2}|فاتح)\s*(?:من\s*)?([^\d\s()،,.]+)\s*(\d{4})"
+)
+
+
+def consolidation_date(lines: list[Line]) -> str | None:
+    """ "15 أكتوبر 1954" from "صيغة محينة بتاريخ 15 أكتوبر 1954" on the first pages (about a quarter
+    of the Adala PDFs state it; the others are dated by their publication on Adala)."""
+    text = " ".join(normalize(line.text) for line in lines if line.page <= 3)
+    found = CONSOLIDATED.search(text)
+    return " ".join(found.groups()) if found else None
+
+
 def parse_entry(entry: CatalogEntry, pdf: Path, key: str) -> tuple[list[Article], Report]:
     start = time.perf_counter()
     report = Report(key=key, file=entry.file_name, title=short_title(entry)[:120], status="ok")
@@ -316,7 +330,8 @@ def parse_entry(entry: CatalogEntry, pdf: Path, key: str) -> tuple[list[Article]
         report.status = "garbled"  # a font without a usable character map
         return [], report
 
-    profile = detect_profile(group_into_lines(spans, min_size=0.0))
+    all_lines = group_into_lines(spans, min_size=0.0)
+    profile = detect_profile(all_lines)
     if profile is None:
         report.status = "no_articles"
         return [], report
@@ -333,6 +348,7 @@ def parse_entry(entry: CatalogEntry, pdf: Path, key: str) -> tuple[list[Article]
         language="ar",
         layout="auto",
         source_url=entry.url,
+        consolidated_as_of=consolidation_date(all_lines),
         downloaded_on=date.today().isoformat(),
         is_official_version=True,  # the Arabic text (consolidated), not a translation
     )
