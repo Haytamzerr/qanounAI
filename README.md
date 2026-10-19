@@ -226,6 +226,12 @@ keep the conversation (decision 76).
 | ![Analysis](docs/screenshots/analysis.png) | ![Follow-up](docs/screenshots/follow-up.png) |
 
 The home page shows five themes; "all themes" opens the fifteen (![all themes](docs/screenshots/home-all-themes.png)).
+
+**Analyse my situation** opens a page of its own: six short steps while a case file writes itself beside them, then a five-part analysis with a checklist of steps and the missing facts as one-tap questions (decision 81).
+
+| ![Telling what happened](docs/screenshots/situation-story.png) | ![Reviewing the file](docs/screenshots/situation-review.png) | ![Phone](docs/screenshots/situation-mobile.png) |
+| --- | --- | --- |
+| ![The analysis](docs/screenshots/situation-result.png) | | |
 Answers can also correct a wrong premise ("l'article 400 du Code pénal…" is looked up directly),
 ask a short question back when the question is too vague, and the article panel says how recent
 the text is.

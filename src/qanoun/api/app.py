@@ -18,7 +18,7 @@ import json
 import threading
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.concurrency import run_in_threadpool
@@ -45,10 +45,14 @@ class AskRequest(BaseModel):
     question: str = Field(min_length=2, max_length=1000)
     mode: Literal["quick", "analysis"] = "quick"
     history: list[TurnIn] = Field(default_factory=list, max_length=8)
+    # chosen in the situation builder: theme, role, when, goal (decision 81)
+    facts: list[Annotated[str, Field(max_length=200)]] = Field(default_factory=list, max_length=6)
 
     def run(self, answerer: Answerer, on_step=None) -> Answer:
         turns = [Turn(t.question, t.answer, tuple(t.sources)) for t in self.history]
-        return answerer.answer(self.question, on_step, mode=self.mode, history=turns)
+        return answerer.answer(
+            self.question, on_step, mode=self.mode, history=turns, facts=self.facts
+        )
 
 
 class Citation(BaseModel):

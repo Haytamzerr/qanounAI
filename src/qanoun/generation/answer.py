@@ -161,6 +161,7 @@ class Answerer:
         *,
         mode: str = "quick",
         history: Sequence[Turn] = (),
+        facts: Sequence[str] = (),
     ) -> Answer:
         """`on_step(name, details)` is called as the work progresses, so an interface can show
         "searching…", "writing…" while the user waits (see the API's streaming endpoint)."""
@@ -179,11 +180,14 @@ class Answerer:
         refs = self.references(standalone or question, language) if self.references else []
         named = [r.article for r in refs if r.article is not None]
         notes = [n for r in refs if (n := note(r))]
+        facts = [f.strip() for f in facts if f.strip()][:6]  # chosen in the situation builder
+        if facts:
+            notes.append("What the person selected about the situation: " + "; ".join(facts))
         carried = self._carried(history)
         talk = [(t.question, t.answer) for t in history]
 
         if mode == "analysis":
-            planned = self._plan(standalone or question, language, talk)
+            planned = self._plan(standalone or question, language, talk, facts)
             if planned is not None:
                 situation, searches, missing, suggested = planned
                 leads = self._leads(suggested, language)
@@ -231,10 +235,14 @@ class Answerer:
             return []
         return [a for i in talk[-1].sources[:3] if (a := self.lookup(i)) is not None]
 
-    def _plan(self, question, language, talk) -> tuple[str, list[str], list[str], list[str]] | None:
+    def _plan(
+        self, question, language, talk, facts=()
+    ) -> tuple[str, list[str], list[str], list[str]] | None:
         prompt = (f"CONVERSATION SO FAR\n{conversation_block(talk)}\n\n" if talk else "") + (
             f"SITUATION\n{question}"
         )
+        if facts:
+            prompt += "\n\nWHAT THE PERSON SELECTED\n" + "\n".join(f"- {f}" for f in facts)
         try:
             data = json.loads(
                 self.llm.generate(plan_system(language), prompt, json_schema=PLAN_SCHEMA)
