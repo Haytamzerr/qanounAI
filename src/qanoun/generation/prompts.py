@@ -20,8 +20,10 @@ LANGUAGE_INSTRUCTIONS = {
     "darija-latn": (
         "Answer in everyday Moroccan Darija written in Latin letters with digits, the way "
         'Moroccans text on WhatsApp (3 = ع, 7 = ح, 9 = ق), e.g. "ila bghiti t3ref chi haja, '
-        'swelni w ghadi nchra7lek". Not classical Arabic in Latin letters. You may quote the '
-        "legal term in Arabic in parentheses."
+        'swelni w ghadi nchra7lek". Write ONLY Latin letters and digits: no Arabic letters at '
+        'all, legal terms included ("difa3 char3i", "lmokri", "lkra"). Say the rule the way a '
+        'Moroccan would ("ila darbti chi wa7ed"), not classical Arabic in Latin letters '
+        '("man irtakaba darban").'
     ),
 }
 
@@ -45,7 +47,7 @@ Rules:
    "clarify" and ask one short question back, suggesting two or three precise topics; cite
    nothing then.
 10. When a source gives the date its text was last updated and the question is about what is in
-   force or recent, mention that date.
+   force or recent, mention that date, in the answer's language (never copy the English note).
 {language}"""
 
 ANSWER_SCHEMA = {

@@ -102,3 +102,30 @@ def test_progress_steps_are_reported_in_order():
     assert [name for name, _ in steps] == ["understood", "sources", "writing"]
     assert steps[0][1]["language"] == "fr"
     assert steps[1][1]["articles"] == [a.id for a in ARTICLES[:2]]
+
+
+def test_an_arabizi_answer_with_arabic_letters_is_rewritten_in_latin_letters():
+    mixed = ok("3ndek l7e9 (الحق) f 1.5 nhar f chhar [2].", used=[2])
+    clean = ok("3ndek l7e9 f 1.5 nhar f chhar [2].", used=[2])
+    llm = ScriptedLLM(mixed, clean)
+    answer = Answerer(retriever, llm, k=3).answer("chhal dyal lconji 3ndi f l3am?")
+    assert answer.attempts == 2 and answer.verified
+    assert "الحق" not in answer.text
+    assert "Arabic letters" in llm.prompts[1][1] and "الحق" in llm.prompts[1][1]
+
+
+def test_a_writing_slip_never_makes_a_correct_answer_unverified():
+    mixed = ok("3ndek l7e9 (الحق) f 1.5 nhar f chhar [2].", used=[2])
+    answer = Answerer(retriever, ScriptedLLM(mixed, mixed), k=3).answer(
+        "chhal dyal lconji 3ndi f l3am?"
+    )
+    assert answer.attempts == 2 and answer.verified  # the law is right; only the script slipped
+
+
+def test_style_rules():
+    from qanoun.generation.citations import style_problems
+
+    assert style_problems("Le congé est d'un jour et demi (العطلة السنوية) [1].", "fr") == []
+    assert style_problems("3ndek l7e9 f lconji [1].", "darija-latn") == []
+    assert style_problems("ila kano mtوفرin [1]", "darija-latn")
+    assert style_problems("(version published on Adala on 2026-07-28)", "darija-ar")

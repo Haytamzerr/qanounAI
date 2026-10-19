@@ -68,3 +68,28 @@ def check(
             problems.append(f"mentions article {number}, which is not among the cited sources")
 
     return CheckedAnswer(re.sub(r"[ \t]{2,}", " ", cleaned).strip(), cited, problems)
+
+
+ARABIC_LETTERS = re.compile(r"[\u0600-\u06FF]+")
+SOURCE_NOTES = re.compile(r"version published on Adala|text updated as of", re.IGNORECASE)
+
+
+def style_problems(text: str, language: str) -> list[str]:
+    """What the reader would notice in the writing (not the law): a retry fixes it.
+
+    Arabizi readers asked in Latin letters; an answer that switches to Arabic script mid-word
+    ("mtوفرin") is hard to read. The English notes that introduce each source are for the model,
+    not for the reader.
+    """
+    problems = []
+    if language == "darija-latn" and (found := ARABIC_LETTERS.findall(text)):
+        sample = ", ".join(dict.fromkeys(found[:4]))
+        problems.append(
+            f"Arabic letters in a Latin-letter answer ({sample}): write every word, legal "
+            "terms included, in Latin letters with digits"
+        )
+    if SOURCE_NOTES.search(text):
+        problems.append(
+            "an English note from the sources was copied: say the date in the answer's language"
+        )
+    return problems
