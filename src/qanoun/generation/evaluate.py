@@ -46,6 +46,8 @@ class AnswerResult:
     seconds: float
     error: str = ""
     history: list[str] = field(default_factory=list)
+    plan: list[str] = field(default_factory=list)  # analysis mode: the searches that were run
+    leads: list[str] = field(default_factory=list)  # analysis mode: suggested articles found
 
     @property
     def answered(self) -> bool:
@@ -76,6 +78,7 @@ def run(
                 q["id"], q["question"], q["language"], q["expected"], a.status, a.text,
                 [s.id for s in a.sources], [s.id for s in a.cited_articles], a.verified,
                 a.problems, a.attempts, a.model, time.perf_counter() - start, "", a.history,
+                a.plan, a.leads,
             )  # fmt: skip
         except Exception as error:  # one failing question must not stop the whole run
             result = AnswerResult(
@@ -144,6 +147,10 @@ def report(label: str, results: list[AnswerResult]) -> str:
         lines.append(r.error or r.answer)
         lines.append("")
         lines.append(f"cited: {', '.join(r.cited) or '—'} · expected: {', '.join(r.expected)}")
+        if r.plan:
+            lines.append(f"searched: {' | '.join(r.plan)}")
+        if r.leads:
+            lines.append(f"suggested articles found: {', '.join(r.leads)}")
         if len(r.history) > 1 or r.problems:
             lines.append("attempts: " + " | ".join(r.history))
         lines.append("")

@@ -98,3 +98,24 @@ def test_a_failed_rewrite_still_answers_the_follow_up():
     history = [Turn("Question ?", "Réponse [1].")]
     answer = Answerer(RecordingRetriever(), llm).answer("Et après ?", history=history)
     assert answer.verified and answer.standalone is None
+
+
+def test_the_plan_may_suggest_articles_which_are_looked_up_not_trusted():
+    from qanoun.understanding.references import ReferenceResolver
+
+    plan = dict(PLAN, articles=["loi 65.99 article 231", "loi 65.99 article 9999"])
+    llm = ScriptedLLM(plan, SECTIONS)
+    steps = []
+    answer = Answerer(
+        lambda q, k: [ARTICLES[0]], llm, references=ReferenceResolver(ARTICLES).resolve
+    ).answer("Licencié après 7 ans ?", lambda n, d: steps.append((n, d)), mode="analysis")
+    lead = BY_ID["loi-65-99-ar-art-231"]
+    assert answer.leads == [lead.id]  # the article that does not exist is dropped
+    assert answer.sources[:2] == [lead, ARTICLES[0]]  # leads come before what search found
+    assert dict(steps)["planned"]["articles"] == [lead.id]
+
+
+def test_a_plan_without_suggested_articles_still_works():
+    llm = ScriptedLLM(PLAN, SECTIONS)  # an older plan without "articles"
+    answer = Answerer(RecordingRetriever(), llm).answer("Licencié ?", mode="analysis")
+    assert answer.mode == "analysis" and answer.leads == []

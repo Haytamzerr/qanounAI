@@ -9,6 +9,11 @@ paragraphs, each starting with the article's opening sentence ("يعاقب بغ�
 article by its best vector: the article's or a passage's. The answer still receives the whole
 article.
 
+Short articles that list cases get one passage per item too (decision 77): article 124 of the
+Penal Code is only 397 characters, but its three cases (an act ordered by law, force majeure,
+self-defence) are different subjects, and its single vector did not answer a question about
+self-defence. Their other paragraphs are not cut into windows: the article vector covers them.
+
 Usage (after the article vectors exist; the configured embedder, e.g. 8-bit ONNX on the PC):
     uv run python -m qanoun.retrieval.passages
 
@@ -52,19 +57,21 @@ def _units(text: str) -> list[str]:
 
 LIST_ITEM = re.compile(r"^\s*(?:\d{1,2}|[أ-ي])\s*[.)\-–]\s|^\s*[-–•\u00ad]\s*")
 INTRO = 200  # characters of the sentence that opens a list ("…إحدى المخالفات التالية:")
+MIN_ITEMS = 2  # a short article gets item passages only if it lists at least this many cases
 
 
 def split_passages(article: Article) -> list[Passage]:
-    """The passages of a long article (none for a short one).
+    """The passages of an article: long ones, and short ones that list cases (else none).
 
     Each item of a list ("4. الاستعمال أو التحدث بالهاتف…") is a passage of its own, preceded by
     the article's opening sentence and the sentence that opens the list: a list item says what
     is forbidden, the opening sentence says the penalty. The other paragraphs are grouped into
     windows of about WINDOW characters (decision 67).
     """
-    if len(article.text) <= LONG:
-        return []
     units = _units(article.text)
+    short = len(article.text) <= LONG
+    if short and sum(bool(LIST_ITEM.match(u)) for u in units[1:]) < MIN_ITEMS:
+        return []
     lead = units[0][:LEAD]
     where = " > ".join(article.hierarchy)
     header = f"{article.law_title}\n{where}\n{article.label} {article.article_number}"
@@ -85,6 +92,8 @@ def split_passages(article: Article) -> list[Passage]:
             texts.append(f"{header}\n{lead}\n{context}{unit[:WINDOW]}")
             continue
         intro = unit[:INTRO]  # a paragraph that is not an item may open the next list
+        if short:
+            continue  # the article's own vector covers the rest of a short article
         while len(unit) > WINDOW:  # a single very long paragraph: cut it
             flush()
             texts.append(f"{header}\n{lead}\n{unit[:WINDOW]}")
@@ -135,7 +144,13 @@ def load_passage_vectors(
     return [p for p, _ in found], vectors[[i for _, i in found]]
 
 
-def embed_passages(passages: Sequence[Passage], embedder, directory: Path | None = None, log=print):
+def embed_passages(
+    passages: Sequence[Passage],
+    embedder,
+    directory: Path | None = None,
+    log=print,
+    batch: int = 1000,
+):
     """Vectors for every passage: saved ones reused, missing ones computed, all saved."""
     path = passages_path(embedder.name, directory)
     hashes = passage_hashes(embedder.name, passages)
@@ -145,16 +160,27 @@ def embed_passages(passages: Sequence[Passage], embedder, directory: Path | None
             known = dict(zip(saved["hashes"], saved["vectors"], strict=True))
     missing = [i for i, h in enumerate(hashes) if h not in known]
     log(f"{len(passages)} passages: {len(passages) - len(missing)} saved, {len(missing)} to embed")
-    if missing:
-        start = time.perf_counter()
-        new = embedder.embed([passages[i].text for i in missing], show_progress=True)
-        log(f"embedded in {time.perf_counter() - start:.0f} s")
-        known.update(zip(hashes[missing], new, strict=True))
-    vectors = np.stack([known[h] for h in hashes]) if len(passages) else np.zeros((0, 0))
     path.parent.mkdir(parents=True, exist_ok=True)
+    start = time.perf_counter()
+    for first in range(0, len(missing), batch):
+        part = missing[first : first + batch]
+        new = embedder.embed([passages[i].text for i in part], show_progress=True)
+        known.update(zip(hashes[part], new, strict=True))
+        _save(path, known)  # an interrupted run resumes from here
+        done = first + len(part)
+        log(f"{done}/{len(missing)} embedded ({time.perf_counter() - start:.0f} s), saved")
+    vectors = np.stack([known[h] for h in hashes]) if len(passages) else np.zeros((0, 0))
     np.savez(path, vectors=vectors.astype(np.float32), hashes=hashes)
     log(f"saved to {path}")
     return vectors
+
+
+def _save(path: Path, known: dict[str, np.ndarray]) -> None:
+    hashes = np.array(list(known))
+    vectors = np.stack(list(known.values())).astype(np.float32)
+    tmp = path.with_name(path.stem + ".tmp.npz")
+    np.savez(tmp, vectors=vectors, hashes=hashes)
+    tmp.replace(path)  # never a half-written file, even if the run is stopped while saving
 
 
 def main(argv: list[str] | None = None) -> int:

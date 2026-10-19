@@ -84,6 +84,7 @@ class AnswerOut(BaseModel):
     text: str
     sections: dict[str, str] | None  # analysis: situation, law, application, steps, missing
     plan: list[str]  # analysis: the searches that were run
+    leads: list[str]  # analysis: articles the plan suggested, found in the official text
     standalone: str | None  # a follow-up as rewritten with the conversation
     citations: list[Citation]
     verified: bool
@@ -97,7 +98,7 @@ class AnswerOut(BaseModel):
     def of(cls, a: Answer) -> "AnswerOut":
         return cls(
             question=a.question, language=a.language, status=a.status, mode=a.mode, text=a.text,
-            sections=a.sections, plan=a.plan, standalone=a.standalone,
+            sections=a.sections, plan=a.plan, leads=a.leads, standalone=a.standalone,
             citations=[Citation.of(n, a.sources[n - 1]) for n in a.cited],
             verified=a.verified, problems=a.problems, sources=[s.id for s in a.sources],
             model=a.model, attempts=a.attempts, seconds=a.seconds,

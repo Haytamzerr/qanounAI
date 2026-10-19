@@ -103,3 +103,50 @@ def test_passage_vectors_are_saved_and_reloaded(tmp_path, monkeypatch):
     embed_passages(all_passages(articles), embedder, log=lambda _: None)
     store = NumpyStore.from_cache(articles, [embedder.name])
     assert store.passages == len(all_passages(articles)) > 0
+
+
+def test_short_articles_that_list_cases_get_one_passage_per_case():
+    from qanoun.retrieval.passages import split_passages
+
+    penal_124 = ARTICLES[0].model_copy(
+        update={
+            "text": "لا جناية ولا جنحة ولا مخالفة في الأحوال الآتية:\n"
+            "1 - إذا كان الفعل قد أوجبه القانون وأمرت به السلطة الشرعية.\n"
+            "2 - إذا اضطر الفاعل ماديا إلى ارتكاب الجريمة.\n"
+            "3 - إذا كانت الجريمة قد استلزمتها ضرورة حالة للدفاع الشرعي عن نفس الفاعل."
+        }
+    )
+    passages = split_passages(penal_124)
+    assert len(passages) == 3
+    assert all(p.text.count("في الأحوال الآتية") == 1 for p in passages)  # the opening kept
+    assert "للدفاع الشرعي" in passages[2].text and "السلطة" not in passages[2].text
+    one_item = penal_124.model_copy(update={"text": "يعاقب على ما يلي:\n1 - السرقة."})
+    assert split_passages(one_item) == []  # a single item is not a list
+
+
+class FailingAfter(HashingEmbedder):
+    def __init__(self, calls):
+        super().__init__()
+        self.calls = calls
+
+    def embed(self, texts, show_progress=False):
+        if self.calls == 0:
+            raise RuntimeError("stopped")
+        self.calls -= 1
+        return super().embed(texts, show_progress)
+
+
+def test_an_interrupted_passage_run_resumes_where_it_stopped(tmp_path, monkeypatch):
+    from qanoun.config import settings
+    from qanoun.retrieval.passages import all_passages, embed_passages, load_passage_vectors
+
+    monkeypatch.setattr(settings, "data_dir", tmp_path)
+    passages = all_passages([_long_article()])
+    assert len(passages) >= 3
+    with pytest.raises(RuntimeError):
+        embed_passages(passages, FailingAfter(2), log=lambda _: None, batch=1)
+    saved, _ = load_passage_vectors(HashingEmbedder().name, passages)
+    assert len(saved) == 2  # the first two batches were kept
+    resumed = FailingAfter(len(passages) - 2)  # fails if asked to redo the saved ones
+    vectors = embed_passages(passages, resumed, log=lambda _: None, batch=1)
+    assert vectors.shape[0] == len(passages)

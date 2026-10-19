@@ -74,6 +74,10 @@ Do not answer. From the situation (and the conversation so far, if any), give:
 - "searches": 2 to 4 short search queries in formal Arabic legal language, using the words a
   law would use (المكري، الإفراغ، الفصل التعسفي، النفقة…), one per legal question the situation
   raises (for example the duty of one side, the remedy of the other, a deadline, a penalty);
+- "articles": up to 4 articles you believe apply, each as the law's usual Arabic name or number
+  and the article number, for example "القانون الجنائي الفصل 124" or "القانون رقم 67.12 المادة
+  10". They are only leads: each is looked up in the official text and read before use, so give
+  none rather than guess;
 - "missing": up to 3 facts not given that would change the answer, in {language}."""
 
 PLAN_SCHEMA = {
@@ -81,9 +85,10 @@ PLAN_SCHEMA = {
     "properties": {
         "situation": {"type": "STRING"},
         "searches": {"type": "ARRAY", "items": {"type": "STRING"}},
+        "articles": {"type": "ARRAY", "items": {"type": "STRING"}},
         "missing": {"type": "ARRAY", "items": {"type": "STRING"}},
     },
-    "required": ["situation", "searches", "missing"],
+    "required": ["situation", "searches", "articles", "missing"],
 }
 
 ANALYSIS_SYSTEM = """You are Qanoun AI. You analyse a person's situation under Moroccan law.
