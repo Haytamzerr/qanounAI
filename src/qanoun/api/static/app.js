@@ -27,6 +27,21 @@ const STRINGS = {
     notCovered: "لا يغطي هذا السؤال أي نص من النصوص المتوفرة.",
     article: "المادة", official: "النص الرسمي", translation: "ترجمة", openPdf: "فتح النص الكامل (PDF)",
     seconds: (s) => `${s} ث`, error: "تعذّر الجواب: ",
+    ctaSituation: "حلّل وضعيتي خطوة بخطوة", backHome: "سؤال سريع", editFile: "تعديل الملف", print: "طباعة / PDF",
+    bTitle: "احكِ لنا ما وقع", bSub: "خطوات قصيرة. نكتب ملفك ونحن نتقدم، ثم نحلله من النصوص الرسمية.",
+    stepOf: (i, n) => `الخطوة ${i} من ${n}`, next: "التالي", back: "رجوع", skip: "تخطي", analyse: "حلّل وضعيتي",
+    qTheme: "ما موضوع المشكل؟", qRole: "من أنت في هذه القصة؟", qStory: "ماذا وقع؟", qWhen: "متى وقع ذلك؟", qGoal: "ماذا تريد؟", qReview: "راجع ملفك",
+    hStory: "بكلماتك وبأي لغة. لا نحتاج الأسماء ولا أرقام البطاقة أو الهاتف.", hWhen: "الآجال القانونية قد تغيّر الجواب.", hGoal: "اختر واحدا أو أكثر.",
+    hReview: "كل سطر في الملف قابل للتعديل: اضغط عليه. بعد ذلك:",
+    reviewSteps: ["نحدد الأسئلة القانونية التي تطرحها وضعيتك", "نبحث في عدة قوانين عن المواد التي تنطبق عليها", "نكتب لك خمسة أقسام، وكل مرجع متحقق منه"],
+    storyPlaceholder: "مثلا: أكتري شقة منذ سنتين، والسقف صار يقطر، والمالك يرفض الإصلاح…", minStory: "اكتب جملة أو جملتين على الأقل.",
+    qProof: "ماذا لديك؟", dictate: "إملاء صوتي", listening: "أستمع…",
+    privacy: "يبدو أن نصك يحتوي على رقم هاتف أو بطاقة أو بريد إلكتروني. لا نحتاجها.", hide: "إخفاؤها",
+    fileTitle: "ملفك", fileTheme: "الموضوع", fileRole: "أنا", fileStory: "ما وقع", fileProof: "لدي", fileWhen: "متى", fileGoal: "أريد",
+    fileNote: "لا يُحفظ ملفك على أي خادم.", otherTheme: "موضوع آخر", tapMissing: "اضغط على سؤال لتجيب عنه:",
+    whens: ["هذا الأسبوع", "هذا الشهر", "من شهر إلى سنة", "منذ أكثر من سنة", "ما زال مستمرا"],
+    goals: ["معرفة حقوقي", "استرجاع مال أو تعويض", "إيقاف ما يحدث", "الدفاع عن نفسي", "الخطوات وأين أذهب", "الوثائق التي أحتاجها"],
+    proofs: ["عقد مكتوب", "وصولات أو أداءات", "رسائل أو صور", "شهود", "شكاية سبق تقديمها", "لا شيء بعد"],
   },
   fr: {
     heroTitle: "Posez votre question sur le droit marocain",
@@ -53,6 +68,21 @@ const STRINGS = {
     notCovered: "Aucun des textes disponibles ne couvre cette question.",
     article: "Article", official: "Texte officiel", translation: "Traduction", openPdf: "Ouvrir le texte complet (PDF)",
     seconds: (s) => `${s} s`, error: "Réponse impossible : ",
+    ctaSituation: "Analyser ma situation, étape par étape", backHome: "Question rapide", editFile: "Modifier le dossier", print: "Imprimer / PDF",
+    bTitle: "Racontez-nous ce qui s'est passé", bSub: "Quelques étapes courtes. Votre dossier s'écrit au fur et à mesure, puis nous l'analysons à partir des textes officiels.",
+    stepOf: (i, n) => `Étape ${i} sur ${n}`, next: "Suivant", back: "Retour", skip: "Passer", analyse: "Analyser ma situation",
+    qTheme: "De quoi s'agit-il ?", qRole: "Qui êtes-vous dans cette histoire ?", qStory: "Que s'est-il passé ?", qWhen: "Quand cela s'est-il passé ?", qGoal: "Qu'attendez-vous ?", qReview: "Relisez votre dossier",
+    hStory: "Avec vos mots, dans la langue que vous voulez. Pas besoin de noms, de numéro de CIN ou de téléphone.", hWhen: "Les délais légaux peuvent changer la réponse.", hGoal: "Choisissez-en un ou plusieurs.",
+    hReview: "Chaque ligne du dossier se modifie d'un clic. Ensuite :",
+    reviewSteps: ["Nous repérons les questions juridiques que pose votre situation", "Nous cherchons les articles applicables dans plusieurs lois", "Nous rédigeons cinq parties, chaque citation vérifiée"],
+    storyPlaceholder: "Ex. : je loue un appartement depuis deux ans, le plafond fuit et le propriétaire refuse de réparer…", minStory: "Écrivez au moins une ou deux phrases.",
+    qProof: "Qu'avez-vous en main ?", dictate: "Dicter", listening: "J'écoute…",
+    privacy: "Votre texte semble contenir un numéro de téléphone, de CIN ou un e-mail. Nous n'en avons pas besoin.", hide: "Les masquer",
+    fileTitle: "Votre dossier", fileTheme: "Sujet", fileRole: "Je suis", fileStory: "Les faits", fileProof: "J'ai", fileWhen: "Quand", fileGoal: "Je veux",
+    fileNote: "Votre dossier n'est enregistré sur aucun serveur.", otherTheme: "Autre sujet", tapMissing: "Touchez une question pour y répondre :",
+    whens: ["Cette semaine", "Ce mois-ci", "Il y a 1 à 12 mois", "Il y a plus d'un an", "Ça continue"],
+    goals: ["Connaître mes droits", "Récupérer de l'argent ou une indemnité", "Faire cesser la situation", "Me défendre", "Les démarches et où aller", "Les documents à préparer"],
+    proofs: ["Un contrat écrit", "Des reçus ou paiements", "Des messages ou photos", "Des témoins", "Une plainte déjà déposée", "Rien pour l'instant"],
   },
   darija: {
     heroTitle: "سول على القانون المغربي",
@@ -79,6 +109,21 @@ const STRINGS = {
     notCovered: "حتى نص من النصوص اللي عندنا ما كيجاوب على هاد السؤال.",
     article: "المادة", official: "النص الرسمي", translation: "ترجمة", openPdf: "حل النص كامل (PDF)",
     seconds: (s) => `${s} ث`, error: "ما قدرناش نجاوبو: ",
+    ctaSituation: "حلل ليا الوضعية ديالي، خطوة بخطوة", backHome: "سؤال دغيا", editFile: "بدل الملف", print: "طبع / PDF",
+    bTitle: "عاود لينا شنو وقع", bSub: "شي خطوات قصار. الملف ديالك كيتكتب وانتا كتزيد، ومن بعد كنحللوه من النصوص الرسمية.",
+    stepOf: (i, n) => `الخطوة ${i} من ${n}`, next: "زيد", back: "رجع", skip: "دوز", analyse: "حلل ليا الوضعية",
+    qTheme: "على شنو المشكل؟", qRole: "شكون نتا فهاد القصة؟", qStory: "شنو وقع؟", qWhen: "إمتى وقع هادشي؟", qGoal: "شنو بغيتي؟", qReview: "راجع الملف ديالك",
+    hStory: "بالهضرة ديالك، بأي لغة. ما محتاجينش الأسماء ولا رقم البطاقة ولا التيليفون.", hWhen: "الآجال ديال القانون يقدرو يبدلو الجواب.", hGoal: "ختار واحد ولا كثر.",
+    hReview: "كل سطر فالملف تقدر تبدلو: ضغط عليه. من بعد:",
+    reviewSteps: ["كنحددو الأسئلة القانونية اللي كتطرح الوضعية ديالك", "كنقلبو فبزاف ديال القوانين على المواد اللي كتطبق عليها", "كنكتبو ليك خمسة ديال الأجزاء، وكل مادة متأكدين منها"],
+    storyPlaceholder: "بحال: كاري شقة هادي عامين، السقف ولا كيقطر، ومول الدار ما بغاش يصلح…", minStory: "كتب جملة ولا جوج على الأقل.",
+    qProof: "شنو عندك فيدك؟", dictate: "هضر", listening: "كنسمع…",
+    privacy: "بان لينا فالنص رقم تيليفون ولا بطاقة ولا إيميل. ما محتاجينهمش.", hide: "خبيهم",
+    fileTitle: "الملف ديالك", fileTheme: "الموضوع", fileRole: "أنا", fileStory: "شنو وقع", fileProof: "عندي", fileWhen: "إمتى", fileGoal: "بغيت",
+    fileNote: "الملف ديالك ما كيتسجل فحتى سيرفور.", otherTheme: "حاجة أخرى", tapMissing: "ضغط على سؤال باش تجاوب عليه:",
+    whens: ["هاد السيمانة", "هاد الشهر", "من شهر لعام", "كثر من عام", "مازال كيوقع"],
+    goals: ["نعرف الحقوق ديالي", "نرجع فلوسي ولا ناخد تعويض", "نوقف هادشي", "ندافع على راسي", "شنو ندير وفين نمشي", "الوراق اللي خاصني"],
+    proofs: ["عقد مكتوب", "وصولات ولا خلاص", "ميساجات ولا تصاور", "شهود", "سبق ليا درت شكاية", "والو حتى لدابا"],
   },
 };
 
@@ -146,8 +191,9 @@ let lang = store.get("qanoun.lang", navigator.language?.startsWith("fr") ? "fr" 
 let current = null;   // the answer on screen
 let openTopic = null;
 let allTopics = false;
-let mode = store.get("qanoun.mode", "quick");   // "quick" or "analysis" (decision 75)
-let conversation = [];                          // earlier answers of this conversation (decision 76)
+let mode = "quick";        // the conversation's mode: the top box asks quickly, the builder analyses (81)
+let facts = [];            // what the person chose in the situation builder (theme, role, when…)
+let conversation = [];     // earlier answers of this conversation (decision 76)
 const SECTIONS = [["situation", "secSituation"], ["law", "secLaw"], ["application", "secApplication"], ["steps", "secSteps"], ["missing", "secMissing"]];
 const t = (key, ...args) => { const v = STRINGS[lang][key]; return typeof v === "function" ? v(...args) : v; };
 
@@ -162,20 +208,11 @@ function applyLanguage() {
   document.querySelectorAll("[data-i18n-label]").forEach((el) => el.setAttribute("aria-label", t(el.dataset.i18nLabel)));
   document.querySelectorAll(".lang button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.lang === lang)));
   renderTopics();
-  renderMode();
   renderThread();
+  if (!$("builder").hidden) { renderDossier(); renderBuilder(); }
   loadCorpus();
   if (current) renderAnswer(current, false);
 }
-
-// ---------- quick answer or analysis ----------
-function renderMode() {
-  document.querySelectorAll(".mode button").forEach((b) => b.setAttribute("aria-checked", String(b.dataset.mode === mode)));
-  $("mode-hint").textContent = t(mode === "analysis" ? "hintAnalysis" : "hintQuick");
-}
-document.querySelectorAll(".mode button").forEach((b) => b.addEventListener("click", () => {
-  mode = b.dataset.mode; store.set("qanoun.mode", mode); renderMode();
-}));
 
 // ---------- the conversation: earlier answers stay above the current one ----------
 function renderThread() {
@@ -192,7 +229,8 @@ function renderThread() {
   });
 }
 function newConversation() {
-  conversation = []; current = null;
+  conversation = []; current = null; mode = "quick"; facts = [];
+  $("edit-file").hidden = true;
   renderThread();
   $("result").hidden = true; $("followup").hidden = true;
   $("workspace").classList.add("idle");
@@ -272,9 +310,11 @@ function markStep(name) {
   });
 }
 
-async function ask(question, followUp = false) {
+async function ask(question, followUp = false, options = {}) {
   question = question.trim();
   if (question.length < 2) return;
+  if (!followUp) { mode = options.mode || "quick"; facts = options.facts || []; }
+  $("edit-file").hidden = !(mode === "analysis" && facts.length);
   const buttons = document.querySelectorAll(".ask-btn");
   buttons.forEach((b) => { b.disabled = true; });
   if (followUp && current) conversation.push(current);   // the last answer joins the thread
@@ -300,7 +340,7 @@ async function ask(question, followUp = false) {
 
   try {
     const response = await fetch("/ask/stream", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question, mode, history }),
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question, mode, history, facts: followUp ? [] : facts }),
     });
     if (!response.ok) throw new Error((await response.json()).detail || response.statusText);
     const reader = response.body.getReader();
@@ -367,7 +407,16 @@ function renderAnswer(data, animate) {
   if (data.sections) {
     SECTIONS.forEach(([key, label], i) => {
       const value = data.sections[key];
-      if (value) html += `<section class="section sec-${key}"><h3><i>${i + 1}</i>${t(label)}</h3>${paragraphs(value)}</section>`;
+      if (!value) return;
+      let body = paragraphs(value);
+      const steps = key === "steps" && listItems(value);
+      const questions = key === "missing" && missingQuestions(value);
+      if (steps) {  // what you can do: a checklist to tick
+        body = `<ul class="checklist">${steps.map((s) => `<li><label><input type="checkbox"><span>${escapeHtml(s)}</span></label></li>`).join("")}</ul>`;
+      } else if (questions) {  // what is missing: one tap answers it in the follow-up box
+        body = `<p class="tap-hint">${t("tapMissing")}</p>${questions.map((q) => `<button type="button" class="missing-q" dir="auto">${escapeHtml(q)}</button>`).join("")}`;
+      }
+      html += `<section class="section sec-${key}"><h3><i>${i + 1}</i>${t(label)}</h3>${body}</section>`;
     });
   } else {
     html += paragraphs(data.text);
@@ -382,6 +431,12 @@ function renderAnswer(data, animate) {
   $("mode-badge").textContent = t(data.mode === "analysis" ? "modeAnalysis" : "modeQuick");
   $("followup").hidden = false;
   text.querySelectorAll(".cite").forEach((b) => b.addEventListener("click", () => openArticle(+b.dataset.n, b)));
+  text.querySelectorAll(".missing-q").forEach((b) => b.addEventListener("click", () => {
+    const box = $("followup-q");
+    box.value = `${b.textContent.replace(/\s*\d+\s*$/, "").trim()} `;
+    $("followup").scrollIntoView({ block: "center" });
+    box.focus(); box.setSelectionRange(box.value.length, box.value.length);
+  }));
 
   $("flag").hidden = data.verified && data.status !== "not_covered";
   $("flag").textContent = data.status === "not_covered" ? t("notCovered") : t("unverified");
@@ -399,6 +454,17 @@ function renderAnswer(data, animate) {
   $("meta").textContent = t("seconds", total.toFixed(1));
 }
 
+// "1) Write to the landlord. 2) Wait a month…" → items, for the checklist
+function listItems(value) {
+  let items = value.split(/(?:^|\n|[.!؟?:،]\s*)\s*\d{1,2}\s*[).]\s+/).map((s) => s.trim()).filter(Boolean);
+  if (items.length < 2) items = value.split(/\n+/).map((s) => s.replace(/^\s*[-•]\s*/, "").trim()).filter(Boolean);
+  return items.length >= 2 ? items : null;
+}
+function missingQuestions(value) {
+  const items = value.split(/(?<=[?؟])\s+|\n+/).map((s) => s.replace(/^\s*[-•\d.)]+\s*/, "").trim()).filter((s) => s.length > 3);
+  return items.length && items.some((s) => /[?؟]\s*(\[\d+\])*$/.test(s)) ? items : null;
+}
+
 function citationText(data) {
   const sources = data.citations.map((c) => `[${c.number}] ${c.law_title}, ${c.label || t("article")} ${c.article_number}`);
   const body = data.sections
@@ -414,6 +480,7 @@ $("copy").addEventListener("click", async () => {
   if (!current) return;
   try { await navigator.clipboard.writeText(citationText(current)); toast(t("copied")); } catch { /* clipboard blocked */ }
 });
+$("print").addEventListener("click", () => window.print());
 $("share").addEventListener("click", async () => {
   if (!current) return;
   const text = citationText(current);
@@ -477,7 +544,8 @@ function renderHistory() {
     b.addEventListener("click", () => {
       closePanels();
       conversation = []; renderThread();
-      current = h.answer;
+      current = h.answer; mode = h.answer.mode || "quick"; facts = [];
+      $("edit-file").hidden = true;
       $("workspace").classList.remove("idle");
       $("result").hidden = false; $("error").hidden = true;
       $("asked").textContent = h.question;
@@ -490,5 +558,195 @@ function renderHistory() {
 }
 $("history-open").addEventListener("click", (e) => { renderHistory(); openPanel("history", e.currentTarget); });
 $("history-clear").addEventListener("click", () => { store.set("qanoun.history", []); renderHistory(); });
+
+// ---------- "Analyse my situation": the case file writes itself (decision 81) ----------
+// Themes come from TOPICS; each has the roles a person can have in it.
+const ROLES = {
+  work: [["أجير", "Salarié(e)", "خدام"], ["مشغّل", "Employeur", "باطرون"], ["عامل منزلي", "Employé(e) de maison", "خدام فالديور"], ["باحث عن شغل", "En recherche d'emploi", "كنقلب على خدمة"]],
+  family: [["زوجة", "Épouse", "المرا"], ["زوج", "Époux", "الراجل"], ["أب أو أم", "Parent", "الواليد ولا الواليدة"], ["ابن أو بنت", "Enfant", "الولد ولا البنت"]],
+  home: [["مكتري", "Locataire", "كاري"], ["مكري", "Propriétaire bailleur", "مول الدار"], ["جار", "Voisin(e)", "جار"], ["مشتري", "Acheteur", "شاري"]],
+  penal: [["ضحية", "Victime", "ضحية"], ["متهم", "Mis(e) en cause", "متهم"], ["شاهد", "Témoin", "شاهد"]],
+  road: [["سائق", "Conducteur", "سايق"], ["راجل أو ضحية حادثة", "Piéton ou victime", "مترجل ولا ضحية"], ["مالك العربة", "Propriétaire du véhicule", "مول الطوموبيل"]],
+  consumer: [["مستهلك", "Client(e)", "الكليان"], ["بائع", "Vendeur", "البياع"]],
+  contract: [["دائن", "Créancier (on me doit)", "سلفت لشي حد"], ["مدين", "Débiteur (je dois)", "عليا الكريدي"], ["طرف في عقد", "Partie à un contrat", "طرف فعقد"]],
+  other: [["شخص", "Particulier", "شخص عادي"], ["مقاولة", "Entreprise", "شركة"]],
+};
+const BUILDER_THEMES = ["work", "family", "home", "penal", "road", "consumer", "contract", "other"];
+const LANG_INDEX = { ar: 0, fr: 1, darija: 2 };
+const STEPS = ["theme", "role", "story", "when", "goal", "review"];
+const file = { theme: null, role: null, story: "", proofs: [], when: null, goals: [] };
+let stepIndex = 0;
+
+const themeName = (key) => key === "other" ? t("otherTheme") : TOPICS.find((x) => x.icon === key)?.name[lang];
+const roleName = (key, i) => ROLES[key][i][LANG_INDEX[lang]];
+const PRIVATE = /(?:\+212|\b0)[5-7](?:[\s.-]?\d){8}\b|\b[A-Z]{1,2}\d{5,7}\b|[\w.+-]+@[\w-]+\.[\w.]+/gi;
+
+function chip(label, selected, onPick, cls = "") {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = `chip ${cls}`; b.setAttribute("aria-pressed", String(selected));
+  b.dir = "auto"; b.innerHTML = label;
+  b.addEventListener("click", onPick);
+  return b;
+}
+function advanceSoon() { setTimeout(() => goStep(stepIndex + 1), 220); }
+
+function renderBuilder() {
+  const step = STEPS[stepIndex];
+  const box = $("b-step");
+  box.innerHTML = "";
+  $("b-progress").innerHTML = STEPS.map((_, i) => `<span class="${i < stepIndex ? "done" : i === stepIndex ? "now" : ""}"></span>`).join("");
+  const head = document.createElement("div");
+  head.className = "b-head";
+  const q = { theme: "qTheme", role: "qRole", story: "qStory", when: "qWhen", goal: "qGoal", review: "qReview" }[step];
+  const hint = { story: "hStory", when: "hWhen", goal: "hGoal", review: "hReview" }[step];
+  head.innerHTML = `<p class="b-count">${t("stepOf", stepIndex + 1, STEPS.length)}</p><h2>${t(q)}</h2>${hint ? `<p class="b-hint">${t(hint)}</p>` : ""}`;
+  box.append(head);
+  const grid = document.createElement("div");
+  box.append(grid);
+
+  if (step === "theme") {
+    grid.className = "tiles";
+    BUILDER_THEMES.forEach((key) => {
+      const icon = key === "other" ? '<circle cx="12" cy="12" r="8"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6M12 16.5h0"/>' : ICONS[key];
+      grid.append(chip(`<span class="tile-icon"><svg viewBox="0 0 24 24">${icon}</svg></span><span>${themeName(key)}</span>`,
+        file.theme === key, () => { if (file.theme !== key) file.role = null; file.theme = key; renderDossier(); advanceSoon(); }, "tile"));
+    });
+  } else if (step === "role") {
+    grid.className = "chips big";
+    ROLES[file.theme || "other"].forEach((_, i) => grid.append(chip(escapeHtml(roleName(file.theme || "other", i)), file.role === i,
+      () => { file.role = i; renderDossier(); advanceSoon(); })));
+  } else if (step === "story") {
+    grid.className = "story";
+    grid.innerHTML = `
+      <div class="story-box"><textarea id="b-story" rows="5" maxlength="1000" dir="auto"></textarea>
+        <button type="button" class="ghost mic" id="b-mic" hidden><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>${t("dictate")}</span></button></div>
+      <p class="privacy" id="b-privacy" hidden><span>${t("privacy")}</span> <button type="button" class="link" id="b-hide">${t("hide")}</button></p>
+      <p class="b-error" id="b-story-error" hidden>${t("minStory")}</p>
+      <h3>${t("qProof")}</h3><div class="chips" id="b-proofs"></div>`;
+    const area = grid.querySelector("#b-story");
+    area.placeholder = t("storyPlaceholder");
+    area.value = file.story;
+    const check = () => {
+      file.story = area.value;
+      PRIVATE.lastIndex = 0;
+      $("b-privacy").hidden = !PRIVATE.test(area.value);
+      $("b-story-error").hidden = true;
+      renderDossier();
+    };
+    area.addEventListener("input", check);
+    $("b-hide").addEventListener("click", () => { area.value = area.value.replace(PRIVATE, "•••"); check(); area.focus(); });
+    const proofs = grid.querySelector("#b-proofs");
+    t("proofs").forEach((label, i) => proofs.append(chip(escapeHtml(label), file.proofs.includes(i), (e) => {
+      const last = i === t("proofs").length - 1;   // "nothing yet" excludes the others
+      file.proofs = file.proofs.includes(i) ? file.proofs.filter((x) => x !== i) : last ? [i] : [...file.proofs.filter((x) => x !== t("proofs").length - 1), i];
+      renderDossier(); renderBuilder();
+    })));
+    setupDictation(area, check);
+    check();
+    setTimeout(() => area.focus(), 60);
+  } else if (step === "when") {
+    grid.className = "chips big";
+    t("whens").forEach((label, i) => grid.append(chip(escapeHtml(label), file.when === i, () => { file.when = i; renderDossier(); advanceSoon(); })));
+  } else if (step === "goal") {
+    grid.className = "chips big";
+    t("goals").forEach((label, i) => grid.append(chip(escapeHtml(label), file.goals.includes(i), () => {
+      file.goals = file.goals.includes(i) ? file.goals.filter((x) => x !== i) : [...file.goals, i];
+      renderDossier(); renderBuilder();
+    })));
+  } else {
+    grid.className = "review";
+    grid.innerHTML = `<ol class="review-steps">${t("reviewSteps").map((x) => `<li>${x}</li>`).join("")}</ol>`;
+  }
+
+  $("b-back").hidden = stepIndex === 0;
+  const next = $("b-next");
+  const optional = step === "role" || step === "when" || step === "goal";
+  next.querySelector("span").textContent = step === "review" ? t("analyse") : optional && !chosen(step) ? t("skip") : t("next");
+  next.classList.toggle("final", step === "review");
+  next.hidden = step === "theme";
+  $("dossier").classList.toggle("complete", step === "review");
+}
+function chosen(step) {
+  return { role: file.role !== null, when: file.when !== null, goal: file.goals.length > 0 }[step];
+}
+
+function renderDossier() {
+  const line = (label, value, step) => `
+    <div class="d-line${value ? "" : " empty"}"><dt>${label}</dt>
+      <dd><button type="button" data-step="${step}" dir="auto">${value ? escapeHtml(value) : "…"}</button></dd></div>`;
+  const theme = file.theme ? themeName(file.theme) : "";
+  const role = file.theme && file.role !== null ? roleName(file.theme, file.role) : "";
+  const proofs = file.proofs.map((i) => t("proofs")[i]).join("، ");
+  $("dossier-body").innerHTML = line(t("fileTheme"), theme, 0) + line(t("fileRole"), role, 1)
+    + line(t("fileStory"), file.story.trim(), 2) + line(t("fileProof"), proofs, 2)
+    + line(t("fileWhen"), file.when !== null ? t("whens")[file.when] : "", 3)
+    + line(t("fileGoal"), file.goals.map((i) => t("goals")[i]).join("، "), 4);
+  $("dossier-body").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => goStep(+b.dataset.step)));
+}
+
+function goStep(i) {
+  if (STEPS[stepIndex] === "story" && i > stepIndex && file.story.trim().length < 15) {
+    $("b-story-error").hidden = false; $("b-story").focus(); return;
+  }
+  if (i >= STEPS.length) { submitFile(); return; }
+  stepIndex = Math.max(0, i);
+  renderBuilder();
+  $("b-step").scrollIntoView({ block: "nearest" });
+}
+$("b-next").addEventListener("click", () => goStep(stepIndex + 1));
+$("b-back").addEventListener("click", () => goStep(stepIndex - 1));
+
+function fileFacts() {
+  const out = [];
+  if (file.theme) out.push(`${t("fileTheme")}: ${themeName(file.theme)}`);
+  if (file.theme && file.role !== null) out.push(`${t("fileRole")}: ${roleName(file.theme, file.role)}`);
+  if (file.proofs.length) out.push(`${t("fileProof")}: ${file.proofs.map((i) => t("proofs")[i]).join(", ")}`);
+  if (file.when !== null) out.push(`${t("fileWhen")}: ${t("whens")[file.when]}`);
+  if (file.goals.length) out.push(`${t("fileGoal")}: ${file.goals.map((i) => t("goals")[i]).join(", ")}`);
+  return out;
+}
+function submitFile() {
+  history.pushState(null, "", location.pathname);   // back to the answer page; "back" returns here
+  route();
+  ask(file.story, false, { mode: "analysis", facts: fileFacts() });
+}
+
+// Dictation where the browser offers it (Chrome, Edge, Safari); hidden elsewhere.
+function setupDictation(area, onChange) {
+  const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const mic = $("b-mic");
+  if (!Recognition) return;
+  mic.hidden = false;
+  let listening = null;
+  mic.addEventListener("click", () => {
+    if (listening) { listening.stop(); return; }
+    const r = new Recognition();
+    r.lang = lang === "fr" ? "fr-FR" : "ar-MA";
+    r.interimResults = false;
+    r.onresult = (e) => {
+      const said = Array.from(e.results).map((x) => x[0].transcript).join(" ");
+      area.value = `${area.value.trim()} ${said}`.trim(); onChange();
+    };
+    r.onend = () => { listening = null; mic.classList.remove("on"); mic.querySelector("span").textContent = t("dictate"); };
+    r.start(); listening = r;
+    mic.classList.add("on"); mic.querySelector("span").textContent = t("listening");
+  });
+}
+
+// ---------- pages: home (#) and the situation builder (#situation) ----------
+function route() {
+  const builder = location.hash === "#situation";
+  document.querySelector(".hero").hidden = builder;
+  $("workspace").hidden = builder;
+  $("builder").hidden = !builder;
+  if (builder) {
+    if (STEPS[stepIndex] !== "review" && file.story.trim().length >= 15 && current?.mode === "analysis") stepIndex = STEPS.length - 1;
+    renderDossier(); renderBuilder();
+    window.scrollTo(0, 0);
+    $("b-title").focus({ preventScroll: true });
+  }
+}
+window.addEventListener("hashchange", route);
+route();
 
 applyLanguage();

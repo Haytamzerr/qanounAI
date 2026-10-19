@@ -150,3 +150,15 @@ def test_a_single_word_idea_is_a_party_not_an_issue():
     ideas = retriever.queries[1:]
     assert "المكري" not in ideas and len(ideas) == 3
     assert any("الإصلاحات" in q for q in ideas) and any(q.startswith("أداء") for q in ideas)
+
+
+def test_what_the_person_selected_reaches_the_plan_and_the_writer():
+    llm = ScriptedLLM(PLAN, SECTIONS)
+    facts = ["Sujet: Travail", "Je suis: Salarié(e)", "Quand: Il y a 1 à 12 mois"]
+    answer = Answerer(RecordingRetriever(), llm).answer(
+        "On m'a licencié sans motif après 7 ans.", mode="analysis", facts=facts
+    )
+    assert answer.language == "fr"  # detected on the person's own words, not the labels
+    plan_prompt, write_prompt = llm.prompts[0][1], llm.prompts[1][1]
+    assert "WHAT THE PERSON SELECTED" in plan_prompt and "- Je suis: Salarié(e)" in plan_prompt
+    assert "Quand: Il y a 1 à 12 mois" in write_prompt

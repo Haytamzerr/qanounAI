@@ -33,7 +33,7 @@ import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 
-from qanoun.generation.citations import ARTICLE_MENTION, check
+from qanoun.generation.citations import ARTICLE_MENTION, check, style_problems
 from qanoun.generation.llm import LLM
 from qanoun.generation.prompts import (
     ANALYSIS_SCHEMA,
@@ -161,6 +161,7 @@ class Answerer:
         *,
         mode: str = "quick",
         history: Sequence[Turn] = (),
+        facts: Sequence[str] = (),
     ) -> Answer:
         """`on_step(name, details)` is called as the work progresses, so an interface can show
         "searching…", "writing…" while the user waits (see the API's streaming endpoint)."""
@@ -179,11 +180,14 @@ class Answerer:
         refs = self.references(standalone or question, language) if self.references else []
         named = [r.article for r in refs if r.article is not None]
         notes = [n for r in refs if (n := note(r))]
+        facts = [f.strip() for f in facts if f.strip()][:6]  # chosen in the situation builder
+        if facts:
+            notes.append("What the person selected about the situation: " + "; ".join(facts))
         carried = self._carried(history)
         talk = [(t.question, t.answer) for t in history]
 
         if mode == "analysis":
-            planned = self._plan(standalone or question, language, talk)
+            planned = self._plan(standalone or question, language, talk, facts)
             if planned is not None:
                 situation, searches, missing, suggested = planned
                 leads = self._leads(suggested, language)
@@ -231,10 +235,14 @@ class Answerer:
             return []
         return [a for i in talk[-1].sources[:3] if (a := self.lookup(i)) is not None]
 
-    def _plan(self, question, language, talk) -> tuple[str, list[str], list[str], list[str]] | None:
+    def _plan(
+        self, question, language, talk, facts=()
+    ) -> tuple[str, list[str], list[str], list[str]] | None:
         prompt = (f"CONVERSATION SO FAR\n{conversation_block(talk)}\n\n" if talk else "") + (
             f"SITUATION\n{question}"
         )
+        if facts:
+            prompt += "\n\nWHAT THE PERSON SELECTED\n" + "\n".join(f"- {f}" for f in facts)
         try:
             data = json.loads(
                 self.llm.generate(plan_system(language), prompt, json_schema=PLAN_SCHEMA)
@@ -271,8 +279,11 @@ class Answerer:
 
     # ---------- writing and checking ----------
 
-    def _attempts(self, question, sources, system, schema, prompt_of, parse, step):
-        """Write, check, and retry once with the problems shown (shared by both modes)."""
+    def _attempts(self, question, language, sources, system, schema, prompt_of, parse, step):
+        """Write, check, and retry once with the problems shown (shared by both modes).
+
+        Citation problems make an answer unverified; writing problems (Arabic letters in an
+        Arabizi answer…) only earn a retry, they do not make the law wrong (decision 80)."""
         own = set(ARTICLE_MENTION.findall(question))  # numbers the person wrote may come back
         prompt = prompt_of()
         lines, best = [], None
@@ -281,21 +292,25 @@ class Answerer:
             status, text, used, extra = parse(self.llm.generate(system, prompt, json_schema=schema))
             answered = status == "answered"
             checked = check(text, sources, used, answered=answered, allowed=own)
+            style = style_problems(text, language) if answered else []
+            problems = [*checked.problems, *style]
             line = f"attempt {attempt}: {status}" + (
-                f" — rejected: {'; '.join(checked.problems)}" if checked.problems else ""
+                f" — rejected: {'; '.join(problems)}" if problems else ""
             )
             lines.append(line)
             log.info(line)
-            if best is None or (answered and not best[0]) or (answered and checked.ok):
+            better = best is None or (answered and not best[0])
+            better = better or (answered and checked.ok and (not best[1].ok or not style))
+            if better:
                 best = (answered, checked, status, extra)  # a refusal never replaces an answer
-            if checked.ok or attempt > self.retries:
+            if not problems or attempt > self.retries:
                 break
             prompt = (
                 prompt_of()
                 + "\n\nYOUR PREVIOUS ANSWER:\n"
                 + text
                 + "\n\nIT BROKE THE RULES:\n- "
-                + "\n- ".join(checked.problems)
+                + "\n- ".join(problems)
                 + "\nCorrect only these problems and keep what was right. Cite only the numbered "
                 "sources; if the sources answer the question, do not refuse."
             )
@@ -315,6 +330,7 @@ class Answerer:
 
         (answered, checked, status, _), attempt, lines = self._attempts(
             question,
+            language,
             sources,
             system_prompt(language),
             ANSWER_SCHEMA,
@@ -365,6 +381,7 @@ class Answerer:
 
         (answered, checked, status, sections), attempt, lines = self._attempts(
             question,
+            language,
             sources,
             analysis_system(language),
             ANALYSIS_SCHEMA,

@@ -154,3 +154,23 @@ def test_the_interface_is_never_served_stale():
     client = client_with()
     assert client.get("/").headers["cache-control"] == "no-cache"
     assert client.get("/static/app.js").headers["cache-control"] == "no-cache"
+
+
+def test_ask_accepts_what_the_person_selected_and_limits_it():
+    plan = {"situation": "s", "searches": ["الأجير"], "missing": []}
+    sections = {
+        "status": "answered", "situation": "s", "law": "Règle [1].", "application": "a",
+        "steps": "1) Écrire. 2) Attendre.", "missing": "", "used_sources": [1],
+    }  # fmt: skip
+    client = client_with(plan, sections)
+    body = {"question": "On m'a licencié.", "mode": "analysis", "facts": ["Sujet: Travail"]}
+    assert client.post("/ask", json=body).status_code == 200
+    too_many = dict(body, facts=["x"] * 7)
+    assert client.post("/ask", json=too_many).status_code == 422
+    too_long = dict(body, facts=["x" * 201])
+    assert client.post("/ask", json=too_long).status_code == 422
+
+
+def test_the_interface_has_the_situation_page():
+    page = client_with().get("/").text
+    assert 'href="#situation"' in page and 'id="builder"' in page and 'id="dossier"' in page
