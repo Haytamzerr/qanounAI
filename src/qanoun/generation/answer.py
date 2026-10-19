@@ -8,7 +8,9 @@ Two modes (decision 75):
 - "analysis": the model first plans the research (the facts that matter, 2–4 searches in the
   law's own words, the facts that are missing), each search is run, and the answer is written
   in sections: situation · what the law says · what it means for you · what you can do · what
-  is missing. Every section is checked like a quick answer.
+  is missing. Every section is checked like a quick answer. The plan may also name articles the
+  model believes apply ("Penal Code art. 124"): they are looked up in the official text and given
+  as sources, never trusted as such; an article that does not exist is dropped (decision 78).
 
 A follow-up ("and if I have children?") is first rewritten into a standalone question using the
 conversation, which is also shown to the model; the articles cited in the previous answer stay
@@ -89,6 +91,7 @@ class Answer:
     mode: str = "quick"  # "quick" or "analysis"
     sections: dict[str, str] | None = None  # analysis mode: situation, law, application…
     plan: list[str] = field(default_factory=list)  # analysis mode: the searches that were run
+    leads: list[str] = field(default_factory=list)  # analysis: ids of suggested articles found
     standalone: str | None = None  # a follow-up rewritten with the conversation
 
     @property
@@ -173,17 +176,20 @@ class Answerer:
         if mode == "analysis":
             planned = self._plan(standalone or question, language, talk)
             if planned is not None:
-                situation, searches, missing = planned
-                step("planned", {"situation": situation, "searches": searches})
+                situation, searches, missing, suggested = planned
+                leads = self._leads(suggested, language)
+                step("planned", {"situation": situation, "searches": searches,
+                                 "articles": [a.id for a in leads]})  # fmt: skip
                 found = [a for q in searches for a in self._search(q, self.per_search)]
                 found += self._search(understood.query, self.per_search, done=True)
-                sources = _unique([*named, *found, *carried])[: self.max_sources]
+                sources = _unique([*named, *leads, *found, *carried])[: self.max_sources]
                 seconds = {"retrieval": time.perf_counter() - clock}
                 step("sources", {"articles": [a.id for a in sources]})
                 answer = self._write_analysis(
                     question, language, sources, notes, talk, missing, step, seconds
                 )
                 answer.plan, answer.standalone = searches, standalone
+                answer.leads = [a.id for a in leads if a in sources]
                 return answer
             log.info("planning failed: quick answer instead")
 
@@ -215,7 +221,7 @@ class Answerer:
             return []
         return [a for i in talk[-1].sources[:3] if (a := self.lookup(i)) is not None]
 
-    def _plan(self, question, language, talk) -> tuple[str, list[str], list[str]] | None:
+    def _plan(self, question, language, talk) -> tuple[str, list[str], list[str], list[str]] | None:
         prompt = (f"CONVERSATION SO FAR\n{conversation_block(talk)}\n\n" if talk else "") + (
             f"SITUATION\n{question}"
         )
@@ -225,10 +231,21 @@ class Answerer:
             )
             searches = [str(q).strip() for q in data.get("searches", []) if str(q).strip()][:4]
             missing = [str(m).strip() for m in data.get("missing", []) if str(m).strip()][:3]
-            return str(data.get("situation", "")), searches, missing
+            suggested = [str(m).strip() for m in data.get("articles", []) if str(m).strip()][:4]
+            return str(data.get("situation", "")), searches, missing, suggested
         except Exception as error:  # a broken plan must not cost the person an answer
             log.info("plan rejected: %s", error)
             return None
+
+    def _leads(self, suggested: Sequence[str], language: str) -> list[Article]:
+        """The suggested articles that exist in the official text (the others are dropped)."""
+        if self.references is None:
+            return []
+        found = [r.article for s in suggested for r in self.references(s, language)]
+        leads = _unique([a for a in found if a is not None])[:4]
+        if len(leads) < len(suggested):
+            log.info("plan leads: %d of %d found", len(leads), len(suggested))
+        return leads
 
     def _search(self, query: str, k: int, done: bool = False) -> list[Article]:
         """One search of the plan; plan queries go through the Darija lexicon too."""
