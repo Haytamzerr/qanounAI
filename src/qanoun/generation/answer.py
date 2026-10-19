@@ -12,6 +12,11 @@ Two modes (decision 75):
   model believes apply ("Penal Code art. 124"): they are looked up in the official text and given
   as sources, never trusted as such; an article that does not exist is dropped (decision 78).
 
+When the Darija lexicon recognises several legal ideas in one question ("I hit him / he started /
+will I go to prison?" → assault, self-defence, prison), each idea also gets a small search of its
+own and its best articles join the sources: one vector for the whole question averages the ideas
+and the minority one is lost (decision 79).
+
 A follow-up ("and if I have children?") is first rewritten into a standalone question using the
 conversation, which is also shown to the model; the articles cited in the previous answer stay
 available (decision 76).
@@ -132,6 +137,8 @@ class Answerer:
         lookup: Lookup | None = None,
         per_search: int = 4,
         max_sources: int = 14,
+        per_idea: int = 2,
+        max_ideas: int = 3,
     ):
         self.retriever = retriever
         self.llm = llm
@@ -142,6 +149,8 @@ class Answerer:
         self.retries = retries
         self.per_search = per_search
         self.max_sources = max_sources
+        self.per_idea = per_idea
+        self.max_ideas = max_ideas
 
     # ---------- entry point ----------
 
@@ -180,7 +189,8 @@ class Answerer:
                 leads = self._leads(suggested, language)
                 step("planned", {"situation": situation, "searches": searches,
                                  "articles": [a.id for a in leads]})  # fmt: skip
-                found = [a for q in searches for a in self._search(q, self.per_search)]
+                found = self._by_idea(understood)  # few, and kept within the 14 sources
+                found += [a for q in searches for a in self._search(q, self.per_search)]
                 found += self._search(understood.query, self.per_search, done=True)
                 sources = _unique([*named, *leads, *found, *carried])[: self.max_sources]
                 seconds = {"retrieval": time.perf_counter() - clock}
@@ -193,7 +203,7 @@ class Answerer:
                 return answer
             log.info("planning failed: quick answer instead")
 
-        found = self.retriever(understood.query, self.k)
+        found = [*self.retriever(understood.query, self.k), *self._by_idea(understood)]
         sources = _unique([*named, *found, *carried])
         seconds = {"retrieval": time.perf_counter() - clock}
         step("sources", {"articles": [a.id for a in sources]})
@@ -246,6 +256,13 @@ class Answerer:
         if len(leads) < len(suggested):
             log.info("plan leads: %d of %d found", len(leads), len(suggested))
         return leads
+
+    def _by_idea(self, understood) -> list[Article]:
+        """The best articles for each legal idea, when the question raises several."""
+        ideas = list(dict.fromkeys(" ".join(e.legal_ar) for e in understood.terms))
+        if len(ideas) < 2:
+            return []  # one idea: the question's own search already targets it
+        return [a for idea in ideas[: self.max_ideas] for a in self.retriever(idea, self.per_idea)]
 
     def _search(self, query: str, k: int, done: bool = False) -> list[Article]:
         """One search of the plan; plan queries go through the Darija lexicon too."""

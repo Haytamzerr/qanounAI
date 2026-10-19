@@ -119,3 +119,22 @@ def test_a_plan_without_suggested_articles_still_works():
     llm = ScriptedLLM(PLAN, SECTIONS)  # an older plan without "articles"
     answer = Answerer(RecordingRetriever(), llm).answer("Licencié ?", mode="analysis")
     assert answer.mode == "analysis" and answer.leads == []
+
+
+def test_each_legal_idea_of_a_darija_question_gets_its_own_search():
+    """o08: "I hit him / he started / prison?" → one search per idea, so self-defence is found."""
+    retriever = RecordingRetriever()
+    llm = ScriptedLLM(ok("Un jour et demi par mois [1]."))
+    Answerer(retriever, llm).answer("wach ila darbt chi wa7ed w howa bda bdarb, ghadi n7bes?")
+    assert retriever.queries[0].startswith("wach ila darbt")  # the question's own search first
+    ideas = retriever.queries[1:]
+    assert any("الدفاع الشرعي" in q and "الحبس" not in q for q in ideas)
+    assert len(ideas) == 3
+
+
+def test_a_question_with_one_legal_idea_gets_one_search():
+    retriever = RecordingRetriever()
+    Answerer(retriever, ScriptedLLM(ok("Un jour et demi par mois [1]."))).answer(
+        "Combien de jours de congé par mois ?"
+    )
+    assert len(retriever.queries) == 1
