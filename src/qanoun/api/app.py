@@ -133,6 +133,15 @@ def create_app(
                 state["answerer"] = (answerer_factory or default_answerer)()
             return state["answerer"]
 
+    @app.middleware("http")
+    async def always_fresh_interface(request, call_next):
+        """The page and its files are small: make the browser re-check them on every load, so
+        an update (`git pull` + restart) shows at once instead of an old cached copy."""
+        response = await call_next(request)
+        if request.url.path == "/" or request.url.path.startswith("/static/"):
+            response.headers["Cache-Control"] = "no-cache"
+        return response
+
     app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
     @app.get("/", include_in_schema=False)

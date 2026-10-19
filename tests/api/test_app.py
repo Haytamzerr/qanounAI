@@ -148,3 +148,9 @@ def test_stream_reports_the_plan():
     client = client_with(plan, sections)
     text = client.post("/ask/stream", json={"question": "Ma situation ?", "mode": "analysis"}).text
     assert "event: planned" in text and "العطلة" in text
+
+
+def test_the_interface_is_never_served_stale():
+    client = client_with()
+    assert client.get("/").headers["cache-control"] == "no-cache"
+    assert client.get("/static/app.js").headers["cache-control"] == "no-cache"
