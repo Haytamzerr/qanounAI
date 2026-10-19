@@ -138,3 +138,15 @@ def test_a_question_with_one_legal_idea_gets_one_search():
         "Combien de jours de congé par mois ?"
     )
     assert len(retriever.queries) == 1
+
+
+def test_a_single_word_idea_is_a_party_not_an_issue():
+    """o05: rent · المكري · repairs · paying rent → the landlord alone is not searched."""
+    retriever = RecordingRetriever()
+    Answerer(retriever, ScriptedLLM(ok("Un jour et demi par mois [1]."))).answer(
+        "كريت شقة، مول الدار ما بغاش يصلح الما اللي كيقطر من السقف، "
+        "واش نقدر ما نخلصش الكرا حتى يصلح؟"
+    )
+    ideas = retriever.queries[1:]
+    assert "المكري" not in ideas and len(ideas) == 3
+    assert any("الإصلاحات" in q for q in ideas) and any(q.startswith("أداء") for q in ideas)

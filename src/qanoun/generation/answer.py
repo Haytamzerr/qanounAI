@@ -260,6 +260,7 @@ class Answerer:
     def _by_idea(self, understood) -> list[Article]:
         """The best articles for each legal idea, when the question raises several."""
         ideas = list(dict.fromkeys(" ".join(e.legal_ar) for e in understood.terms))
+        ideas = [i for i in ideas if len(i.split()) > 1]  # "المكري" names a party, not an issue
         if len(ideas) < 2:
             return []  # one idea: the question's own search already targets it
         return [a for idea in ideas[: self.max_ideas] for a in self.retriever(idea, self.per_idea)]
