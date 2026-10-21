@@ -232,6 +232,11 @@ The home page shows five themes; "all themes" opens the fifteen (![all themes](d
 | ![Telling what happened](docs/screenshots/situation-story.png) | ![Reviewing the file](docs/screenshots/situation-review.png) | ![Phone](docs/screenshots/situation-mobile.png) |
 | --- | --- | --- |
 | ![The analysis](docs/screenshots/situation-result.png) | | |
+
+Under the analysis, three tools turn it into action (decisions 82–86): **legal deadlines** checked against the article's own words, with the last day and a calendar reminder; **calculators** (dismissal indemnity, damages, annual leave, rent increase) whose rates come from the articles and whose arithmetic is tested code; and **letters** (notice, complaint, request) drafted from the cited articles only, with blanks for what we don't know, as Word or print. The file can also start from a ready-made situation or from the person's own contract or letter. Every technique is explained in [docs/learning/situation-tools.md](docs/learning/situation-tools.md).
+
+| ![Starting from a situation or a document](docs/screenshots/situation-start.png) | ![What the document says](docs/screenshots/situation-document.png) | ![Deadlines, calculator, letter](docs/screenshots/situation-tools.png) |
+| --- | --- | --- |
 Answers can also correct a wrong premise ("l'article 400 du Code pénal…" is looked up directly),
 ask a short question back when the question is too vague, and the article panel says how recent
 the text is.

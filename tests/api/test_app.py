@@ -174,3 +174,63 @@ def test_ask_accepts_what_the_person_selected_and_limits_it():
 def test_the_interface_has_the_situation_page():
     page = client_with().get("/").text
     assert 'href="#situation"' in page and 'id="builder"' in page and 'id="dossier"' in page
+
+
+def test_calculate_endpoint():
+    client = client_with()
+    out = client.post(
+        "/calculate",
+        json={"tool": "abusive_dismissal", "inputs": {"years": 7, "monthly_wage": 5000}},
+    ).json()
+    assert out["value"] == 52500 and "loi-65-99-ar-art-41" in out["articles"]
+    assert client.post("/calculate", json={"tool": "nope", "inputs": {}}).status_code == 422
+
+
+def test_letter_endpoints():
+    reply = {
+        "subject": "طلب",
+        "recipient": "[المشغل]",
+        "body": "طبقا للمادة 231 من مدونة الشغل.",
+        "used_sources": [1],
+    }
+    client = client_with(reply)
+    body = {
+        "kind": "request",
+        "language": "ar",
+        "story": "بغيت الكونجي",
+        "sources": ["loi-65-99-ar-art-231"],
+    }
+    out = client.post("/letter", json=body).json()
+    assert out["verified"] and out["cited"] == ["loi-65-99-ar-art-231"]
+    assert client.post("/letter", json=dict(body, sources=["nope"])).status_code == 422
+    docx = client.post("/letter.docx", json={"subject": "s", "body": "b", "language": "fr"})
+    assert docx.status_code == 200 and docx.content[:2] == b"PK"
+
+
+def test_read_document_endpoint():
+    import base64
+
+    reading = {
+        "kind": "receipt",
+        "summary": "s",
+        "story": "خلصت الكرا",
+        "theme": "home",
+        "dates": [],
+        "amounts": [],
+        "clauses": [],
+    }
+    client = client_with(reading)
+    data = base64.b64encode(b"\x89PNG photo").decode()
+    out = client.post("/read-document", json={"mime": "image/png", "data": data}).json()
+    assert out["kind"] == "receipt" and out["read_as"] == "image"
+    assert (
+        client.post("/read-document", json={"mime": "image/png", "data": "@@@"}).status_code == 422
+    )
+
+
+def test_the_interface_has_the_situation_tools():
+    client = client_with()
+    page, script = client.get("/").text, client.get("/static/app.js").text
+    assert 'id="doc-input"' in page and 'id="tools"' in page and 'id="listen"' in page
+    for name in ("SCENARIOS", "deadlinesTool", "calculatorsTool", "letterTool", "downloadIcs"):
+        assert name in script

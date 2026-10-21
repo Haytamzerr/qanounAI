@@ -109,8 +109,26 @@ Write each field in {language}, 1 to 4 short sentences each:
 - "law": what the law says on each question raised, with sources;
 - "application": what it means for this person, and the conditions that would change it;
 - "steps": what they can do, in order (who to notify, which court or office, deadlines);
-- "missing": the facts that would change the answer, as short questions to the person.
+- "missing": the facts that would change the answer, as short questions to the person;
+- "deadlines": every time limit the sources set that matters here (to act, to reply, to go to
+  court, to wait before acting), each with "what" (in {language}), "from_event" (from when it
+  runs, in {language}), "amount" and "unit" (days, months, years or hours), "source" (its
+  number) and "quote": the article's exact words that state it, copied character for character.
+  None if no source sets one; never a time limit from memory.
 {language_rule}"""
+
+DEADLINE_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "what": {"type": "STRING"},
+        "from_event": {"type": "STRING"},
+        "amount": {"type": "INTEGER"},
+        "unit": {"type": "STRING", "enum": ["days", "months", "years", "hours"]},
+        "source": {"type": "INTEGER"},
+        "quote": {"type": "STRING"},
+    },
+    "required": ["what", "amount", "unit", "source", "quote"],
+}
 
 ANALYSIS_SCHEMA = {
     "type": "OBJECT",
@@ -122,6 +140,7 @@ ANALYSIS_SCHEMA = {
         "steps": {"type": "STRING"},
         "missing": {"type": "STRING"},
         "used_sources": {"type": "ARRAY", "items": {"type": "INTEGER"}},
+        "deadlines": {"type": "ARRAY", "items": DEADLINE_SCHEMA},
     },
     "required": ["status", "situation", "law", "application", "steps", "missing", "used_sources"],
 }

@@ -496,7 +496,7 @@ svg { flex: none; }
 
 @media (max-width: 880px) {
   .builder-inner { grid-template-columns: 1fr; }
-  .dossier { position: static; }
+  .dossier { position: relative; top: 0; }  /* relative, not static: it anchors its gold edge */
   .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 520px) {
@@ -519,4 +519,87 @@ svg { flex: none; }
 .review-steps li::before {
   content: counter(rv); flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px;
   background: var(--gold-soft); color: var(--gold); font: 800 14px/1 var(--font-ui);
+}
+
+/* ---------- situation tools: starters, document, deadlines, calculators, letters (82–86) ---------- */
+.starters { margin: 18px 0 22px; padding: 16px; border: 1px dashed var(--line); border-radius: var(--radius-l); }
+.starters h3 { margin: 0 0 10px; font: 700 15px/1.4 var(--font-display); color: var(--slate); }
+.chip.scenario { padding: 7px 14px; font-size: 14px; }
+.doc-btn {
+  display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 14px; padding: 12px 14px;
+  border: 1px solid var(--gold); border-radius: var(--radius-s); background: var(--gold-soft); color: var(--ink);
+  font-weight: 700; text-align: start; transition: filter 0.2s;
+}
+.doc-btn:hover { filter: brightness(1.04); }
+.doc-btn:disabled { opacity: 0.6; cursor: progress; }
+.doc-btn svg { width: 22px; height: 22px; fill: none; stroke: var(--gold); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.doc-note { margin: 8px 0 0; font-size: 13px; color: var(--slate); }
+.exact-date { display: inline-flex; align-items: center; gap: 10px; margin-top: 18px; font-size: 15px; color: var(--slate); }
+input[type="date"], .calc-form input[type="number"], .calc-form select {
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-s); background: var(--sheet); color: var(--ink); font: inherit;
+}
+input[type="date"]:focus, .calc-form input:focus, .calc-form select:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+
+.doc-panel { margin-top: 22px; padding: 16px; border-radius: var(--radius-s); background: var(--sheet); border: 1px solid var(--line); }
+.doc-panel h3 { margin: 0 0 6px !important; }
+.doc-panel p { margin: 0 0 8px; font-size: 15px; }
+.doc-facts { color: var(--slate); }
+.clauses { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.clauses q { display: block; padding-inline-start: 10px; border-inline-start: 3px solid var(--gold); font-size: 14px; color: var(--slate); quotes: none; }
+.clauses span { display: block; font-size: 15px; margin-top: 2px; }
+
+.tools { display: grid; gap: 14px; margin-top: 18px; }
+.tools:empty { display: none; }
+.tool { padding: 16px; border: 1px solid var(--line); border-radius: var(--radius-s); background: var(--paper); }
+.tool > h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font: 700 17px/1.4 var(--font-display); }
+.tool > h3 svg { width: 20px; height: 20px; fill: none; stroke: var(--gold); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+.deadline { padding: 12px 0; border-top: 1px solid var(--line); }
+.deadline:first-of-type { border-top: 0; padding-top: 0; }
+.deadline-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.deadline-head .amount { font: 800 22px/1.2 var(--font-display); color: var(--gold); white-space: nowrap; }
+.deadline-from { margin: 2px 0 0; font-size: 14px; color: var(--slate); }
+.deadline blockquote { margin: 8px 0; padding-inline-start: 10px; border-inline-start: 3px solid var(--line); font-size: 14px; color: var(--slate); }
+.deadline-calc { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.deadline-calc label { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--slate); }
+.due { margin: 0; font-size: 15px; }
+.due .soon, .due .late { color: var(--alert); font-weight: 700; }
+
+.calc-tabs { margin-bottom: 12px; }
+.calc-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px 14px; align-items: end; }
+.calc-form label { display: grid; gap: 4px; font-size: 14px; color: var(--slate); }
+.calc-form label.check { display: flex; align-items: center; gap: 8px; }
+.calc-form input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--gold); }
+.calc-form .ask-btn { justify-content: center; }
+.calc-out:not(:empty) { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.calc-value { margin: 0 0 6px; font: 800 30px/1.2 var(--font-display); color: var(--ink); }
+.calc-value small { font-size: 16px; color: var(--slate); }
+.calc-value.no { font-size: 17px; color: var(--alert); }
+.calc-steps { margin: 0 0 8px; padding-inline-start: 22px; font-size: 15px; }
+.calc-notes { margin: 0 0 8px; padding: 0; list-style: none; font-size: 13px; color: var(--slate); }
+.calc-notes li::before { content: "· "; color: var(--gold); }
+.calc-src { margin: 0; font-size: 13px; color: var(--slate); }
+
+.chips.small .chip { padding: 5px 12px; font-size: 13px; }
+.letter-lang { margin: 10px 0 0; }
+.letter-out:not(:empty) { margin-top: 14px; }
+.letter-paper {
+  padding: 22px 24px; background: #fffefb; color: #1a2233; border: 1px solid var(--line); border-radius: 4px;
+  box-shadow: var(--shadow); font-size: 16px; line-height: 1.8;
+}
+.letter-paper p { margin: 0 0 0.6em; }
+.letter-paper mark { background: rgba(176, 138, 62, 0.22); color: inherit; border-radius: 3px; padding: 0 2px; }
+.muted { color: var(--slate); }
+
+@media print {
+  body.printing-letter * { visibility: hidden; }
+  body.printing-letter .print-me, body.printing-letter .print-me * { visibility: visible; }
+  body.printing-letter .print-me { position: absolute; inset: 0 0 auto 0; box-shadow: none; border: 0; }
+  body.printing-letter .print-me mark { background: none; }
+  .tools { display: none; }
+  body.printing-letter .tools { display: grid; }
+}
+@media (max-width: 520px) {
+  .deadline-calc { flex-direction: column; align-items: flex-start; }
+  .letter-paper { padding: 16px; }
 }

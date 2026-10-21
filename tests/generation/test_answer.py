@@ -15,7 +15,7 @@ class ScriptedLLM:
         self.replies = list(replies)
         self.prompts: list[tuple[str, str]] = []
 
-    def generate(self, system, user, *, json_schema=None):
+    def generate(self, system, user, *, json_schema=None, attachments=()):
         self.prompts.append((system, user))
         reply = self.replies.pop(0)
         return reply if isinstance(reply, str) else json.dumps(reply, ensure_ascii=False)
@@ -129,3 +129,10 @@ def test_style_rules():
     assert style_problems("3ndek l7e9 f lconji [1].", "darija-latn") == []
     assert style_problems("ila kano mtوفرin [1]", "darija-latn")
     assert style_problems("(version published on Adala on 2026-07-28)", "darija-ar")
+
+
+def test_an_article_written_with_the_prefix_lam_is_checked_too():
+    from qanoun.generation.citations import ARTICLE_MENTION, check
+
+    assert ARTICLE_MENTION.findall("طبقا للمادة 999 وللفصل 400") == ["999", "400"]
+    assert check("طبقا للمادة 999 [1].", ARTICLES[1:2], [1]).problems

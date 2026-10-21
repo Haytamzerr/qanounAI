@@ -127,6 +127,102 @@ const STRINGS = {
   },
 };
 
+// ---------- strings for the situation tools (decisions 82–86) ----------
+Object.assign(STRINGS.ar, {
+  listen: "استمع", stopListen: "إيقاف", startFrom: "ابدأ من وضعية شائعة", readDoc: "اقرأ وثيقتي: عقد، رسالة، حكم",
+  readDocNote: "تُرسل الوثيقة إلى Gemini من Google لقراءتها. أخفِ الأرقام الشخصية إن استطعت.", reading: "نقرأ الوثيقة…",
+  docTitle: "ما تقوله وثيقتك", docImage: "قُرئت من صورة: قارنها بالوثيقة قبل الاعتماد عليها.", fileDoc: "الوثيقة",
+  exactDate: "التاريخ بالضبط (اختياري)", deadlinesTitle: "الآجال القانونية", deadlineFrom: "ابتداء من", startDate: "يبدأ الأجل في",
+  dueOn: (d) => `آخر أجل: ${d}`, daysLeft: (n) => (n >= 0 ? `بقي ${n} يوما` : `انقضى الأجل منذ ${-n} يوما`),
+  addCalendar: "أضف إلى التقويم", units: { days: "يوم", months: "شهر", years: "سنة", hours: "ساعة" },
+  calcTitle: "احسب", calculate: "احسب", fromArticles: "المصدر:", notEligible: "لا حق في هذا في حالتك:",
+  calcs: { dismissal_indemnity: "التعويض عن الفصل", abusive_dismissal: "التعويض عن الضرر (فصل تعسفي)", annual_leave: "أيام العطلة السنوية", rent_increase: "أقصى زيادة في الكراء" },
+  inputs: { years: "سنوات العمل", monthly_wage: "الأجرة الشهرية (درهم)", months_worked: "الشهور المشتغلة هذه السنة", years_of_service: "سنوات العمل", monthly_rent: "الكراء الشهري (درهم)", years_since_last_revision: "سنوات منذ العقد أو آخر زيادة", use: "نوع المحل", agricultural: "نشاط فلاحي", representative: "مندوب أجراء أو ممثل نقابي", under_18: "أقل من 18 سنة" },
+  uses: { housing: "سكنى", professional: "مهني" },
+  calcSteps: {
+    hourly_wage: (v, d) => `الأجر بالساعة: ${v} درهم (الأجرة × 12 ÷ ${d.hours_per_year} ساعة في السنة)`,
+    band: (v, d) => `${d.years} سنة × ${d.hours} ساعة (من السنة ${d.from} ${d.to ? `إلى ${d.to}` : "فما فوق"}) = ${v} درهم`,
+    representative: (v) => `+100% لمندوب الأجراء أو الممثل النقابي: ${v} درهم`,
+    months: (v, d) => `${d.years} سنة × ${d.per_year} شهر = ${v} شهر من الأجرة`,
+    cap: (v) => `السقف القانوني: ${v}`, per_month: (v, d) => `${d.months} شهر × ${d.per_month} يوم = ${v} يوم`,
+    seniority: (v, d) => `+1.5 يوم عن كل 5 سنوات (${d.periods}) = ${v} يوم`, increase: (v, d) => `الزيادة القصوى ${d.rate}%: ${v} درهم`,
+    too_early: (v, d) => `لا زيادة قبل ${d.years} سنوات: بقي ${v} سنة`,
+  },
+  calcNotes: { under_six_months: "لا يُستحق قبل ستة أشهر من الشغل.", average_52_weeks: "يُحسب على معدل أجور 52 أسبوعا الأخيرة: أدخل هذا المعدل إن كان مختلفا.", part_year: "جزء السنة حُسب بالتناسب، وقد تحسبه المحكمة بطريقة أخرى.", minimum_wage: "لا يقل الأجر المعتمد عن الحد الأدنى القانوني للأجر.", court_decides: "هذا ما يسمح به القانون كحد أقصى، والمحكمة هي التي تحدد المبلغ.", capped: "طُبق السقف القانوني.", working_days: "أيام شغل فعلي، لا أيام تقويمية.", better_contract: "قد ينص العقد أو الاتفاقية الجماعية على أكثر.", too_early: "لم تمر بعد ثلاث سنوات منذ العقد أو آخر مراجعة.", agreement: "النسبة حد أقصى، ويمكن الاتفاق على أقل." },
+  letterTitle: "اكتب رسالة", letterKinds: { notice: "إشعار / إنذار", complaint: "شكاية", request: "طلب" }, letterIn: { ar: "بالعربية", fr: "بالفرنسية" },
+  writingLetter: "نكتب الرسالة…", letterDraft: "مسودة: راجعها وأكمل ما بين [ ] قبل التوقيع.", downloadWord: "تحميل Word", printLetter: "طباعة الرسالة",
+});
+Object.assign(STRINGS.fr, {
+  listen: "Écouter", stopListen: "Arrêter", startFrom: "Partir d'une situation courante", readDoc: "Lire mon document : contrat, lettre, jugement",
+  readDocNote: "Le document est envoyé à Gemini (Google) pour être lu. Masquez les numéros personnels si vous le pouvez.", reading: "Lecture du document…",
+  docTitle: "Ce que dit votre document", docImage: "Lu depuis une image : comparez avec le document avant de vous y fier.", fileDoc: "Document",
+  exactDate: "Date exacte (facultatif)", deadlinesTitle: "Délais légaux", deadlineFrom: "À compter de", startDate: "Le délai commence le",
+  dueOn: (d) => `Échéance : ${d}`, daysLeft: (n) => (n >= 0 ? `${n} jours restants` : `Délai dépassé de ${-n} jours`),
+  addCalendar: "Ajouter au calendrier", units: { days: "jours", months: "mois", years: "ans", hours: "heures" },
+  calcTitle: "Calculer", calculate: "Calculer", fromArticles: "Source :", notEligible: "Pas de droit dans votre cas :",
+  calcs: { dismissal_indemnity: "Indemnité de licenciement", abusive_dismissal: "Dommages pour licenciement abusif", annual_leave: "Jours de congé annuel", rent_increase: "Hausse de loyer maximale" },
+  inputs: { years: "Années de travail", monthly_wage: "Salaire mensuel (MAD)", months_worked: "Mois travaillés cette année", years_of_service: "Années de travail", monthly_rent: "Loyer mensuel (MAD)", years_since_last_revision: "Années depuis le bail ou la dernière hausse", use: "Type de local", agricultural: "Activité agricole", representative: "Délégué du personnel ou syndical", under_18: "Moins de 18 ans" },
+  uses: { housing: "Habitation", professional: "Professionnel" },
+  calcSteps: {
+    hourly_wage: (v, d) => `Salaire horaire : ${v} MAD (salaire × 12 ÷ ${d.hours_per_year} h par an)`,
+    band: (v, d) => `${d.years} an(s) × ${d.hours} h (années ${d.from}${d.to ? `–${d.to}` : " et plus"}) = ${v} MAD`,
+    representative: (v) => `+100 % pour un délégué ou représentant syndical : ${v} MAD`,
+    months: (v, d) => `${d.years} an(s) × ${d.per_year} mois = ${v} mois de salaire`,
+    cap: (v) => `Plafond légal : ${v}`, per_month: (v, d) => `${d.months} mois × ${d.per_month} jour(s) = ${v} jours`,
+    seniority: (v, d) => `+1,5 jour par période de 5 ans (${d.periods}) = ${v} jours`, increase: (v, d) => `Hausse maximale de ${d.rate} % : ${v} MAD`,
+    too_early: (v, d) => `Pas de hausse avant ${d.years} ans : encore ${v} an(s)`,
+  },
+  calcNotes: { under_six_months: "Pas de droit avant six mois de travail.", average_52_weeks: "Calculé sur la moyenne des salaires des 52 dernières semaines : saisissez cette moyenne si elle diffère.", part_year: "La fraction d'année est comptée au prorata ; un tribunal peut la compter autrement.", minimum_wage: "Le salaire retenu ne peut être inférieur au salaire minimum légal.", court_decides: "C'est le maximum que permet la loi ; le tribunal fixe le montant.", capped: "Le plafond légal s'applique.", working_days: "Jours de travail effectif, pas des jours calendaires.", better_contract: "Le contrat ou la convention collective peut prévoir plus.", too_early: "Trois ans ne sont pas encore passés depuis le bail ou la dernière révision.", agreement: "Le taux est un maximum ; une hausse plus faible peut être convenue." },
+  letterTitle: "Rédiger une lettre", letterKinds: { notice: "Mise en demeure", complaint: "Plainte", request: "Demande" }, letterIn: { ar: "En arabe", fr: "En français" },
+  writingLetter: "Rédaction de la lettre…", letterDraft: "Brouillon : relisez-le et complétez les [ ] avant de signer.", downloadWord: "Télécharger Word", printLetter: "Imprimer la lettre",
+});
+Object.assign(STRINGS.darija, {
+  listen: "سمع", stopListen: "حبس", startFrom: "بدا من شي وضعية معروفة", readDoc: "قرا الوثيقة ديالي: عقد، برية، حكم",
+  readDocNote: "الوثيقة كتمشي لـ Gemini ديال Google باش يقراها. خبي الأرقام الشخصية إلا قدرتي.", reading: "كنقراو الوثيقة…",
+  docTitle: "شنو كتقول الوثيقة ديالك", docImage: "تقرات من تصويرة: قارنها مع الوثيقة قبل ما تعتامد عليها.", fileDoc: "الوثيقة",
+  exactDate: "التاريخ بالضبط (إلا عرفتيه)", deadlinesTitle: "الآجال ديال القانون", deadlineFrom: "من", startDate: "الأجل كيبدا نهار",
+  dueOn: (d) => `آخر نهار: ${d}`, daysLeft: (n) => (n >= 0 ? `باقي ${n} نهار` : `فات الأجل بـ ${-n} نهار`),
+  addCalendar: "زيدها للأجندة", units: { days: "نهار", months: "شهر", years: "عام", hours: "ساعة" },
+  calcTitle: "حسب", calculate: "حسب", fromArticles: "المصدر:", notEligible: "ما عندكش هاد الحق فالحالة ديالك:",
+  calcs: { dismissal_indemnity: "التعويض على الطرد", abusive_dismissal: "التعويض على الطرد التعسفي", annual_leave: "أيام الكونجي", rent_increase: "أكبر زيادة فالكرا" },
+  inputs: { years: "شحال من عام خدمتي", monthly_wage: "الخلصة فالشهر (درهم)", months_worked: "شحال من شهر خدمتي هاد العام", years_of_service: "شحال من عام خدمتي", monthly_rent: "الكرا فالشهر (درهم)", years_since_last_revision: "شحال من عام من العقد ولا آخر زيادة", use: "نوع المحل", agricultural: "خدمة فلاحية", representative: "مندوب ولا ممثل نقابي", under_18: "عندي أقل من 18 عام" },
+  uses: { housing: "سكنى", professional: "مهني" },
+  calcSteps: {
+    hourly_wage: (v, d) => `الخلصة فالساعة: ${v} درهم (الخلصة × 12 ÷ ${d.hours_per_year} ساعة فالعام)`,
+    band: (v, d) => `${d.years} عام × ${d.hours} ساعة (من العام ${d.from} ${d.to ? `حتى ${d.to}` : "ولفوق"}) = ${v} درهم`,
+    representative: (v) => `+100% للمندوب ولا الممثل النقابي: ${v} درهم`,
+    months: (v, d) => `${d.years} عام × ${d.per_year} شهر = ${v} شهر ديال الخلصة`,
+    cap: (v) => `السقف ديال القانون: ${v}`, per_month: (v, d) => `${d.months} شهر × ${d.per_month} نهار = ${v} نهار`,
+    seniority: (v, d) => `+1.5 نهار على كل 5 سنين (${d.periods}) = ${v} نهار`, increase: (v, d) => `أكبر زيادة ${d.rate}%: ${v} درهم`,
+    too_early: (v, d) => `ما كايناش زيادة قبل ${d.years} سنين: باقي ${v} عام`,
+  },
+  calcNotes: { under_six_months: "ما كاينش هاد الحق قبل ستة شهور ديال الخدمة.", average_52_weeks: "كيتحسب على المعدل ديال الخلصة فـ52 سيمانة اللخرين: دخل هاد المعدل إلا كان مختلف.", part_year: "الجزء ديال العام تحسب بالنسبة، والمحكمة تقدر تحسبو بطريقة أخرى.", minimum_wage: "الخلصة اللي كتعتامد ما تقدرش تكون تحت السميك.", court_decides: "هادا هو الأقصى اللي كيسمح بيه القانون، والمحكمة هي اللي كتحدد المبلغ.", capped: "تطبق السقف ديال القانون.", working_days: "أيام ديال الخدمة، ماشي أيام الكالاندري.", better_contract: "العقد ولا الاتفاقية الجماعية يقدرو يعطيو كثر.", too_early: "مازال ما دازوش ثلاث سنين من العقد ولا آخر زيادة.", agreement: "النسبة هي الأقصى، وتقدرو تتافقو على أقل." },
+  letterTitle: "كتب برية", letterKinds: { notice: "إشعار ولا إنذار", complaint: "شكاية", request: "طلب" }, letterIn: { ar: "بالعربية", fr: "بالفرنساوية" },
+  writingLetter: "كنكتبو البرية…", letterDraft: "مسودة: راجعها وكمل اللي بين [ ] قبل ما تسني.", downloadWord: "حمل Word", printLetter: "طبع البرية",
+});
+
+// Common situations: one tap fills the file, then the person adjusts it (decision 85)
+const SCENARIOS = [
+  { theme: "work", role: 0, proofs: [0], when: 1, goals: [0, 1], label: ["فصل دون سبب", "Licencié sans motif", "جراو عليا بلا سبب"],
+    story: ["فصلني المشغل من العمل دون سبب ولا إخطار بعد سبع سنوات من الشغل.", "Mon employeur m'a licencié sans motif ni préavis après sept ans de travail.", "الباطرون جرا عليا بلا سبب وبلا ما يعلمني، من بعد سبع سنين ديال الخدمة."] },
+  { theme: "work", role: 0, proofs: [1], when: 1, goals: [1, 4], label: ["أجرة غير مؤداة", "Salaire impayé", "ما خلصونيش"],
+    story: ["لم يؤد لي المشغل أجرتي منذ شهرين رغم أنني أعمل بشكل عادي.", "Mon employeur ne me paie plus depuis deux mois alors que je travaille normalement.", "الباطرون ما خلصنيش هادي جوج شهور وأنا خدام عادي."] },
+  { theme: "home", role: 0, proofs: [0, 2], when: 4, goals: [0, 4], label: ["المالك لا يصلح", "Le propriétaire ne répare pas", "مول الدار ما بغاش يصلح"],
+    story: ["أكتري شقة منذ سنتين، والسقف صار يقطر، والمكري يرفض الإصلاح.", "Je loue un appartement depuis deux ans, le plafond fuit et le propriétaire refuse de réparer.", "كاري شقة هادي عامين، السقف ولا كيقطر، ومول الدار ما بغاش يصلح."] },
+  { theme: "home", role: 0, proofs: [0], when: 0, goals: [0, 3], label: ["إفراغ دون حكم", "Expulsion sans jugement", "بغا يخرجني بلا حكم"],
+    story: ["يريد المكري إخراجي من الشقة الآن دون أي حكم قضائي.", "Mon propriétaire veut m'expulser tout de suite, sans décision de justice.", "مول الدار بغا يخرجني دابا من الدار بلا حتى حكم."] },
+  { theme: "contract", role: 0, proofs: [2], when: 2, goals: [1, 4], label: ["دين لم يُرد", "Dette non remboursée", "سلفت وما ردوش"],
+    story: ["أقرضت شخصا مبلغا من المال ولم يرده رغم وعوده.", "J'ai prêté de l'argent à quelqu'un qui ne me rembourse pas malgré ses promesses.", "سلفت شي فلوس لواحد وما بغاش يردهم واخا وعدني."] },
+  { theme: "contract", role: 0, proofs: [1], when: 1, goals: [1, 4], label: ["شيك بدون رصيد", "Chèque sans provision", "شيك بلا رصيد"],
+    story: ["تسلمت شيكا مقابل بضاعة، ورفضه البنك لعدم وجود رصيد.", "J'ai reçu un chèque pour une marchandise et la banque l'a refusé faute de provision.", "خداو ليا شيك على سلعة والبنك رفضو حيت ما فيهش الرصيد."] },
+  { theme: "consumer", role: 0, proofs: [1], when: 0, goals: [1], label: ["منتوج معيب", "Produit défectueux", "حاجة خاسرة"],
+    story: ["اشتريت هاتفا فتبين أنه معيب، والبائع يرفض استبداله أو إرجاع ثمنه.", "J'ai acheté un téléphone défectueux et le vendeur refuse de l'échanger ou de me rembourser.", "شريت تيليفون طلع خاسر، والبياع ما بغاش يبدلو ولا يرجع ليا الفلوس."] },
+  { theme: "road", role: 1, proofs: [3], when: 1, goals: [1, 4], label: ["حادثة سير", "Accident de la route", "حادثة"],
+    story: ["صدمتني سيارة وأنا أمشي، وأصبت بجروح ولم أعد أعمل منذ أسابيع.", "J'ai été renversé par une voiture en marchant ; je suis blessé et ne travaille plus depuis des semaines.", "ضربتني طوموبيل وأنا ماشي على رجلي، تجرحت وهادي سيمانات ما خدمتش."] },
+  { theme: "family", role: 0, proofs: [], when: 2, goals: [0, 1], label: ["الحضانة والنفقة", "Garde et pension", "الحضانة والنفقة"],
+    story: ["طلقني زوجي، وأريد حضانة أطفالي والنفقة.", "Mon mari a divorcé ; je veux la garde de nos enfants et une pension.", "راجلي طلقني، وبغيت الحضانة ديال الولاد والنفقة."] },
+];
+
 const ICONS = {
   work: '<path d="M4 8h16v11H4zM9 8V5h6v3M4 13h16"/>',
   family: '<circle cx="8" cy="7" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3 2.3-5.5 5-5.5s5 2.5 5 5.5M13.5 20c0-2.4 1.6-4.3 3.5-4.3S20.5 17.6 20.5 20"/>',
@@ -452,6 +548,8 @@ function renderAnswer(data, animate) {
   });
   const total = Object.values(data.seconds).reduce((a, b) => a + b, 0);
   $("meta").textContent = t("seconds", total.toFixed(1));
+  renderTools(data);
+  setupListen(data);
 }
 
 // "1) Write to the landlord. 2) Wait a month…" → items, for the checklist
@@ -574,7 +672,7 @@ const ROLES = {
 const BUILDER_THEMES = ["work", "family", "home", "penal", "road", "consumer", "contract", "other"];
 const LANG_INDEX = { ar: 0, fr: 1, darija: 2 };
 const STEPS = ["theme", "role", "story", "when", "goal", "review"];
-const file = { theme: null, role: null, story: "", proofs: [], when: null, goals: [] };
+const file = { theme: null, role: null, story: "", proofs: [], when: null, date: "", goals: [], doc: null };
 let stepIndex = 0;
 
 const themeName = (key) => key === "other" ? t("otherTheme") : TOPICS.find((x) => x.icon === key)?.name[lang];
@@ -605,6 +703,17 @@ function renderBuilder() {
   box.append(grid);
 
   if (step === "theme") {
+    const starters = document.createElement("div");
+    starters.className = "starters";
+    starters.innerHTML = `<h3>${t("startFrom")}</h3><div class="chips" id="b-scenarios"></div>
+      <button type="button" class="doc-btn" id="b-doc"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7zM14 3v4h4M12 11v6M9 14l3 3 3-3"/></svg><span>${t("readDoc")}</span></button>
+      <p class="doc-note" id="b-doc-status">${t("readDocNote")}</p>`;
+    box.insertBefore(starters, grid);
+    SCENARIOS.forEach((sc) => starters.querySelector("#b-scenarios").append(chip(escapeHtml(sc.label[LANG_INDEX[lang]]), false, () => {
+      Object.assign(file, { theme: sc.theme, role: sc.role, story: sc.story[LANG_INDEX[lang]], proofs: [...sc.proofs], when: sc.when, goals: [...sc.goals], doc: null });
+      renderDossier(); goStep(STEPS.indexOf("story"));
+    }, "scenario")));
+    starters.querySelector("#b-doc").addEventListener("click", () => $("doc-input").click());
     grid.className = "tiles";
     BUILDER_THEMES.forEach((key) => {
       const icon = key === "other" ? '<circle cx="12" cy="12" r="8"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6M12 16.5h0"/>' : ICONS[key];
@@ -622,7 +731,7 @@ function renderBuilder() {
         <button type="button" class="ghost mic" id="b-mic" hidden><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>${t("dictate")}</span></button></div>
       <p class="privacy" id="b-privacy" hidden><span>${t("privacy")}</span> <button type="button" class="link" id="b-hide">${t("hide")}</button></p>
       <p class="b-error" id="b-story-error" hidden>${t("minStory")}</p>
-      <h3>${t("qProof")}</h3><div class="chips" id="b-proofs"></div>`;
+      <h3>${t("qProof")}</h3><div class="chips" id="b-proofs"></div>${file.doc ? docPanel(file.doc) : ""}`;
     const area = grid.querySelector("#b-story");
     area.placeholder = t("storyPlaceholder");
     area.value = file.story;
@@ -646,7 +755,14 @@ function renderBuilder() {
     setTimeout(() => area.focus(), 60);
   } else if (step === "when") {
     grid.className = "chips big";
-    t("whens").forEach((label, i) => grid.append(chip(escapeHtml(label), file.when === i, () => { file.when = i; renderDossier(); advanceSoon(); })));
+    t("whens").forEach((label, i) => grid.append(chip(escapeHtml(label), file.when === i, () => { file.when = i; renderDossier(); if (!file.date) advanceSoon(); })));
+    const exact = document.createElement("label");
+    exact.className = "exact-date";
+    exact.innerHTML = `<span>${t("exactDate")}</span><input type="date" id="b-date">`;
+    box.append(exact);
+    const input = exact.querySelector("input");
+    input.value = file.date; input.max = new Date().toISOString().slice(0, 10);
+    input.addEventListener("change", () => { file.date = input.value; renderDossier(); });
   } else if (step === "goal") {
     grid.className = "chips big";
     t("goals").forEach((label, i) => grid.append(chip(escapeHtml(label), file.goals.includes(i), () => {
@@ -679,7 +795,8 @@ function renderDossier() {
   const proofs = file.proofs.map((i) => t("proofs")[i]).join("، ");
   $("dossier-body").innerHTML = line(t("fileTheme"), theme, 0) + line(t("fileRole"), role, 1)
     + line(t("fileStory"), file.story.trim(), 2) + line(t("fileProof"), proofs, 2)
-    + line(t("fileWhen"), file.when !== null ? t("whens")[file.when] : "", 3)
+    + line(t("fileWhen"), [file.when !== null ? t("whens")[file.when] : "", file.date].filter(Boolean).join(" · "), 3)
+    + (file.doc ? line(t("fileDoc"), file.doc.summary, 0) : "")
     + line(t("fileGoal"), file.goals.map((i) => t("goals")[i]).join("، "), 4);
   $("dossier-body").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => goStep(+b.dataset.step)));
 }
@@ -701,7 +818,8 @@ function fileFacts() {
   if (file.theme) out.push(`${t("fileTheme")}: ${themeName(file.theme)}`);
   if (file.theme && file.role !== null) out.push(`${t("fileRole")}: ${roleName(file.theme, file.role)}`);
   if (file.proofs.length) out.push(`${t("fileProof")}: ${file.proofs.map((i) => t("proofs")[i]).join(", ")}`);
-  if (file.when !== null) out.push(`${t("fileWhen")}: ${t("whens")[file.when]}`);
+  if (file.when !== null || file.date) out.push(`${t("fileWhen")}: ${[file.when !== null ? t("whens")[file.when] : "", file.date].filter(Boolean).join(", ")}`);
+  if (file.doc) out.push(`${t("fileDoc")}: ${file.doc.summary}`.slice(0, 200));
   if (file.goals.length) out.push(`${t("fileGoal")}: ${file.goals.map((i) => t("goals")[i]).join(", ")}`);
   return out;
 }
@@ -731,6 +849,279 @@ function setupDictation(area, onChange) {
     r.start(); listening = r;
     mic.classList.add("on"); mic.querySelector("span").textContent = t("listening");
   });
+}
+
+// ---------- reading the person's document (decision 86) ----------
+function docPanel(doc) {
+  const clauses = doc.clauses.map((c) => `<li><q dir="auto">${escapeHtml(c.quote)}</q><span dir="auto">${escapeHtml(c.meaning)}</span></li>`).join("");
+  const facts = [...doc.dates.map((d) => `${d.what}: ${d.date}`), ...doc.amounts.map((a) => `${a.what}: ${a.amount}`)];
+  return `<div class="doc-panel"><h3>${t("docTitle")}</h3><p dir="auto">${escapeHtml(doc.summary)}</p>
+    ${facts.length ? `<p class="doc-facts" dir="auto">${facts.map(escapeHtml).join(" · ")}</p>` : ""}
+    ${clauses ? `<ul class="clauses">${clauses}</ul>` : ""}
+    ${doc.read_as === "image" ? `<p class="doc-note">${t("docImage")}</p>` : ""}</div>`;
+}
+$("doc-input").addEventListener("change", async (e) => {
+  const f = e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  const status = $("b-doc-status");
+  const mime = f.type || (f.name.endsWith(".pdf") ? "application/pdf" : "text/plain");
+  if (status) status.textContent = t("reading");
+  $("b-doc")?.setAttribute("disabled", "");
+  try {
+    const data = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result).split(",")[1] || "");
+      r.onerror = () => reject(new Error(f.name));
+      r.readAsDataURL(f);
+    });
+    const response = await fetch("/read-document", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mime, data, language: lang }),
+    });
+    const out = await response.json();
+    if (!response.ok) throw new Error(out.detail || response.statusText);
+    Object.assign(file, { theme: out.theme, role: null, story: out.story || file.story, doc: out });
+    renderDossier(); goStep(STEPS.indexOf("role"));
+  } catch (error) {
+    if (status) { status.textContent = t("error") + error.message; status.classList.add("b-error"); }
+    $("b-doc")?.removeAttribute("disabled");
+  }
+});
+
+// ---------- tools under an answer: deadlines, calculators, letters (decisions 82–84) ----------
+const CALCULATORS = {
+  dismissal_indemnity: { inputs: [["years", 7], ["monthly_wage", 4000], ["agricultural", false], ["representative", false]],
+    articles: ["41", "43", "51", "52", "53", "55", "59", "61", "62", "63", "65"].map((n) => `loi-65-99-ar-art-${n}`), theme: "work" },
+  abusive_dismissal: { inputs: [["years", 7], ["monthly_wage", 4000]],
+    articles: ["35", "39", "40", "41", "59", "61", "62", "63", "65"].map((n) => `loi-65-99-ar-art-${n}`), theme: "work" },
+  annual_leave: { inputs: [["months_worked", 12], ["years_of_service", 3], ["under_18", false]],
+    articles: ["231", "232", "233", "240", "241", "242", "243", "244", "245"].map((n) => `loi-65-99-ar-art-${n}`), theme: "work" },
+  rent_increase: { inputs: [["monthly_rent", 2000], ["years_since_last_revision", 3], ["use", "housing"]],
+    articles: [...["31", "32", "33", "34", "35", "36"].map((n) => `loi-67-12-ar-art-${n}`), ...["2", "3", "4", "5"].map((n) => `loi-07-03-ar-art-${n}`)], theme: "home" },
+};
+// "2 160,5" in every language: "2.160" (ar-MA) reads like two point sixteen
+const fmtNumber = (v) => Number(v).toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+const fmtDate = (d) => d.toLocaleDateString(lang === "fr" ? "fr-FR" : "ar-MA", { dateStyle: "long" });
+const tool = (cls, icon, title) => {
+  const el = document.createElement("section");
+  el.className = `tool ${cls}`;
+  el.innerHTML = `<h3><svg viewBox="0 0 24 24">${icon}</svg>${title}</h3>`;
+  return el;
+};
+
+function renderTools(data) {
+  const box = $("tools");
+  box.innerHTML = "";
+  const ids = new Set([...data.citations.map((c) => c.id), ...(data.sources || [])]);
+  if (data.deadlines?.length) box.append(deadlinesTool(data));
+  const theme = facts.length ? file.theme : null;
+  const calcs = Object.entries(CALCULATORS).filter(([, c]) => c.articles.some((a) => ids.has(a)) || (data.mode === "analysis" && c.theme === theme));
+  if (calcs.length && data.status === "answered") box.append(calculatorsTool(calcs));
+  if (data.mode === "analysis" && data.status === "answered" && data.citations.length) box.append(letterTool(data));
+}
+
+function addTime(start, amount, unit) {
+  const d = new Date(start.getTime());
+  if (unit === "days") d.setDate(d.getDate() + amount);
+  else if (unit === "months") d.setMonth(d.getMonth() + amount);
+  else if (unit === "years") d.setFullYear(d.getFullYear() + amount);
+  else d.setHours(d.getHours() + amount);
+  return d;
+}
+function deadlinesTool(data) {
+  const el = tool("deadlines", '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/>', t("deadlinesTitle"));
+  // A deadline runs from an event that is often still to come (sending the notice): by default it
+  // starts today, which answers "if I act now, what is my last day?"; the person can change it.
+  const start = new Date().toISOString().slice(0, 10);
+  data.deadlines.forEach((d, i) => {
+    const card = document.createElement("div");
+    card.className = "deadline";
+    const cite = data.citations.find((c) => c.id === d.article_id);
+    card.innerHTML = `
+      <div class="deadline-head"><b class="amount">${d.amount} ${t("units")[d.unit]}</b><span dir="auto">${escapeHtml(d.what)}</span></div>
+      ${d.from_event ? `<p class="deadline-from" dir="auto">${t("deadlineFrom")} ${escapeHtml(d.from_event)}</p>` : ""}
+      <blockquote dir="auto">${escapeHtml(d.quote)} ${cite ? `<button class="cite" data-n="${cite.number}">${cite.number}</button>` : `<button class="link" data-id="${escapeHtml(d.article_id)}">${t("article")}</button>`}</blockquote>
+      <div class="deadline-calc"><label><span>${t("startDate")}</span><input type="date" value="${start}"></label>
+        <p class="due" aria-live="polite"></p><button type="button" class="ghost ics" hidden>${t("addCalendar")}</button></div>`;
+    const input = card.querySelector("input");
+    const update = () => {
+      const due = card.querySelector(".due"), ics = card.querySelector(".ics");
+      if (!input.value) { due.textContent = ""; ics.hidden = true; return; }
+      const end = addTime(new Date(`${input.value}T09:00:00`), d.amount, d.unit);
+      const today = new Date(); today.setHours(9, 0, 0, 0);
+      const left = Math.round((end - today) / 86400000);
+      due.innerHTML = `<b>${t("dueOn", fmtDate(end))}</b> · <span class="${left < 0 ? "late" : left <= 7 ? "soon" : ""}">${t("daysLeft", left)}</span>`;
+      ics.hidden = false;
+      ics.onclick = () => downloadIcs(d, end, data.question, i);
+    };
+    input.addEventListener("input", update);
+    card.querySelector(".cite")?.addEventListener("click", (e) => openArticle(cite.number, e.currentTarget));
+    card.querySelector(".link")?.addEventListener("click", (e) => openArticleById(d.article_id, e.currentTarget));
+    update();
+    el.append(card);
+  });
+  return el;
+}
+function downloadIcs(d, due, question, i) {
+  const day = (x) => x.toISOString().slice(0, 10).replace(/-/g, "");
+  const esc = (s) => String(s).replace(/[\;,]/g, (c) => `\\${c}`).replace(/\n/g, "\\n");
+  const next = new Date(due.getTime() + 86400000);
+  const ics = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Qanoun AI//Deadline//EN", "BEGIN:VEVENT",
+    `UID:qanoun-${Date.now()}-${i}@qanoun.ai`, `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").slice(0, 15)}Z`,
+    `DTSTART;VALUE=DATE:${day(due)}`, `DTEND;VALUE=DATE:${day(next)}`, `SUMMARY:${esc(`⚖️ ${d.what}`)}`,
+    `DESCRIPTION:${esc(`${d.quote}\n(${d.article_id})\n\n${question}\n\nQanoun AI`)}`,
+    "BEGIN:VALARM", "TRIGGER:-P3D", "ACTION:DISPLAY", `DESCRIPTION:${esc(d.what)}`, "END:VALARM",
+    "BEGIN:VALARM", "TRIGGER:-PT15H", "ACTION:DISPLAY", `DESCRIPTION:${esc(d.what)}`, "END:VALARM",
+    "END:VEVENT", "END:VCALENDAR"].join("\r\n");
+  saveBlob(new Blob([ics], { type: "text/calendar" }), "qanoun-deadline.ics");
+}
+function saveBlob(blob, name) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+function calculatorsTool(calcs) {
+  const el = tool("calcs", '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h2M12 11h2M8 15h2M12 15h2M16 11v4"/>', t("calcTitle"));
+  const tabs = document.createElement("div");
+  tabs.className = "chips calc-tabs";
+  const body = document.createElement("div");
+  el.append(tabs, body);
+  const show = (name) => {
+    tabs.querySelectorAll(".chip").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.calc === name)));
+    body.innerHTML = "";
+    const form = document.createElement("form");
+    form.className = "calc-form";
+    CALCULATORS[name].inputs.forEach(([key, value]) => {
+      const label = document.createElement("label");
+      if (typeof value === "boolean") {
+        label.className = "check";
+        label.innerHTML = `<input type="checkbox" name="${key}"><span>${t("inputs")[key]}</span>`;
+      } else if (key === "use") {
+        label.innerHTML = `<span>${t("inputs")[key]}</span><select name="use">${Object.entries(t("uses")).map(([k, v]) => `<option value="${k}">${v}</option>`).join("")}</select>`;
+      } else {
+        label.innerHTML = `<span>${t("inputs")[key]}</span><input type="number" name="${key}" min="0" step="any" required value="${value}" inputmode="decimal">`;
+      }
+      form.append(label);
+    });
+    const go = document.createElement("button");
+    go.type = "submit"; go.className = "ask-btn small"; go.textContent = t("calculate");
+    form.append(go);
+    const out = document.createElement("div");
+    out.className = "calc-out"; out.setAttribute("aria-live", "polite");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const inputs = {};
+      CALCULATORS[name].inputs.forEach(([key, value]) => {
+        const field = form.elements[key];
+        inputs[key] = typeof value === "boolean" ? field.checked : key === "use" ? field.value : Number(field.value);
+      });
+      try {
+        const response = await fetch("/calculate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tool: name, inputs }) });
+        const r = await response.json();
+        if (!response.ok) throw new Error(r.detail || response.statusText);
+        const unit = { MAD: lang === "fr" ? "MAD" : "درهم", days: t("units").days, months: t("units").months }[r.unit] || r.unit;
+        const steps = r.steps.map((s) => `<li>${t("calcSteps")[s.key]?.(fmtNumber(s.value), s.detail) ?? ""}</li>`).join("");
+        const articles = r.articles.map((id) => `<button type="button" class="link" data-id="${id}">${id.includes("67-12") ? "67.12" : id.includes("07-03") ? "07.03" : "65.99"} · ${id.split("-").pop()}</button>`).join(" ");
+        out.innerHTML = `${r.eligible ? `<p class="calc-value">${fmtNumber(r.value)} <small>${unit}</small></p>` : `<p class="calc-value no">${t("notEligible")}</p>`}
+          ${steps ? `<ol class="calc-steps">${steps}</ol>` : ""}
+          <ul class="calc-notes">${r.notes.map((n) => `<li>${t("calcNotes")[n] || ""}</li>`).join("")}</ul>
+          <p class="calc-src">${t("fromArticles")} ${articles}</p>`;
+        out.querySelectorAll(".link").forEach((b) => b.addEventListener("click", () => openArticleById(b.dataset.id, b)));
+      } catch (error) { out.innerHTML = `<p class="error">${escapeHtml(t("error") + error.message)}</p>`; }
+    });
+    body.append(form, out);
+  };
+  calcs.forEach(([name]) => {
+    const b = chip(escapeHtml(t("calcs")[name]), false, () => show(name));
+    b.dataset.calc = name; tabs.append(b);
+  });
+  show(calcs[0][0]);
+  return el;
+}
+
+function letterTool(data) {
+  const el = tool("letter", '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>', t("letterTitle"));
+  let letterLang = lang === "fr" ? "fr" : "ar";
+  el.insertAdjacentHTML("beforeend", `<div class="chips letter-kinds"></div><div class="chips small letter-lang"></div><div class="letter-out" aria-live="polite"></div>`);
+  const out = el.querySelector(".letter-out");
+  const langs = el.querySelector(".letter-lang");
+  const drawLangs = () => {
+    langs.innerHTML = "";
+    ["ar", "fr"].forEach((l) => langs.append(chip(t("letterIn")[l], letterLang === l, () => { letterLang = l; drawLangs(); })));
+  };
+  drawLangs();
+  Object.entries(t("letterKinds")).forEach(([kind, label]) => el.querySelector(".letter-kinds").append(chip(escapeHtml(label), false, async (e) => {
+    el.querySelectorAll(".letter-kinds .chip").forEach((b) => b.setAttribute("aria-pressed", String(b === e.currentTarget)));
+    out.innerHTML = `<p class="muted">${t("writingLetter")}</p>`;
+    try {
+      const response = await fetch("/letter", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind, language: letterLang, story: data.question, facts, analysis: data.sections || { answer: data.text }, sources: data.citations.map((c) => c.id) }),
+      });
+      const letter = await response.json();
+      if (!response.ok) throw new Error(letter.detail || response.statusText);
+      showLetter(out, letter);
+    } catch (error) { out.innerHTML = `<p class="error">${escapeHtml(t("error") + error.message)}</p>`; }
+  })));
+  return el;
+}
+function showLetter(out, letter) {
+  const dir = letter.language === "ar" ? "rtl" : "ltr";
+  out.innerHTML = `<p class="flag">${t("letterDraft")}</p>${letter.verified ? "" : `<p class="flag">${t("unverified")}</p>`}
+    <article class="letter-paper" dir="${dir}"><p><b>${escapeHtml(letter.recipient)}</b></p><p><b>${escapeHtml(letter.subject)}</b></p>
+      ${escapeHtml(letter.body).replace(/\[([^\]]+)\]/g, '<mark>[$1]</mark>').split("\n").map((l) => `<p>${l}</p>`).join("")}</article>
+    <div class="answer-actions"><button class="ghost" data-a="word">${t("downloadWord")}</button><button class="ghost" data-a="copy">${t("copy")}</button><button class="ghost" data-a="print">${t("printLetter")}</button></div>`;
+  const text = `${letter.recipient}\n${letter.subject}\n\n${letter.body}`;
+  out.querySelector('[data-a="copy"]').addEventListener("click", async () => { try { await navigator.clipboard.writeText(text); toast(t("copied")); } catch { /* blocked */ } });
+  out.querySelector('[data-a="word"]').addEventListener("click", async () => {
+    const r = await fetch("/letter.docx", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subject: letter.subject, recipient: letter.recipient, body: letter.body, language: letter.language }) });
+    if (r.ok) saveBlob(await r.blob(), "qanoun-letter.docx");
+  });
+  out.querySelector('[data-a="print"]').addEventListener("click", () => {
+    document.body.classList.add("printing-letter");
+    out.querySelector(".letter-paper").classList.add("print-me");
+    window.print();
+    document.body.classList.remove("printing-letter");
+    out.querySelector(".letter-paper").classList.remove("print-me");
+  });
+}
+
+async function openArticleById(id, from) {
+  const cited = current?.citations.find((c) => c.id === id);
+  if (cited) { openArticle(cited.number, from); return; }
+  try {
+    const response = await fetch(`/articles/${encodeURIComponent(id)}`);
+    if (!response.ok) return;
+    const a = await response.json();
+    const rtl = a.language === "ar";
+    $("panel-body").innerHTML = `<div dir="${rtl ? "rtl" : "ltr"}"><h2>${escapeHtml(a.article_word || t("article"))} ${escapeHtml(a.article_number)}</h2>
+      <p class="law">${escapeHtml(a.law_title)}</p><ul class="path">${a.hierarchy.map((h) => `<li>${escapeHtml(h)}</li>`).join("")}</ul>
+      <p class="article-text">${escapeHtml(a.text)}</p><a class="pdf" href="${escapeHtml(a.source_url)}" target="_blank" rel="noopener">${t("openPdf")}</a></div>`;
+    openPanel("panel", from);
+  } catch { /* offline */ }
+}
+
+// ---------- listen to the answer (the browser's own voices) ----------
+function setupListen(data) {
+  const b = $("listen");
+  const voices = "speechSynthesis" in window;
+  b.hidden = !voices || data.language === "darija-latn" || data.status !== "answered";
+  if (b.hidden) return;
+  speechSynthesis.cancel();
+  b.querySelector("span").textContent = t("listen");
+  b.onclick = () => {
+    if (speechSynthesis.speaking) { speechSynthesis.cancel(); b.querySelector("span").textContent = t("listen"); return; }
+    const text = (data.sections ? SECTIONS.map(([k]) => data.sections[k]).filter(Boolean).join(". ") : data.text).replace(/\[\d+\]/g, "");
+    const say = new SpeechSynthesisUtterance(text);
+    say.lang = data.language === "fr" ? "fr-FR" : "ar-MA";
+    const voice = speechSynthesis.getVoices().find((v) => v.lang.startsWith(say.lang.slice(0, 2)));
+    if (voice) say.voice = voice;
+    say.onend = () => { b.querySelector("span").textContent = t("listen"); };
+    speechSynthesis.speak(say);
+    b.querySelector("span").textContent = t("stopListen");
+  };
 }
 
 // ---------- pages: home (#) and the situation builder (#situation) ----------
