@@ -137,3 +137,11 @@ def test_an_unreadable_reply_is_a_clear_error():
 def test_reading_json_round_trip():
     out = read_document(FileLLM(READING), "image/png", b"x")
     assert json.loads(json.dumps(out.as_dict()))["kind"] == "contract"
+
+
+def test_a_real_text_pdf_is_read_with_the_law_reader():
+    from qanoun.generation.documents import pdf_text
+
+    data = pdf_with("Le loyer est fixe a 2500 dirhams par mois. " * 3)
+    text, pages = pdf_text(data)
+    assert pages == 1 and "2500 dirhams par mois" in text

@@ -96,3 +96,20 @@ def test_arabic_line_is_assembled_right_to_left():
 )
 def test_arabic_article_numbers(heading, expected):
     assert article_number(heading, "ar") == expected
+
+
+def test_any_zero_width_letter_read_before_its_neighbour_is_swapped():
+    # LibreOffice draws "تر" as one glyph: "المكتري" came out as "المكرتي" (owner's contract)
+    chars = [("ا", 2.7), ("ل", 2.9), ("م", 5.4), ("ك", 6.1), ("ر", 0.0), ("ت", 8.3), ("ي", 7.8)]
+    assert fix_ligatures(chars) == "المكتري"
+
+
+def test_a_lam_alef_already_in_order_is_not_moved():
+    # "لا" read correctly: lam, then its zero-width alef, then the next letter
+    chars = [("ل", 5.0), ("ا", 0.0), ("ب", 6.0), ("د", 5.0)]
+    assert fix_ligatures(chars) == "لابد"
+
+
+def test_vowel_marks_are_never_moved():
+    chars = [("ك", 6.0), ("َ", 0.0), ("ت", 6.0), ("ب", 6.0)]  # كَتب
+    assert fix_ligatures(chars) == "كَتب"

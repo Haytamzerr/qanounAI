@@ -79,6 +79,7 @@ def is_rtl(text: str) -> bool:
 # --- Arabic ligatures --------------------------------------------------------------------
 
 ALEFS = set("اأإآ")
+ARABIC_BASE_LETTER = re.compile(r"[\u0621-\u064A]")  # letters only: no harakat, no digits
 ZERO_WIDTH = 0.05  # points: a glyph narrower than this is drawn inside its neighbour
 
 
@@ -91,6 +92,13 @@ def fix_ligatures(chars: list[tuple[str, float]]) -> str:
     So: a zero-width alef followed by lam, or a zero-width run starting with ه, is reversed
     with the letter that follows it. A real alef (e.g. the article "ال") has a normal width and
     is never touched, and a zero-width alef that already follows its lam is left as it is.
+
+    Other software draws other pairs as one glyph: LibreOffice writes "تر" as ر (zero width)
+    then ت, so "المكتري" was read "المكرتي" in a contract the owner tested. Any other zero-width
+    Arabic letter followed by a letter with a width is therefore swapped with it too (lam and
+    alef excepted: they keep the rules above). Vowel marks (harakat) are never moved. Measured
+    on 30,858 lines of 65 laws: the five curated laws are unchanged, two Adala lines are
+    repaired ("املتعلق" → "المتعلق", "امللكي" → "الملكي"), nothing else moves.
     """
     out: list[str] = []
     i = 0
@@ -108,6 +116,19 @@ def fix_ligatures(chars: list[tuple[str, float]]) -> str:
             run = [c for c, _ in chars[i : min(j + 1, len(chars))]]
             out += reversed(run)
             i = j + 1
+            continue
+        nxt = chars[i + 1] if i + 1 < len(chars) else None
+        if (
+            is_zero
+            and ARABIC_BASE_LETTER.fullmatch(char)
+            and char not in ALEFS
+            and char != "ل"  # lam belongs to lam-alef and Allah, which have their own rules
+            and nxt is not None
+            and nxt[1] >= ZERO_WIDTH
+            and ARABIC_BASE_LETTER.fullmatch(nxt[0])
+        ):
+            out += [nxt[0], char]
+            i += 2
             continue
         out.append(char)
         i += 1
