@@ -22,7 +22,7 @@ from typing import Annotated, Any, Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -89,6 +89,7 @@ class AnswerOut(BaseModel):
     sections: dict[str, str] | None  # analysis: situation, law, application, steps, missing
     plan: list[str]  # analysis: the searches that were run
     leads: list[str]  # analysis: articles the plan suggested, found in the official text
+    deadlines: list[dict]  # analysis: time limits verified against their article (decision 82)
     standalone: str | None  # a follow-up as rewritten with the conversation
     citations: list[Citation]
     verified: bool
@@ -103,10 +104,38 @@ class AnswerOut(BaseModel):
         return cls(
             question=a.question, language=a.language, status=a.status, mode=a.mode, text=a.text,
             sections=a.sections, plan=a.plan, leads=a.leads, standalone=a.standalone,
+            deadlines=[d.as_dict() for d in a.deadlines],
             citations=[Citation.of(n, a.sources[n - 1]) for n in a.cited],
             verified=a.verified, problems=a.problems, sources=[s.id for s in a.sources],
             model=a.model, attempts=a.attempts, seconds=a.seconds,
         )  # fmt: skip
+
+
+class CalculateRequest(BaseModel):
+    tool: str = Field(max_length=40)
+    inputs: dict[str, float | bool | str] = Field(default_factory=dict, max_length=8)
+
+
+class LetterRequest(BaseModel):
+    kind: Literal["notice", "complaint", "request"] = "notice"
+    language: Literal["ar", "fr"] = "ar"
+    story: str = Field(min_length=2, max_length=2000)
+    facts: list[Annotated[str, Field(max_length=200)]] = Field(default_factory=list, max_length=6)
+    analysis: dict[str, Annotated[str, Field(max_length=4000)]] = Field(default_factory=dict)
+    sources: list[str] = Field(min_length=1, max_length=14)  # ids of the articles cited
+
+
+class DocxRequest(BaseModel):
+    subject: str = Field(max_length=500)
+    recipient: str = Field(default="", max_length=500)
+    body: str = Field(max_length=12000)
+    language: Literal["ar", "fr"] = "ar"
+
+
+class DocumentRequest(BaseModel):
+    mime: str = Field(max_length=80)
+    data: str = Field(max_length=11_500_000)  # base64 of at most 8 MB
+    language: Literal["ar", "fr", "darija"] = "ar"
 
 
 def _sse(event: str, data: Any) -> str:
@@ -200,6 +229,72 @@ def create_app(
                 yield _sse(event, data)
 
         return StreamingResponse(events(), media_type="text/event-stream")
+
+    # ---------- tools for the situation page (decisions 82–86) ----------
+
+    @app.post("/calculate")
+    def calculate(request: CalculateRequest) -> dict:
+        """Run one legal calculator; the figures come from the articles listed in the result."""
+        from dataclasses import asdict
+
+        from qanoun.tools.calculators import CalculationError
+        from qanoun.tools.calculators import calculate as run
+
+        try:
+            return asdict(run(request.tool, dict(request.inputs)))
+        except CalculationError as error:
+            raise HTTPException(422, str(error)) from error
+
+    @app.post("/letter")
+    async def letter(request: LetterRequest) -> dict:
+        """Draft a notice, complaint or request from the situation and the articles cited."""
+        from qanoun.generation.letters import write_letter
+
+        found = get_articles()
+        sources = [found[i] for i in request.sources if i in found][:8]
+        if not sources:
+            raise HTTPException(422, "none of the cited articles is known")
+        try:
+            written = await run_in_threadpool(
+                lambda: write_letter(
+                    get_answerer().llm, request.kind, request.language, request.story, sources,
+                    request.facts, request.analysis,
+                )
+            )  # fmt: skip
+        except LLMError as error:
+            raise HTTPException(503, f"The language model is unavailable: {error}") from error
+        return {**written.__dict__, "verified": written.verified}
+
+    @app.post("/letter.docx")
+    def letter_docx(request: DocxRequest) -> Response:
+        from qanoun.generation.letter_docx import letter_docx as build
+
+        content = build(request.subject, request.recipient, request.body, request.language)
+        return Response(
+            content,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": 'attachment; filename="qanoun-letter.docx"'},
+        )
+
+    @app.post("/read-document")
+    async def read_document(request: DocumentRequest) -> dict:
+        """Turn a contract, letter or judgment (PDF, photo) into the person's file."""
+        import base64
+        import binascii
+
+        from qanoun.generation.documents import DocumentError
+        from qanoun.generation.documents import read_document as read
+
+        try:
+            data = base64.b64decode(request.data, validate=True)
+            reading = await run_in_threadpool(
+                lambda: read(get_answerer().llm, request.mime, data, request.language)
+            )
+        except (DocumentError, binascii.Error) as error:
+            raise HTTPException(422, str(error)) from error
+        except LLMError as error:
+            raise HTTPException(503, f"The language model is unavailable: {error}") from error
+        return reading.as_dict()
 
     return app
 

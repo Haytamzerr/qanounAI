@@ -12,11 +12,12 @@ Usage:
 """
 
 import argparse
+import base64
 import json
 import logging
 import re
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from pathlib import Path
 from typing import Protocol
 
@@ -45,7 +46,8 @@ class LLM(Protocol):
     name: str
 
     def generate(self, system: str, user: str, *, json_schema: dict | None = None) -> str:
-        """The model's reply. With `json_schema`, the reply is JSON following that schema."""
+        """The model's reply. With `json_schema`, the reply is JSON following that schema.
+        GeminiLLM also takes `attachments`: (mime type, bytes) pairs such as a photo."""
         ...
 
 
@@ -55,7 +57,7 @@ class GeminiLLM:
         model: str | None = None,
         api_key: str | None = None,
         temperature: float = 0.1,  # low: we want faithful answers, not creative ones
-        max_output_tokens: int = 1024,
+        max_output_tokens: int = 2048,  # an analysis with its deadlines and quotes needs room
         client: httpx.Client | None = None,
         attempts: int = 3,
         sleep: Callable[[float], None] = time.sleep,
@@ -95,7 +97,15 @@ class GeminiLLM:
             if "generateContent" in m.get("supportedGenerationMethods", [])
         ]
 
-    def generate(self, system: str, user: str, *, json_schema: dict | None = None) -> str:
+    def generate(
+        self,
+        system: str,
+        user: str,
+        *,
+        json_schema: dict | None = None,
+        attachments: Sequence[tuple[str, bytes]] = (),
+    ) -> str:
+        """`attachments`: files the model reads with the text, e.g. ("image/jpeg", photo)."""
         config: dict = {
             "temperature": self.temperature,
             "maxOutputTokens": self.max_output_tokens,
@@ -104,7 +114,23 @@ class GeminiLLM:
             config |= {"responseMimeType": "application/json", "responseSchema": json_schema}
         body = {
             "systemInstruction": {"parts": [{"text": system}]},
-            "contents": [{"role": "user", "parts": [{"text": user}]}],
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [
+                        *(
+                            {
+                                "inline_data": {
+                                    "mime_type": mime,
+                                    "data": base64.b64encode(data).decode(),
+                                }
+                            }
+                            for mime, data in attachments
+                        ),
+                        {"text": user},
+                    ],
+                }
+            ],  # fmt: skip
             "generationConfig": config,
         }
         response = self._generate_with_fallbacks(body)

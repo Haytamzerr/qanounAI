@@ -19,8 +19,10 @@ from dataclasses import dataclass, field
 from qanoun.ingestion.models import Article
 
 MARKER = re.compile(r"\[(\d+)\]")
+# "المادة 5", and with the prefix ل that drops the alif: "طبقا للمادة 5", "للفصل 400"
 ARTICLE_MENTION = re.compile(
-    r"(?:المادة|المواد|الفصل|\barticles?\b|\bart\.|\bl?mad+[ae]\b)\s*(\d+)", re.IGNORECASE
+    r"(?:(?:ال|لل)(?:مادة|مواد|فصل|فصول)|\barticles?\b|\bart\.|\bl?mad+[ae]\b)\s*(\d+)",
+    re.IGNORECASE,
 )
 
 

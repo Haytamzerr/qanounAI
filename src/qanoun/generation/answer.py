@@ -34,6 +34,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 
 from qanoun.generation.citations import ARTICLE_MENTION, check, style_problems
+from qanoun.generation.deadlines import Deadline, verify
 from qanoun.generation.llm import LLM
 from qanoun.generation.prompts import (
     ANALYSIS_SCHEMA,
@@ -97,6 +98,7 @@ class Answer:
     sections: dict[str, str] | None = None  # analysis mode: situation, law, application…
     plan: list[str] = field(default_factory=list)  # analysis mode: the searches that were run
     leads: list[str] = field(default_factory=list)  # analysis: ids of suggested articles found
+    deadlines: list[Deadline] = field(default_factory=list)  # analysis: verified time limits
     standalone: str | None = None  # a follow-up rewritten with the conversation
 
     @property
@@ -364,22 +366,27 @@ class Answerer:
             else []
         )
 
+        found_deadlines: list[list[dict]] = []  # per attempt, kept for the attempt chosen
+
         def parse(raw):
             try:
                 data = json.loads(raw)
+                found_deadlines.append(list(data.get("deadlines") or []))
                 sections = {name: str(data.get(name, "")).strip() for name in SECTIONS}
                 used = [int(n) for n in data.get("used_sources", []) if str(n).isdigit()]
                 status = data.get("status", "answered")
             except (json.JSONDecodeError, AttributeError, TypeError):
+                found_deadlines.append([])
                 sections, used, status = (
                     {"situation": raw, **dict.fromkeys(SECTIONS[1:], "")},
                     [],
                     "answered",
                 )
             text = "\n\n".join(v for v in sections.values() if v)
-            return (status if status in STATUSES else "answered"), text, used, sections
+            extra = {"sections": sections, "deadlines": found_deadlines[-1]}
+            return (status if status in STATUSES else "answered"), text, used, extra
 
-        (answered, checked, status, sections), attempt, lines = self._attempts(
+        (answered, checked, status, extra), attempt, lines = self._attempts(
             question,
             language,
             sources,
@@ -390,6 +397,8 @@ class Answerer:
             step,
         )
         seconds["generation"] = time.perf_counter() - clock
+        sections = extra["sections"] if extra else None
+        deadlines = verify(extra["deadlines"], sources) if extra and answered else []
         if sections is not None:  # unknown [n] markers removed in every section, as in the text
             sections = {
                 name: check(value, sources, answered=False).text for name, value in sections.items()
@@ -408,6 +417,7 @@ class Answerer:
             lines,
             mode="analysis",
             sections=sections if answered else None,
+            deadlines=deadlines,
         )
 
 
