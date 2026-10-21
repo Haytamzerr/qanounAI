@@ -164,6 +164,7 @@ class Answerer:
         mode: str = "quick",
         history: Sequence[Turn] = (),
         facts: Sequence[str] = (),
+        document: Sequence[str] = (),
     ) -> Answer:
         """`on_step(name, details)` is called as the work progresses, so an interface can show
         "searching…", "writing…" while the user waits (see the API's streaming endpoint)."""
@@ -185,11 +186,17 @@ class Answerer:
         facts = [f.strip() for f in facts if f.strip()][:6]  # chosen in the situation builder
         if facts:
             notes.append("What the person selected about the situation: " + "; ".join(facts))
+        clauses = [c.strip() for c in document if c.strip()][:8]  # from "read my document" (86)
+        if clauses:
+            notes.append(
+                "Clauses quoted from the person's document; check each one against the sources:"
+                + "".join(f"\n  «{c}»" for c in clauses)
+            )
         carried = self._carried(history)
         talk = [(t.question, t.answer) for t in history]
 
         if mode == "analysis":
-            planned = self._plan(standalone or question, language, talk, facts)
+            planned = self._plan(standalone or question, language, talk, facts, clauses)
             if planned is not None:
                 situation, searches, missing, suggested = planned
                 leads = self._leads(suggested, language)
@@ -198,7 +205,8 @@ class Answerer:
                 found = self._by_idea(understood)  # few, and kept within the 14 sources
                 found += [a for q in searches for a in self._search(q, self.per_search)]
                 found += self._search(understood.query, self.per_search, done=True)
-                sources = _unique([*named, *leads, *found, *carried])[: self.max_sources]
+                limit = self.max_sources + (4 if clauses else 0)  # a contract raises more questions
+                sources = _unique([*named, *leads, *found, *carried])[:limit]
                 seconds = {"retrieval": time.perf_counter() - clock}
                 step("sources", {"articles": [a.id for a in sources]})
                 answer = self._write_analysis(
@@ -238,18 +246,23 @@ class Answerer:
         return [a for i in talk[-1].sources[:3] if (a := self.lookup(i)) is not None]
 
     def _plan(
-        self, question, language, talk, facts=()
+        self, question, language, talk, facts=(), clauses=()
     ) -> tuple[str, list[str], list[str], list[str]] | None:
         prompt = (f"CONVERSATION SO FAR\n{conversation_block(talk)}\n\n" if talk else "") + (
             f"SITUATION\n{question}"
         )
         if facts:
             prompt += "\n\nWHAT THE PERSON SELECTED\n" + "\n".join(f"- {f}" for f in facts)
+        if clauses:
+            prompt += "\n\nCLAUSES OF THE PERSON'S DOCUMENT\n" + "\n".join(
+                f"- {c}" for c in clauses
+            )
         try:
             data = json.loads(
                 self.llm.generate(plan_system(language), prompt, json_schema=PLAN_SCHEMA)
             )
-            searches = [str(q).strip() for q in data.get("searches", []) if str(q).strip()][:4]
+            most = 6 if clauses else 4  # one search per clause that may conflict with the law
+            searches = [str(q).strip() for q in data.get("searches", []) if str(q).strip()][:most]
             missing = [str(m).strip() for m in data.get("missing", []) if str(m).strip()][:3]
             suggested = [str(m).strip() for m in data.get("articles", []) if str(m).strip()][:4]
             return str(data.get("situation", "")), searches, missing, suggested

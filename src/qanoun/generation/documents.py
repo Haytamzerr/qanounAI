@@ -40,9 +40,10 @@ before they ask a lawyer-like assistant about it. Extract only what the document
   ("the landlord", "my employer") — never names, ID, phone numbers or addresses;
 - "theme": the closest of {themes};
 - "dates" and "amounts": the ones that matter, each with what it is;
-- "clauses": up to five clauses worth checking (a deadline, a penalty, a waiver, a termination
-  condition), each with its exact words in "quote", copied character for character, and what
-  it means in plain {language} in "meaning".
+- "clauses": up to eight clauses worth checking, those that limit the person's rights first
+  (a waiver, a termination without notice or indemnity, a penalty, a deadline, a duration, a
+  working time, a leave, a rent increase, who pays repairs), each with its exact words in
+  "quote", copied character for character, and what it means in plain {language} in "meaning".
 Never add a fact that is not in the document. Never give legal advice here."""
 
 READ_SCHEMA = {
@@ -168,7 +169,7 @@ def read_document(llm: LLM, mime: str, data: bytes, language: str = "ar") -> Rea
 
     flat = _flat(text) if text else ""
     clauses = []
-    for c in (data_out.get("clauses") or [])[:5]:
+    for c in (data_out.get("clauses") or [])[:8]:
         quote, meaning = str(c.get("quote", "")).strip(), str(c.get("meaning", "")).strip()
         if not quote:
             continue

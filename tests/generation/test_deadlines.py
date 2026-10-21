@@ -71,3 +71,17 @@ def test_the_analysis_returns_only_verified_deadlines():
         "جراو عليا من الخدمة", mode="analysis"
     )
     assert [x.amount for x in answer.deadlines] == [90]
+
+
+def test_a_duration_and_a_half_is_not_shown_as_a_whole_one():
+    """Owner's contract test: «شهر ونصف» (1.5 months) was shown as "1 month"."""
+    probation = article("loi-65-99-ar-art-14", "تحدد فترة الاختبار في شهر ونصف بالنسبة للمستخدمين؛")
+    item = d(amount=1, unit="months", source=1, quote="شهر ونصف بالنسبة للمستخدمين")
+    assert verify([item], [probation]) == []
+
+
+def test_the_prompt_asks_for_limits_to_act_not_durations():
+    from qanoun.generation.prompts import analysis_system
+
+    system = analysis_system("fr")
+    assert "must act" in system and "Not durations that describe a status" in system
