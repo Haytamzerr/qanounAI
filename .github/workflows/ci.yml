@@ -30,3 +30,27 @@ jobs:
 
       - name: Tests
         run: uv run pytest
+
+  # The owner runs the app on Windows with the full corpus: the same tests there, with a .env like
+  # his, catch what Linux misses (environment-variable limits, encodings, paths).
+  test-windows:
+    runs-on: windows-latest
+    env:
+      UV_NO_GROUP: embeddings
+      QANOUN_CORPUS: full
+      QANOUN_VECTOR_STORE: numpy
+      QANOUN_EMBEDDING_BACKEND: onnx
+      QANOUN_QDRANT_URL: data/qdrant
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install Python and dependencies
+        run: uv sync --locked
+
+      - name: Tests
+        run: uv run pytest
