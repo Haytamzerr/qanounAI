@@ -2,7 +2,7 @@
 {"id": "r02", "question": "Quelle est la durée de la période d'essai pour un contrat à durée indéterminée ?", "language": "fr", "style": "formal", "expected": ["loi-65-99-ar-art-13", "loi-65-99-ar-art-14"]}
 {"id": "r03", "question": "chhal dyal lwe9t dyal la période d'essai f lkhedma?", "language": "darija-latn", "style": "everyday", "expected": ["loi-65-99-ar-art-13", "loi-65-99-ar-art-14"]}
 {"id": "r04", "question": "كم مدة أجل الإخطار عند إنهاء عقد الشغل؟", "language": "ar", "style": "formal", "expected": ["loi-65-99-ar-art-43"]}
-{"id": "r05", "question": "tredouni mn lkhedma bla préavis, wach 3ndi l7e9?", "language": "darija-latn", "style": "everyday", "expected": ["loi-65-99-ar-art-43", "loi-65-99-ar-art-52", "loi-65-99-ar-art-53"]}
+{"id": "r05", "question": "tredouni mn lkhedma bla préavis, wach 3ndi l7e9?", "language": "darija-latn", "style": "everyday", "expected": ["loi-65-99-ar-art-43", "loi-65-99-ar-art-51", "loi-65-99-ar-art-52", "loi-65-99-ar-art-53"]}
 {"id": "r06", "question": "كيف يحسب التعويض عن الفصل؟", "language": "ar", "style": "formal", "expected": ["loi-65-99-ar-art-52", "loi-65-99-ar-art-53"]}
 {"id": "r07", "question": "شحال كيعطيوك ديال التعويض إلى طردوك من الخدمة؟", "language": "darija-ar", "style": "everyday", "expected": ["loi-65-99-ar-art-52", "loi-65-99-ar-art-53"]}
 {"id": "r08", "question": "Combien de jours de congé annuel payé a un salarié ?", "language": "fr", "style": "formal", "expected": ["loi-65-99-ar-art-231"]}
