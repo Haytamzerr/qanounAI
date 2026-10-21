@@ -112,11 +112,23 @@ class Reading:
 
 
 def pdf_text(data: bytes) -> tuple[str, int]:
+    """The text of a PDF, with the Arabic repairs used for the laws (ligatures read backwards,
+    right-to-left reading order, numbers kept whole): PyMuPDF's plain text turned "المكتري"
+    into "المكرتي" and split "15%", so no Arabic clause could be checked against it."""
+    import tempfile
+    from pathlib import Path
+
     import pymupdf
+
+    from qanoun.ingestion.pdf_lines import read_lines
 
     try:
         with pymupdf.open(stream=data, filetype="pdf") as pdf:
-            return "\n".join(page.get_text() for page in pdf), pdf.page_count
+            pages = pdf.page_count
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "document.pdf"
+            path.write_bytes(data)
+            return "\n".join(line.text for line in read_lines(path, 0)), pages
     except Exception as error:  # a damaged or protected PDF
         raise DocumentError(f"this PDF cannot be opened ({error})") from error
 
