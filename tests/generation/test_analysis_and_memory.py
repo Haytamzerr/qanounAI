@@ -183,7 +183,8 @@ def test_the_clauses_of_a_document_are_checked_one_by_one():
         "check each one against the sources" in write_prompt
         and "renonce par avance" in write_prompt
     )
-    assert retriever.queries[:6] == [f"بحث {i}" for i in range(1, 7)]  # 6 searches, not 4
+    assert retriever.queries[:2] == clauses  # each clause searched with its own words first
+    assert retriever.queries[2:8] == [f"بحث {i}" for i in range(1, 7)]  # then 6 plan searches
 
 
 def test_the_model_is_told_not_to_compute_totals():
@@ -191,3 +192,20 @@ def test_the_model_is_told_not_to_compute_totals():
 
     for system in (system_prompt("fr"), analysis_system("fr")):
         assert "Never" in system and "compute a total yourself" in system
+
+
+def test_each_clause_is_searched_with_its_own_words_and_comes_first():
+    """Owner's contract: the plan forgot "dismissal without notice"; art. 43/51 never came."""
+    clauses = ["L'employeur peut mettre fin au contrat sans préavis ni indemnité."]
+    llm = ScriptedLLM(PLAN, SECTIONS)
+    retriever = RecordingRetriever()
+    answer = Answerer(retriever, llm).answer("Mon contrat.", mode="analysis", document=clauses)
+    assert retriever.queries[0] == clauses[0]  # searched before the plan's searches
+    first_clause_hit = ARTICLES[0]  # RecordingRetriever's first answer
+    assert answer.sources[0] == first_clause_hit
+
+
+def test_a_clause_verdict_must_rest_on_a_source():
+    from qanoun.generation.prompts import analysis_system
+
+    assert "never judged from memory" in analysis_system("fr")

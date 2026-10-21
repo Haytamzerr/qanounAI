@@ -141,6 +141,7 @@ class Answerer:
         max_sources: int = 14,
         per_idea: int = 2,
         max_ideas: int = 3,
+        per_clause: int = 2,
     ):
         self.retriever = retriever
         self.llm = llm
@@ -152,6 +153,7 @@ class Answerer:
         self.per_search = per_search
         self.max_sources = max_sources
         self.per_idea = per_idea
+        self.per_clause = per_clause
         self.max_ideas = max_ideas
 
     # ---------- entry point ----------
@@ -202,11 +204,14 @@ class Answerer:
                 leads = self._leads(suggested, language)
                 step("planned", {"situation": situation, "searches": searches,
                                  "articles": [a.id for a in leads]})  # fmt: skip
+                # Each clause of the document is searched with its own words (decision 89): the
+                # plan once forgot "dismissal without notice", and its article never came back.
+                by_clause = [a for c in clauses for a in self._search(c, self.per_clause)]
                 found = self._by_idea(understood)  # few, and kept within the 14 sources
                 found += [a for q in searches for a in self._search(q, self.per_search)]
                 found += self._search(understood.query, self.per_search, done=True)
-                limit = self.max_sources + (4 if clauses else 0)  # a contract raises more questions
-                sources = _unique([*named, *leads, *found, *carried])[:limit]
+                limit = self.max_sources + min(2 * len(clauses), 10)  # a contract asks more
+                sources = _unique([*named, *leads, *by_clause, *found, *carried])[:limit]
                 seconds = {"retrieval": time.perf_counter() - clock}
                 step("sources", {"articles": [a.id for a in sources]})
                 answer = self._write_analysis(
