@@ -132,7 +132,7 @@ Object.assign(STRINGS.ar, {
   listen: "استمع", stopListen: "إيقاف", startFrom: "ابدأ من وضعية شائعة", readDoc: "اقرأ وثيقتي: عقد، رسالة، حكم",
   readDocNote: "تُرسل الوثيقة إلى Gemini من Google لقراءتها. أخفِ الأرقام الشخصية إن استطعت.", reading: "نقرأ الوثيقة…",
   docTitle: "ما تقوله وثيقتك", docImage: "قُرئت من صورة: قارنها بالوثيقة قبل الاعتماد عليها.", fileDoc: "الوثيقة",
-  exactDate: "التاريخ بالضبط (اختياري)", deadlinesTitle: "الآجال القانونية", deadlineFrom: "ابتداء من", startDate: "يبدأ الأجل في",
+  exactDate: "التاريخ بالضبط (اختياري)", deadlinesTitle: "الآجال القانونية", deadlineFrom: "نقطة البداية:", startDate: "يبدأ الأجل في",
   dueOn: (d) => `آخر أجل: ${d}`, daysLeft: (n) => (n >= 0 ? `بقي ${n} يوما` : `انقضى الأجل منذ ${-n} يوما`),
   addCalendar: "أضف إلى التقويم", units: { days: "يوم", months: "شهر", years: "سنة", hours: "ساعة" },
   calcTitle: "احسب", calculate: "احسب", fromArticles: "المصدر:", notEligible: "لا حق في هذا في حالتك:",
@@ -156,7 +156,7 @@ Object.assign(STRINGS.fr, {
   listen: "Écouter", stopListen: "Arrêter", startFrom: "Partir d'une situation courante", readDoc: "Lire mon document : contrat, lettre, jugement",
   readDocNote: "Le document est envoyé à Gemini (Google) pour être lu. Masquez les numéros personnels si vous le pouvez.", reading: "Lecture du document…",
   docTitle: "Ce que dit votre document", docImage: "Lu depuis une image : comparez avec le document avant de vous y fier.", fileDoc: "Document",
-  exactDate: "Date exacte (facultatif)", deadlinesTitle: "Délais légaux", deadlineFrom: "À compter de", startDate: "Le délai commence le",
+  exactDate: "Date exacte (facultatif)", deadlinesTitle: "Délais légaux", deadlineFrom: "Point de départ :", startDate: "Le délai commence le",
   dueOn: (d) => `Échéance : ${d}`, daysLeft: (n) => (n >= 0 ? `${n} jours restants` : `Délai dépassé de ${-n} jours`),
   addCalendar: "Ajouter au calendrier", units: { days: "jours", months: "mois", years: "ans", hours: "heures" },
   calcTitle: "Calculer", calculate: "Calculer", fromArticles: "Source :", notEligible: "Pas de droit dans votre cas :",
@@ -180,7 +180,7 @@ Object.assign(STRINGS.darija, {
   listen: "سمع", stopListen: "حبس", startFrom: "بدا من شي وضعية معروفة", readDoc: "قرا الوثيقة ديالي: عقد، برية، حكم",
   readDocNote: "الوثيقة كتمشي لـ Gemini ديال Google باش يقراها. خبي الأرقام الشخصية إلا قدرتي.", reading: "كنقراو الوثيقة…",
   docTitle: "شنو كتقول الوثيقة ديالك", docImage: "تقرات من تصويرة: قارنها مع الوثيقة قبل ما تعتامد عليها.", fileDoc: "الوثيقة",
-  exactDate: "التاريخ بالضبط (إلا عرفتيه)", deadlinesTitle: "الآجال ديال القانون", deadlineFrom: "من", startDate: "الأجل كيبدا نهار",
+  exactDate: "التاريخ بالضبط (إلا عرفتيه)", deadlinesTitle: "الآجال ديال القانون", deadlineFrom: "كيبدا من:", startDate: "الأجل كيبدا نهار",
   dueOn: (d) => `آخر نهار: ${d}`, daysLeft: (n) => (n >= 0 ? `باقي ${n} نهار` : `فات الأجل بـ ${-n} نهار`),
   addCalendar: "زيدها للأجندة", units: { days: "نهار", months: "شهر", years: "عام", hours: "ساعة" },
   calcTitle: "حسب", calculate: "حسب", fromArticles: "المصدر:", notEligible: "ما عندكش هاد الحق فالحالة ديالك:",
@@ -289,6 +289,7 @@ let openTopic = null;
 let allTopics = false;
 let mode = "quick";        // the conversation's mode: the top box asks quickly, the builder analyses (81)
 let facts = [];            // what the person chose in the situation builder (theme, role, when…)
+let clauses = [];          // clauses read from the person's document, checked by the analysis
 let conversation = [];     // earlier answers of this conversation (decision 76)
 const SECTIONS = [["situation", "secSituation"], ["law", "secLaw"], ["application", "secApplication"], ["steps", "secSteps"], ["missing", "secMissing"]];
 const t = (key, ...args) => { const v = STRINGS[lang][key]; return typeof v === "function" ? v(...args) : v; };
@@ -409,7 +410,7 @@ function markStep(name) {
 async function ask(question, followUp = false, options = {}) {
   question = question.trim();
   if (question.length < 2) return;
-  if (!followUp) { mode = options.mode || "quick"; facts = options.facts || []; }
+  if (!followUp) { mode = options.mode || "quick"; facts = options.facts || []; clauses = options.document || []; }
   $("edit-file").hidden = !(mode === "analysis" && facts.length);
   const buttons = document.querySelectorAll(".ask-btn");
   buttons.forEach((b) => { b.disabled = true; });
@@ -436,7 +437,7 @@ async function ask(question, followUp = false, options = {}) {
 
   try {
     const response = await fetch("/ask/stream", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question, mode, history, facts: followUp ? [] : facts }),
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question, mode, history, facts: followUp ? [] : facts, document: followUp ? [] : clauses }),
     });
     if (!response.ok) throw new Error((await response.json()).detail || response.statusText);
     const reader = response.body.getReader();
@@ -559,7 +560,8 @@ function listItems(value) {
   return items.length >= 2 ? items : null;
 }
 function missingQuestions(value) {
-  const items = value.split(/(?<=[?؟])\s+|\n+/).map((s) => s.replace(/^\s*[-•\d.)]+\s*/, "").trim()).filter((s) => s.length > 3);
+  // "Question 1 ?; Question 2 ?" — the model separates them with spaces, new lines or "; "
+  const items = value.split(/(?<=[?؟])[\s;؛]+|\n+/).map((s) => s.replace(/^\s*[-•\d.)]+\s*/, "").trim()).filter((s) => s.length > 3);
   return items.length && items.some((s) => /[?؟]\s*(\[\d+\])*$/.test(s)) ? items : null;
 }
 
@@ -826,7 +828,8 @@ function fileFacts() {
 function submitFile() {
   history.pushState(null, "", location.pathname);   // back to the answer page; "back" returns here
   route();
-  ask(file.story, false, { mode: "analysis", facts: fileFacts() });
+  const document = file.doc ? file.doc.clauses.map((c) => c.quote.slice(0, 400)).slice(0, 8) : [];
+  ask(file.story, false, { mode: "analysis", facts: fileFacts(), document });
 }
 
 // Dictation where the browser offers it (Chrome, Edge, Safari); hidden elsewhere.

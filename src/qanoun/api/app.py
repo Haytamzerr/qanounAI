@@ -47,12 +47,17 @@ class AskRequest(BaseModel):
     history: list[TurnIn] = Field(default_factory=list, max_length=8)
     # chosen in the situation builder: theme, role, when, goal (decision 81)
     facts: list[Annotated[str, Field(max_length=200)]] = Field(default_factory=list, max_length=6)
+    # clauses quoted from the person's document, checked one by one in the analysis
+    document: list[Annotated[str, Field(max_length=400)]] = Field(
+        default_factory=list, max_length=8
+    )
 
     def run(self, answerer: Answerer, on_step=None) -> Answer:
         turns = [Turn(t.question, t.answer, tuple(t.sources)) for t in self.history]
         return answerer.answer(
-            self.question, on_step, mode=self.mode, history=turns, facts=self.facts
-        )
+            self.question, on_step, mode=self.mode, history=turns, facts=self.facts,
+            document=self.document,
+        )  # fmt: skip
 
 
 class Citation(BaseModel):

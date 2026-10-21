@@ -162,3 +162,32 @@ def test_what_the_person_selected_reaches_the_plan_and_the_writer():
     plan_prompt, write_prompt = llm.prompts[0][1], llm.prompts[1][1]
     assert "WHAT THE PERSON SELECTED" in plan_prompt and "- Je suis: Salarié(e)" in plan_prompt
     assert "Quand: Il y a 1 à 12 mois" in write_prompt
+
+
+def test_the_clauses_of_a_document_are_checked_one_by_one():
+    """Owner's contract: two unlawful clauses (no notice, waiver) were missed because only the
+    story reached the analysis."""
+    clauses = [
+        "L'employeur peut mettre fin au présent contrat à tout moment, sans préavis ni indemnité.",
+        "La salariée renonce par avance à toute indemnité de licenciement.",
+    ]
+    plan = dict(PLAN, searches=[f"بحث {i}" for i in range(1, 8)])
+    llm = ScriptedLLM(plan, SECTIONS)
+    retriever = RecordingRetriever()
+    Answerer(retriever, llm).answer(
+        "Je suis assistante administrative en CDI.", mode="analysis", document=clauses
+    )
+    plan_prompt, write_prompt = llm.prompts[0][1], llm.prompts[1][1]
+    assert "CLAUSES OF THE PERSON'S DOCUMENT" in plan_prompt and "sans préavis" in plan_prompt
+    assert (
+        "check each one against the sources" in write_prompt
+        and "renonce par avance" in write_prompt
+    )
+    assert retriever.queries[:6] == [f"بحث {i}" for i in range(1, 7)]  # 6 searches, not 4
+
+
+def test_the_model_is_told_not_to_compute_totals():
+    from qanoun.generation.prompts import analysis_system, system_prompt
+
+    for system in (system_prompt("fr"), analysis_system("fr")):
+        assert "Never" in system and "compute a total yourself" in system

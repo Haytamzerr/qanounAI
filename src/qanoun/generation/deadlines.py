@@ -8,7 +8,8 @@ the exact words of the article. Nothing is trusted:
 2. the quote must appear, word for word (after the usual normalisation), in that article;
 3. the duration must be in the quote: its number in digits or in words ("تسعين", "quinze"),
    or a unit alone meaning one ("أجل شهر"), or an Arabic dual meaning two ("شهرين");
-4. the unit must be one of days, months, years, hours.
+4. the unit must be one of days, months, years, hours;
+5. no "and a half" in the quote: "شهر ونصف" was shown as "1 month" (owner's contract test).
 
 A deadline that fails any check is dropped (and logged); the interface then turns the duration
 into a date from the day the person gives, and a calendar reminder.
@@ -77,8 +78,13 @@ def _has_unit(words: list[str], unit: str) -> bool:
     return any(w in forms or any(w.endswith(f) and len(f) > 2 for f in forms) for w in words)
 
 
+HALF = re.compile(r"نصف|demi|moitie|half")  # "شهر ونصف" is 1.5 months: not a whole amount
+
+
 def _has_amount(quote: str, amount: int, unit: str) -> bool:
     text = normalize(quote)
+    if HALF.search(text):
+        return False  # a duration "and a half" cannot be shown exactly as whole days or months
     if re.search(rf"(?<!\d){amount}(?!\d)", text):
         return True
     if any(normalize(w) in text for w in NUMBER_WORDS.get(amount, ())):

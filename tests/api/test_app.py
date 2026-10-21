@@ -234,3 +234,16 @@ def test_the_interface_has_the_situation_tools():
     assert 'id="doc-input"' in page and 'id="tools"' in page and 'id="listen"' in page
     for name in ("SCENARIOS", "deadlinesTool", "calculatorsTool", "letterTool", "downloadIcs"):
         assert name in script
+
+
+def test_ask_accepts_document_clauses_within_limits():
+    plan = {"situation": "s", "searches": ["الأجير"], "missing": []}
+    sections = {
+        "status": "answered", "situation": "s", "law": "Règle [1].", "application": "a",
+        "steps": "e", "missing": "", "used_sources": [1],
+    }  # fmt: skip
+    client = client_with(plan, sections)
+    body = {"question": "Mon contrat.", "mode": "analysis", "document": ["Clause 1.", "Clause 2."]}
+    assert client.post("/ask", json=body).status_code == 200
+    assert client.post("/ask", json=dict(body, document=["c"] * 9)).status_code == 422
+    assert client.post("/ask", json=dict(body, document=["c" * 401])).status_code == 422
