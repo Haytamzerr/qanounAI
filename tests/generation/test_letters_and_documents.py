@@ -117,9 +117,12 @@ def test_a_real_pdf_without_text_is_read_as_an_image():
     assert out.read_as == "image" and llm.files[0][0] == "application/pdf"
 
 
+# Short ids: pytest puts the test id in an environment variable (PYTEST_CURRENT_TEST), and
+# Windows refuses variables over 32,767 characters — an 8 MB parameter in the id broke the run.
 @pytest.mark.parametrize(
     ("mime", "data"),
     [("image/png", b""), ("application/zip", b"PK"), ("image/png", b"x" * (8 * 1024 * 1024 + 1))],
+    ids=["empty", "zip", "over-8-MB"],
 )
 def test_files_we_cannot_read_are_refused(mime, data):
     with pytest.raises(DocumentError):
