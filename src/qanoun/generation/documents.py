@@ -43,7 +43,8 @@ before they ask a lawyer-like assistant about it. Extract only what the document
 - "clauses": up to eight clauses worth checking, those that limit the person's rights first
   (a waiver, a termination without notice or indemnity, a penalty, a deadline, a duration, a
   working time, a leave, a rent increase, who pays repairs), each with its exact words in
-  "quote", copied character for character, and what it means in plain {language} in "meaning".
+  "quote" (copied character for character, at most 200 characters: the words that matter) and
+  what it means in one short plain sentence in {language} in "meaning".
 Never add a fact that is not in the document. Never give legal advice here."""
 
 READ_SCHEMA = {
@@ -165,7 +166,10 @@ def read_document(llm: LLM, mime: str, data: bytes, language: str = "ar") -> Rea
     try:
         data_out = json.loads(raw)
     except json.JSONDecodeError as error:
-        raise DocumentError("the document could not be read, try a clearer photo") from error
+        message = "the reply about the document was incomplete; try again"
+        if attachments:
+            message += " (or send a clearer photo)"
+        raise DocumentError(message) from error
 
     flat = _flat(text) if text else ""
     clauses = []

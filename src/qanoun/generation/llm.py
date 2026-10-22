@@ -26,6 +26,7 @@ import httpx
 from qanoun.config import settings
 
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta"
+MAX_OUTPUT_TOKENS = 8192  # the most a cut-off reply is retried with
 log = logging.getLogger("qanoun.llm")
 
 
@@ -57,7 +58,7 @@ class GeminiLLM:
         model: str | None = None,
         api_key: str | None = None,
         temperature: float = 0.1,  # low: we want faithful answers, not creative ones
-        max_output_tokens: int = 2048,  # an analysis with its deadlines and quotes needs room
+        max_output_tokens: int = 4096,  # Arabic analyses and documents need room (decision 90)
         client: httpx.Client | None = None,
         attempts: int = 3,
         sleep: Callable[[float], None] = time.sleep,
@@ -134,6 +135,17 @@ class GeminiLLM:
             "generationConfig": config,
         }
         response = self._generate_with_fallbacks(body)
+        # A reply cut at the length limit is half a JSON object: ask again once with twice the
+        # room (an Arabic contract with 8 clauses went past 2,048 tokens, decision 90).
+        while (
+            response.get("candidates", [{}])[0].get("finishReason") == "MAX_TOKENS"
+            and config["maxOutputTokens"] < MAX_OUTPUT_TOKENS
+        ):
+            config["maxOutputTokens"] = min(config["maxOutputTokens"] * 2, MAX_OUTPUT_TOKENS)
+            log.info(
+                "reply cut at the length limit: asking again with %d", config["maxOutputTokens"]
+            )
+            response = self._generate_with_fallbacks(body)
         try:
             candidate = response["candidates"][0]
             return "".join(part.get("text", "") for part in candidate["content"]["parts"])

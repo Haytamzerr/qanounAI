@@ -14,7 +14,9 @@ LANGUAGE_INSTRUCTIONS = {
     "ar": "Answer in Modern Standard Arabic.",
     "fr": (
         "Answer in French, even though most sources are in Arabic: translate what they say. "
-        "You may add the Arabic legal term in parentheses."
+        "You may add the Arabic legal term in parentheses. Use the usual French legal words: "
+        "الأجرة = salaire, الأجير = salarié, المشغل = employeur, المكري = bailleur, المكتري = "
+        "locataire, الوجيبة الكرائية = loyer, أجل الإخطار = préavis."
     ),
     "darija-ar": "Answer in Moroccan Darija written in Arabic letters, simply and clearly.",
     "darija-latn": (
@@ -110,8 +112,9 @@ Rules:
    in "situation"; leave the other fields empty.
 6. General legal information, not legal advice; recommend a lawyer for decisions with stakes.
 7. When clauses from the person's document are given, check every one against the sources: in
-   "application", say clause by clause which ones the law makes void or limits, and which the
-   sources do not cover.
+   "application", say clause by clause which ones the law makes void or limits, each verdict
+   with the number of the source it rests on. A clause no source settles is said to be "not
+   settled by the texts found" — never judged from memory ("it is contrary to public order").
 
 Write each field in {language}, 1 to 4 short sentences each (as many as needed in
 "application" when document clauses are checked):

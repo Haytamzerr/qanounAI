@@ -225,3 +225,32 @@ def test_a_damaged_state_file_is_ignored(tmp_path):
     state.write_text("not json")
     llm = GeminiLLM(api_key="k", client=fake_gemini([], reply("")), state_path=state)
     assert llm.name == "gemini-3.0-flash"
+
+
+def test_a_reply_cut_at_the_length_limit_is_asked_again_with_more_room():
+    """An Arabic contract with 8 clauses went past the limit: half a JSON object came back."""
+    requests: list[httpx.Request] = []
+
+    def cut(text, reason):
+        return {"candidates": [{"content": {"parts": [{"text": text}]}, "finishReason": reason}]}
+
+    replies = iter([cut('{"kind": "contr', "MAX_TOKENS"), cut('{"kind": "contract"}', "STOP")])
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if request.url.path.endswith("/models"):
+            return httpx.Response(200, json=MODELS)
+        return httpx.Response(200, json=next(replies))
+
+    llm = GeminiLLM(
+        api_key="secret",
+        model="gemini-3.0-flash",
+        client=httpx.Client(transport=httpx.MockTransport(handler)),
+    )
+    assert llm.generate("s", "u", json_schema={"type": "OBJECT"}) == '{"kind": "contract"}'
+    limits = [
+        json.loads(r.content)["generationConfig"]["maxOutputTokens"]
+        for r in requests
+        if r.method == "POST"
+    ]
+    assert limits == [4096, 8192]
